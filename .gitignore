@@ -15,3 +15,8 @@ testar_rotas_evolution.py
 config_backup/
 
 .env
+
+# Arquivos locais e binarios
+clinica.db
+grok.exe
+config_backup/
