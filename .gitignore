@@ -1,0 +1,17 @@
+﻿.venv/
+env/
+venv/
+__pycache__/
+*.pyc
+.env
+*.json
+!package.json
+*.log
+.vscode/
+.idea/
+testar_rotas_evolution.py
+.env
+
+config_backup/
+
+.env
