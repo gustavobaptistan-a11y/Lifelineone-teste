@@ -1,0 +1,16 @@
+{
+    "5561999999999@s.whatsapp.net": {
+        "estado": "urgencia_detectada"
+    },
+    "5561888888888@s.whatsapp.net": {
+        "estado": "inicio"
+    },
+    "5561777777777@s.whatsapp.net": {
+        "estado": "inicio",
+        "nome": "Olá",
+        "sintoma": "Carlos Silva",
+        "convenio": "Dor de cabeça persistente",
+        "primeira_consulta": "Unimed",
+        "horario": "Sim"
+    }
+}

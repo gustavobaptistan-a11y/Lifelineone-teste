@@ -1,35 +1,41 @@
 ﻿import json
-import os
+from app.database import obter_conexao, inicializar_banco
 
-class SessionRepository:
-    def __init__(self, arquivo_db="sessions.json"):
-        self.arquivo_db = arquivo_db
-        self._carregar()
+# Garante que a tabela existe ao carregar o módulo
+inicializar_banco()
 
-    def _carregar(self):
-        if os.path.exists(self.arquivo_db):
-            try:
-                with open(self.arquivo_db, "r", encoding="utf-8") as f:
-                    self.sessoes = json.load(f)
-            except Exception:
-                self.sessoes = {}
-        else:
-            self.sessoes = {}
+def obter_sessao(remote_jid: str) -> dict:
+    try:
+        conn = obter_conexao()
+        cursor = conn.cursor()
+        cursor.execute("SELECT dados FROM sessoes WHERE remote_jid = %s;", (remote_jid,))
+        resultado = cursor.fetchone()
+        cursor.close()
+        conn.close()
 
-    def _salvar(self):
-        try:
-            with open(self.arquivo_db, "w", encoding="utf-8") as f:
-                json.dump(self.sessoes, f, ensure_ascii=False, indent=4)
-        except Exception as e:
-            print(f"Erro ao salvar arquivo de sessões: {e}")
+        if resultado and "dados" in resultado:
+            return resultado["dados"]
+        
+        # Se não existir, cria padrão
+        sessao_inicial = {"estado": "inicio"}
+        salvar_sessao(remote_jid, sessao_inicial)
+        return sessao_inicial
+    except Exception as e:
+        print(f"[Sessão] Erro ao obter sessão do Postgres: {e}")
+        return {"estado": "inicio"}
 
-    def obter_sessao(self, remote_jid: str) -> dict:
-        self._carregar()
-        return self.sessoes.get(remote_jid, {"estado": "inicio", "historico": []})
-
-    def salvar_sessao(self, remote_jid: str, dados_sessao: dict):
-        self.sessoes[remote_jid] = dados_sessao
-        self._salvar()
-
-# Instância global exportada para consumo nos routers
-session_repository = SessionRepository()
+def salvar_sessao(remote_jid: str, dados_sessao: dict):
+    try:
+        conn = obter_conexao()
+        cursor = conn.cursor()
+        cursor.execute("""
+            INSERT INTO sessoes (remote_jid, dados, atualizado_em)
+            VALUES (%s, %s, CURRENT_TIMESTAMP)
+            ON CONFLICT (remote_jid) 
+            DO UPDATE SET dados = EXCLUDED.dados, atualizado_em = CURRENT_TIMESTAMP;
+        """, (remote_jid, json.dumps(dados_sessao)))
+        conn.commit()
+        cursor.close()
+        conn.close()
+    except Exception as e:
+        print(f"[Sessão] Erro ao salvar sessão no Postgres: {e}")

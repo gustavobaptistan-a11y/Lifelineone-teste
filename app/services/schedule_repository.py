@@ -1,4 +1,4 @@
-﻿import asyncpg
+import asyncpg
 
 async def formatar_opcoes_horarios(db_conn: asyncpg.Connection, periodo: str = None) -> list:
     """Busca horários disponíveis no PostgreSQL e retorna formatados em até 3 opções numeradas."""

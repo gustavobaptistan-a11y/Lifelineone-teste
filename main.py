@@ -1,4 +1,4 @@
-﻿from fastapi import FastAPI
+from fastapi import FastAPI
 from app.database import connect_to_db, close_db_connection
 from app.routers import webhook
 

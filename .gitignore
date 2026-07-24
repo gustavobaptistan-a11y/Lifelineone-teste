@@ -1,26 +1,25 @@
-﻿.venv/
+﻿# --- Ambiente Virtual ---
+.venv/
 env/
 venv/
+
+# --- Cache e Compilação ---
 __pycache__/
 *.pyc
-.env
-*.json
-!package.json
 *.log
-.vscode/
-.idea/
-testar_rotas_evolution.py
-.env
 
+# --- Credenciais e Configurações Locais ---
+.env
 config_backup/
 
-.env
-
-# Arquivos locais e binarios
-clinica.db
-grok.exe
-config_backup/
-
-# Banco de dados e binarios
+# --- Bancos de Dados e Binários ---
 *.db
 *.exe
+ngrok.exe
+
+# --- IDEs e Editores ---
+.vscode/
+.idea/
+
+# --- Arquivos de Teste Avulsos ---
+testar_rotas_evolution.py

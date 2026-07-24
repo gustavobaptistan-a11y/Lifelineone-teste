@@ -1,0 +1,21 @@
+[
+    {
+        "id_agendamento": "AG-1784841252",
+        "whatsapp_jid": "5561988887777@s.whatsapp.net",
+        "data_criacao": "2026-07-23 18:14:12",
+        "status_agendamento": "CONFIRMADO",
+        "paciente": {
+            "nome_completo": "Carlos Eduardo Teste",
+            "contato": "5561988887777"
+        },
+        "triagem": {
+            "sintoma_principal": "Dor de cabeça forte e febre",
+            "modalidade_atendimento": "Particular",
+            "tipo_consulta": "Sim, primeira vez"
+        },
+        "agendamento": {
+            "preferencia_periodo": "Manhã",
+            "opcao_horario_escolhida": "1"
+        }
+    }
+]

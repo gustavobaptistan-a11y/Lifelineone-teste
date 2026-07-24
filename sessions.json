@@ -1,0 +1,512 @@
+{
+    "5561999998888@s.whatsapp.net": {
+        "estado": "inicio",
+        "historico": [
+            {
+                "autor": "usuario",
+                "texto": "Olá, boa tarde"
+            },
+            {
+                "autor": "bot",
+                "texto": "Olá! Seja bem-vindo(a) à Lifeline. Para começarmos o seu atendimento, por favor, me informe o seu **nome completo**."
+            },
+            {
+                "autor": "usuario",
+                "texto": "Olá, boa tarde"
+            },
+            {
+                "autor": "bot",
+                "texto": "Obrigado, Olá, boa tarde. Poderia descrever qual é o seu **sintoma principal** ou o motivo da consulta?"
+            },
+            {
+                "autor": "usuario",
+                "texto": "Carlos Eduardo Mendes"
+            },
+            {
+                "autor": "bot",
+                "texto": "Compreendo. O atendimento será **Particular** ou por **Convênio**?"
+            },
+            {
+                "autor": "usuario",
+                "texto": "Dor nas costas intensa"
+            },
+            {
+                "autor": "bot",
+                "texto": "Perfeito. É a sua **primeira consulta** com a nossa equipe ou trata-se de um **retorno**?"
+            },
+            {
+                "autor": "usuario",
+                "texto": "Convênio Particular"
+            },
+            {
+                "autor": "bot",
+                "texto": "Entendido. Qual **período do dia** você prefere para o atendimento? (Manhã ou Tarde)"
+            },
+            {
+                "autor": "usuario",
+                "texto": "Sim, primeira vez"
+            },
+            {
+                "autor": "bot",
+                "texto": "📋 **Horários disponíveis encontrados:**\n1️⃣ Amanhã às 09:00\n2️⃣ Amanhã às 14:30\n3️⃣ Depois de amanhã às 10:00\n\nPor favor, digite o **número** da opção desejada para confirmar o seu agendamento:"
+            },
+            {
+                "autor": "usuario",
+                "texto": "Quero período da tarde"
+            },
+            {
+                "autor": "bot",
+                "texto": "✅ **Consulta agendada com sucesso!** Enviamos os detalhes e orientações para você. Aguardamos sua visita!"
+            },
+            {
+                "autor": "usuario",
+                "texto": "1"
+            },
+            {
+                "autor": "bot",
+                "texto": "Olá! Vamos reiniciar o seu atendimento. Por favor, digite seu nome completo."
+            }
+        ]
+    },
+    "5561999056868@s.whatsapp.net": {
+        "estado": "coletar_name",
+        "historico": [
+            {
+                "autor": "usuario",
+                "texto": "Olá, gostaria de agendar uma consulta"
+            },
+            {
+                "autor": "bot",
+                "texto": "Olá! Seja bem-vindo(a) à Lifeline. Para começarmos o seu atendimento, por favor, me informe o seu **nome completo**."
+            }
+        ]
+    },
+    "5561999997777@s.whatsapp.net": {
+        "estado": "finalizado",
+        "dados": {},
+        "historico": [
+            {
+                "autor": "usuario",
+                "texto": "Olá, boa tarde"
+            },
+            {
+                "autor": "bot",
+                "texto": "Olá! Seja bem-vindo(a) à Clínica Lifeline. Para começarmos o seu atendimento, por favor, me informe o seu **nome completo**."
+            },
+            {
+                "autor": "usuario",
+                "texto": "Carlos Eduardo Mendes"
+            },
+            {
+                "autor": "bot",
+                "texto": "Obrigado, Carlos Eduardo Mendes. Poderia descrever qual é o seu **sintoma principal** ou o motivo da consulta?"
+            },
+            {
+                "autor": "usuario",
+                "texto": "Dor nas costas intensa"
+            },
+            {
+                "autor": "bot",
+                "texto": "Compreendo. O atendimento será na modalidade **Particular** ou por **Convênio**?"
+            },
+            {
+                "autor": "usuario",
+                "texto": "Particular"
+            },
+            {
+                "autor": "bot",
+                "texto": "Perfeito. É a sua **primeira consulta** com a nossa equipe ou trata-se de um **retorno**?"
+            },
+            {
+                "autor": "usuario",
+                "texto": "Sim, primeira vez"
+            },
+            {
+                "autor": "bot",
+                "texto": "Entendido. Qual **período do dia** você prefere para o atendimento? (Manhã ou Tarde)"
+            },
+            {
+                "autor": "usuario",
+                "texto": "Período da tarde"
+            },
+            {
+                "autor": "bot",
+                "texto": "📋 **Horários disponíveis:**\n1️⃣ Amanhã às 09:00\n2️⃣ Amanhã às 14:30\n3️⃣ Depois de amanhã às 10:00\n\nPor favor, digite o **número** da opção desejada para confirmar:"
+            },
+            {
+                "autor": "usuario",
+                "texto": "2"
+            },
+            {
+                "autor": "bot",
+                "texto": "✅ **Consulta agendada com sucesso!** Enviamos os detalhes e orientações para você. Agradecemos a preferência e aguardamos a sua visita!"
+            },
+            {
+                "autor": "usuario",
+                "texto": "Olá, boa tarde"
+            },
+            {
+                "autor": "bot",
+                "texto": "O seu atendimento anterior já foi concluído com sucesso. Caso queira iniciar um novo agendamento, digite 'olá'."
+            },
+            {
+                "autor": "usuario",
+                "texto": "Carlos Eduardo Mendes"
+            },
+            {
+                "autor": "bot",
+                "texto": "O seu atendimento anterior já foi concluído com sucesso. Caso queira iniciar um novo agendamento, digite 'olá'."
+            },
+            {
+                "autor": "usuario",
+                "texto": "Dor nas costas intensa"
+            },
+            {
+                "autor": "bot",
+                "texto": "O seu atendimento anterior já foi concluído com sucesso. Caso queira iniciar um novo agendamento, digite 'olá'."
+            },
+            {
+                "autor": "usuario",
+                "texto": "Particular"
+            },
+            {
+                "autor": "bot",
+                "texto": "O seu atendimento anterior já foi concluído com sucesso. Caso queira iniciar um novo agendamento, digite 'olá'."
+            },
+            {
+                "autor": "usuario",
+                "texto": "Sim, primeira vez"
+            },
+            {
+                "autor": "bot",
+                "texto": "O seu atendimento anterior já foi concluído com sucesso. Caso queira iniciar um novo agendamento, digite 'olá'."
+            },
+            {
+                "autor": "usuario",
+                "texto": "Período da tarde"
+            },
+            {
+                "autor": "bot",
+                "texto": "O seu atendimento anterior já foi concluído com sucesso. Caso queira iniciar um novo agendamento, digite 'olá'."
+            },
+            {
+                "autor": "usuario",
+                "texto": "2"
+            },
+            {
+                "autor": "bot",
+                "texto": "O seu atendimento anterior já foi concluído com sucesso. Caso queira iniciar um novo agendamento, digite 'olá'."
+            },
+            {
+                "autor": "usuario",
+                "texto": "Olá, boa tarde"
+            },
+            {
+                "autor": "bot",
+                "texto": "O seu atendimento anterior já foi concluído com sucesso. Caso queira iniciar um novo agendamento, digite 'olá'."
+            },
+            {
+                "autor": "usuario",
+                "texto": "Carlos Eduardo Mendes"
+            },
+            {
+                "autor": "bot",
+                "texto": "O seu atendimento anterior já foi concluído com sucesso. Caso queira iniciar um novo agendamento, digite 'olá'."
+            },
+            {
+                "autor": "usuario",
+                "texto": "Dor nas costas intensa"
+            },
+            {
+                "autor": "bot",
+                "texto": "O seu atendimento anterior já foi concluído com sucesso. Caso queira iniciar um novo agendamento, digite 'olá'."
+            },
+            {
+                "autor": "usuario",
+                "texto": "Particular"
+            },
+            {
+                "autor": "bot",
+                "texto": "O seu atendimento anterior já foi concluído com sucesso. Caso queira iniciar um novo agendamento, digite 'olá'."
+            },
+            {
+                "autor": "usuario",
+                "texto": "Sim, primeira vez"
+            },
+            {
+                "autor": "bot",
+                "texto": "O seu atendimento anterior já foi concluído com sucesso. Caso queira iniciar um novo agendamento, digite 'olá'."
+            },
+            {
+                "autor": "usuario",
+                "texto": "Período da tarde"
+            },
+            {
+                "autor": "bot",
+                "texto": "O seu atendimento anterior já foi concluído com sucesso. Caso queira iniciar um novo agendamento, digite 'olá'."
+            },
+            {
+                "autor": "usuario",
+                "texto": "2"
+            },
+            {
+                "autor": "bot",
+                "texto": "O seu atendimento anterior já foi concluído com sucesso. Caso queira iniciar um novo agendamento, digite 'olá'."
+            }
+        ]
+    },
+    "5561988887777@s.whatsapp.net": {
+        "estado": "finalizado",
+        "dados": {
+            "nome_paciente": "Carlos Eduardo Teste",
+            "sintoma": "Dor de cabeça forte e febre",
+            "convenio": "Particular",
+            "primeira_consulta": "Sim, primeira vez",
+            "preferencia_horario": "Manhã",
+            "horario_escolhido": "1"
+        },
+        "historico": [
+            {
+                "autor": "usuario",
+                "texto": "Olá, boa tarde!"
+            },
+            {
+                "autor": "bot",
+                "texto": "Olá! Seja bem-vindo(a) à Clínica Lifeline. Para começarmos o seu atendimento, por favor, me informe o seu **nome completo**."
+            },
+            {
+                "autor": "usuario",
+                "texto": "Carlos Eduardo Teste"
+            },
+            {
+                "autor": "bot",
+                "texto": "Obrigado, Carlos Eduardo Teste. Poderia descrever qual é o seu **sintoma principal** ou o motivo da consulta?"
+            },
+            {
+                "autor": "usuario",
+                "texto": "Dor de cabeça forte e febre"
+            },
+            {
+                "autor": "bot",
+                "texto": "Compreendo. O atendimento será na modalidade **Particular** ou por **Convênio**?"
+            },
+            {
+                "autor": "usuario",
+                "texto": "Particular"
+            },
+            {
+                "autor": "bot",
+                "texto": "Perfeito. É a sua **primeira consulta** com a nossa equipe ou trata-se de um **retorno**?"
+            },
+            {
+                "autor": "usuario",
+                "texto": "Sim, primeira vez"
+            },
+            {
+                "autor": "bot",
+                "texto": "Entendido. Qual **período do dia** você prefere para o atendimento? (Manhã ou Tarde)"
+            },
+            {
+                "autor": "usuario",
+                "texto": "Manhã"
+            },
+            {
+                "autor": "bot",
+                "texto": "📋 **Horários disponíveis:**\n1️⃣ Amanhã às 09:00\n2️⃣ Amanhã às 14:30\n3️⃣ Depois de amanhã às 10:00\n\nPor favor, digite o **número** da opção desejada para confirmar:"
+            },
+            {
+                "autor": "usuario",
+                "texto": "1"
+            },
+            {
+                "autor": "bot",
+                "texto": "✅ **Consulta agendada com sucesso!** Enviamos os detalhes e orientações para você. Agradecemos a preferência e aguardamos a sua visita!"
+            },
+            {
+                "autor": "usuario",
+                "texto": "Olá, boa tarde!"
+            },
+            {
+                "autor": "bot",
+                "texto": "O seu atendimento anterior já foi concluído com sucesso. Caso queira iniciar um novo agendamento, digite 'olá'."
+            },
+            {
+                "autor": "usuario",
+                "texto": "Carlos Eduardo Teste"
+            },
+            {
+                "autor": "bot",
+                "texto": "O seu atendimento anterior já foi concluído com sucesso. Caso queira iniciar um novo agendamento, digite 'olá'."
+            },
+            {
+                "autor": "usuario",
+                "texto": "Dor de cabeça forte e febre"
+            },
+            {
+                "autor": "bot",
+                "texto": "O seu atendimento anterior já foi concluído com sucesso. Caso queira iniciar um novo agendamento, digite 'olá'."
+            },
+            {
+                "autor": "usuario",
+                "texto": "Particular"
+            },
+            {
+                "autor": "bot",
+                "texto": "O seu atendimento anterior já foi concluído com sucesso. Caso queira iniciar um novo agendamento, digite 'olá'."
+            },
+            {
+                "autor": "usuario",
+                "texto": "Sim, primeira vez"
+            },
+            {
+                "autor": "bot",
+                "texto": "O seu atendimento anterior já foi concluído com sucesso. Caso queira iniciar um novo agendamento, digite 'olá'."
+            },
+            {
+                "autor": "usuario",
+                "texto": "Manhã"
+            },
+            {
+                "autor": "bot",
+                "texto": "O seu atendimento anterior já foi concluído com sucesso. Caso queira iniciar um novo agendamento, digite 'olá'."
+            },
+            {
+                "autor": "usuario",
+                "texto": "1"
+            },
+            {
+                "autor": "bot",
+                "texto": "O seu atendimento anterior já foi concluído com sucesso. Caso queira iniciar um novo agendamento, digite 'olá'."
+            },
+            {
+                "autor": "usuario",
+                "texto": "Olá, boa tarde!"
+            },
+            {
+                "autor": "bot",
+                "texto": "O seu atendimento anterior já foi concluído com sucesso. Caso queira iniciar um novo agendamento, digite 'olá'."
+            },
+            {
+                "autor": "usuario",
+                "texto": "Carlos Eduardo Teste"
+            },
+            {
+                "autor": "bot",
+                "texto": "O seu atendimento anterior já foi concluído com sucesso. Caso queira iniciar um novo agendamento, digite 'olá'."
+            },
+            {
+                "autor": "usuario",
+                "texto": "Dor de cabeça forte e febre"
+            },
+            {
+                "autor": "bot",
+                "texto": "O seu atendimento anterior já foi concluído com sucesso. Caso queira iniciar um novo agendamento, digite 'olá'."
+            },
+            {
+                "autor": "usuario",
+                "texto": "Particular"
+            },
+            {
+                "autor": "bot",
+                "texto": "O seu atendimento anterior já foi concluído com sucesso. Caso queira iniciar um novo agendamento, digite 'olá'."
+            },
+            {
+                "autor": "usuario",
+                "texto": "Sim, primeira vez"
+            },
+            {
+                "autor": "bot",
+                "texto": "O seu atendimento anterior já foi concluído com sucesso. Caso queira iniciar um novo agendamento, digite 'olá'."
+            },
+            {
+                "autor": "usuario",
+                "texto": "Manhã"
+            },
+            {
+                "autor": "bot",
+                "texto": "O seu atendimento anterior já foi concluído com sucesso. Caso queira iniciar um novo agendamento, digite 'olá'."
+            },
+            {
+                "autor": "usuario",
+                "texto": "1"
+            },
+            {
+                "autor": "bot",
+                "texto": "O seu atendimento anterior já foi concluído com sucesso. Caso queira iniciar um novo agendamento, digite 'olá'."
+            },
+            {
+                "autor": "usuario",
+                "texto": "Olá, boa tarde!"
+            },
+            {
+                "autor": "bot",
+                "texto": "O seu atendimento anterior já foi concluído com sucesso. Caso queira iniciar um novo agendamento, digite 'olá'."
+            },
+            {
+                "autor": "usuario",
+                "texto": "Carlos Eduardo Teste"
+            },
+            {
+                "autor": "bot",
+                "texto": "O seu atendimento anterior já foi concluído com sucesso. Caso queira iniciar um novo agendamento, digite 'olá'."
+            },
+            {
+                "autor": "usuario",
+                "texto": "Dor de cabeça forte e febre"
+            },
+            {
+                "autor": "bot",
+                "texto": "O seu atendimento anterior já foi concluído com sucesso. Caso queira iniciar um novo agendamento, digite 'olá'."
+            },
+            {
+                "autor": "usuario",
+                "texto": "Particular"
+            },
+            {
+                "autor": "bot",
+                "texto": "O seu atendimento anterior já foi concluído com sucesso. Caso queira iniciar um novo agendamento, digite 'olá'."
+            },
+            {
+                "autor": "usuario",
+                "texto": "Sim, primeira vez"
+            },
+            {
+                "autor": "bot",
+                "texto": "O seu atendimento anterior já foi concluído com sucesso. Caso queira iniciar um novo agendamento, digite 'olá'."
+            },
+            {
+                "autor": "usuario",
+                "texto": "Manhã"
+            },
+            {
+                "autor": "bot",
+                "texto": "O seu atendimento anterior já foi concluído com sucesso. Caso queira iniciar um novo agendamento, digite 'olá'."
+            },
+            {
+                "autor": "usuario",
+                "texto": "1"
+            },
+            {
+                "autor": "bot",
+                "texto": "O seu atendimento anterior já foi concluído com sucesso. Caso queira iniciar um novo agendamento, digite 'olá'."
+            }
+        ]
+    },
+    "5561999998888": {
+        "estado": "coletar_sintoma",
+        "dados": {
+            "nome_paciente": "Carlos Alberto"
+        }
+    },
+    "5561977776666": {
+        "estado": "finalizado",
+        "dados": {
+            "nome_paciente": "Juliana Paes",
+            "sintoma": "Forte dor de cabeça e febre há dois dias",
+            "convenio": "Particular",
+            "primeira_consulta": "Sim, primeira consulta",
+            "preferencia_horario": "Manhã",
+            "horario_escolhido": "1"
+        }
+    }
+}

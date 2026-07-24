@@ -1,27 +1,33 @@
-﻿import asyncpg
-from app.config import settings
+﻿import os
+import psycopg2
+from psycopg2.extras import RealDictCursor
 
-pool = None
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:gugaguga@localhost:5432/lifeline_db")
 
+def obter_conexao():
+    return psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
+
+def inicializar_banco():
+    try:
+        conn = obter_conexao()
+        cursor = conn.cursor()
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS sessoes (
+                remote_jid VARCHAR(255) PRIMARY KEY,
+                dados JSONB NOT NULL,
+                atualizado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        """)
+        conn.commit()
+        cursor.close()
+        conn.close()
+        print("[Banco de Dados] Tabela 'sessoes' verificada/criada com sucesso no PostgreSQL.")
+    except Exception as e:
+        print(f"[Banco de Dados] Erro ao conectar ou inicializar o PostgreSQL: {e}")
+
+# Função assíncrona para compatibilidade com o await do main.py
 async def connect_to_db():
-    global pool
-    if hasattr(settings, "DATABASE_URL") and settings.DATABASE_URL:
-        try:
-            pool = await asyncpg.create_pool(dsn=settings.DATABASE_URL)
-            print("✅ Conexão com o banco de dados PostgreSQL estabelecida!")
-        except Exception as e:
-            print(f"⚠️ Erro ao conectar ao banco de dados: {e}")
+    inicializar_banco()
 
 async def close_db_connection():
-    global pool
-    if pool:
-        await pool.close()
-        print("🔒 Conexão com o banco de dados encerrada!")
-
-async def get_db_connection():
-    global pool
-    if pool:
-        async with pool.acquire() as connection:
-            yield connection
-    else:
-        yield None
+    pass
