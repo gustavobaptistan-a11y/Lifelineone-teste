@@ -1,10 +1,12 @@
-﻿import os
-import psycopg2
+﻿import psycopg2
 from psycopg2.extras import RealDictCursor
+from app.config import settings
 
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:gugaguga@localhost:5432/lifeline_db")
+DATABASE_URL = settings.DATABASE_URL
 
 def obter_conexao():
+    if not DATABASE_URL:
+        raise RuntimeError("DATABASE_URL não configurada")
     return psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
 
 def inicializar_banco():

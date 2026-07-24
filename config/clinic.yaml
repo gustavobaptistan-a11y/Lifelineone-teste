@@ -1,0 +1,55 @@
+calendar:
+  id: primary
+  timezone: America/Sao_Paulo
+
+appointment:
+  duration_minutes: 30
+  buffer_minutes: 10
+  minimum_notice_hours: 2
+
+availability:
+  max_options: 3
+  search_days: 30
+  weekly_hours:
+    monday:
+      - start: "08:00"
+        end: "12:00"
+      - start: "13:00"
+        end: "18:00"
+    tuesday:
+      - start: "08:00"
+        end: "12:00"
+      - start: "13:00"
+        end: "18:00"
+    wednesday:
+      - start: "08:00"
+        end: "12:00"
+      - start: "13:00"
+        end: "18:00"
+    thursday:
+      - start: "08:00"
+        end: "12:00"
+      - start: "13:00"
+        end: "18:00"
+    friday:
+      - start: "08:00"
+        end: "12:00"
+      - start: "13:00"
+        end: "18:00"
+    saturday:
+      - start: "08:00"
+        end: "12:00"
+    sunday: []
+
+conflicts:
+  ignore_statuses:
+    - cancelled
+    - canceled
+  overlap_is_conflict: true
+  search_next_available: true
+  prevent_duplicate_event: true
+
+exceptions:
+  holidays: []
+  vacations: []
+  blocked_periods: []

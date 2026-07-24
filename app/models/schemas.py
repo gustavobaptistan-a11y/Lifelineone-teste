@@ -1,5 +1,41 @@
 from typing import Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
+
+
+class WebhookKey(BaseModel):
+    model_config = ConfigDict(populate_by_name=True, extra="ignore")
+
+    remote_jid: str = Field(alias="remoteJid", min_length=1)
+    from_me: bool = Field(default=False, alias="fromMe")
+
+
+class ExtendedTextMessage(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+
+    text: Optional[str] = None
+
+
+class WebhookMessage(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+
+    conversation: Optional[str] = None
+    extended_text_message: Optional[ExtendedTextMessage] = Field(
+        default=None,
+        alias="extendedTextMessage",
+    )
+
+
+class WebhookData(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+
+    key: WebhookKey
+    message: WebhookMessage
+
+
+class WebhookPayload(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+
+    data: WebhookData
 
 class DadosExtraidos(BaseModel):
     nome: Optional[str] = Field(default=None, description="Nome completo do paciente extraído da mensagem")

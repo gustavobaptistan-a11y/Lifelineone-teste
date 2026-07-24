@@ -1,8 +1,5 @@
 ﻿import json
-from app.database import obter_conexao, inicializar_banco
-
-# Garante que a tabela existe ao carregar o módulo
-inicializar_banco()
+from app.database import obter_conexao
 
 def obter_sessao(remote_jid: str) -> dict:
     try:

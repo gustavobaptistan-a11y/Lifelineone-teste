@@ -29,17 +29,21 @@ class AgendamentoRepository:
             "data_criacao": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             "status_agendamento": "CONFIRMADO",
             "paciente": {
-                "nome_completo": dados_sessao.get("nome_paciente", "Não informado"),
+                "nome_completo": dados_sessao.get("nome", "Não informado"),
                 "contato": remote_jid.split("@")[0]
             },
             "triagem": {
                 "sintoma_principal": dados_sessao.get("sintoma", "Não informado"),
                 "modalidade_atendimento": dados_sessao.get("convenio", "Não informado"),
-                "tipo_consulta": dados_sessao.get("primeira_consulta", "Não informado")
+                "tipo_consulta": (
+                    "Primeira consulta" if dados_sessao.get("primeira_consulta") is True else
+                    "Retorno" if dados_sessao.get("primeira_consulta") is False else
+                    "Não informado"
+                )
             },
             "agendamento": {
                 "preferencia_periodo": dados_sessao.get("preferencia_horario", "Não informado"),
-                "opcao_horario_escolhida": dados_sessao.get("horario_escolhido", "Não informado")
+                "opcao_horario_escolhida": dados_sessao.get("horario", "Não informado")
             }
         }
 
