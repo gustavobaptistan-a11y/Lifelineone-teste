@@ -45,3 +45,19 @@ def test_nome_incompleto_nao_avanca():
     assert estado == "aguardando_nome"
     assert "nome completo" in resposta
     assert dados == {}
+
+
+def test_gera_horarios_disponiveis_sem_google_calendar():
+    dados = {}
+    _, estado, dados = processar("inicio", "Ola", dados)
+    _, estado, dados = processar(estado, "Maria Silva", dados)
+    _, estado, dados = processar(estado, "Dor de cabeca", dados)
+    _, estado, dados = processar(estado, "Unimed", dados)
+    _, estado, dados = processar(estado, "Sim", dados)
+
+    assert estado == "aguardando_preferencia_horario"
+    _, estado, dados = processar(estado, "manha", dados)
+
+    assert estado == "aguardando_horario"
+    assert isinstance(dados.get("opcoes_horario"), list)
+    assert len(dados["opcoes_horario"]) >= 1

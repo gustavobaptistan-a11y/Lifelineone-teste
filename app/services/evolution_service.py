@@ -10,7 +10,7 @@ class EvolutionService:
     def __init__(self):
         self.base_url = settings.EVOLUTION_API_URL.rstrip("/")
         self.api_key = settings.EVOLUTION_API_KEY
-        self.instance = settings.EVOLUTION_INSTANCE
+        self.instance = settings.EVOLUTION_INSTANCE_NAME
         self.enabled = settings.EVOLUTION_SEND_ENABLED
 
     async def send_text_message(self, phone: str, text: str) -> dict:

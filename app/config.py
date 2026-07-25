@@ -4,9 +4,10 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: str = ""
     EVOLUTION_API_URL: str = "https://api-wpp.ghosthub.com.br"
     EVOLUTION_API_KEY: str = ""
-    EVOLUTION_INSTANCE: str = "lifeline"
+    EVOLUTION_INSTANCE_NAME: str = ""
     EVOLUTION_SEND_ENABLED: bool = False
     DATABASE_URL: str = ""
+    WEBHOOK_SECRET: str = ""
     WEBHOOK_GLOBAL_ENABLED: bool = False
     WEBHOOK_GLOBAL_URL: str = ""
     WEBHOOK_GLOBAL_WEBHOOK_BY_EVENTS: bool = False

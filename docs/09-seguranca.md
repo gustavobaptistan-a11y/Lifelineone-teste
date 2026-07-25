@@ -10,3 +10,5 @@ Riscos conhecidos que exigem tratamento futuro:
 - mensagens proprias ainda nao filtradas;
 - detalhes de excecao podem ser devolvidos ao cliente;
 - logs devem evitar tokens, dados clinicos e identificadores desnecessarios.
+
+A aplicação agora suporta um `WEBHOOK_SECRET` opcional para autenticar requisições de webhook via `X-Webhook-Secret` ou `Authorization: Bearer <segredo>`.

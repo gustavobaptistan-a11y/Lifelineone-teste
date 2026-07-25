@@ -1,18 +1,45 @@
 ﻿import logging
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Header, HTTPException
+from app.config import settings
 from app.models.schemas import WebhookPayload
 from app.services.agendamento_repository import agendamento_repository
 from app.services.evolution_service import evolution_service
 from app.services.validador_fluxo import processar_fluxo_atendimento
-from app.services.session_repository import obter_sessao, salvar_sessao
+from app.services import session_repository
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
 @router.post("/webhook")
-async def receber_webhook(payload: WebhookPayload):
+async def receber_webhook(
+    payload: WebhookPayload,
+    authorization: str | None = Header(None),
+    x_webhook_secret: str | None = Header(None),
+):
     try:
+        if payload.event or payload.instance:
+            logger.debug(
+                "Webhook Evolution recebido: event=%s instance=%s",
+                payload.event,
+                payload.instance,
+            )
+
+        if settings.WEBHOOK_SECRET:
+            token_candidates = []
+            if x_webhook_secret:
+                token_candidates.append(x_webhook_secret.strip())
+            if authorization:
+                auth_value = authorization.strip()
+                if auth_value.lower().startswith("bearer "):
+                    token_candidates.append(auth_value[7:].strip())
+                else:
+                    token_candidates.append(auth_value)
+
+            if settings.WEBHOOK_SECRET not in token_candidates:
+                logger.warning("Webhook nao autorizado: cabecalho inválido")
+                raise HTTPException(status_code=401, detail="Webhook nao autorizado")
+
         data = payload.data
         if data.key.from_me:
             return {"status": "ignorado", "motivo": "mensagem enviada pelo proprio bot"}
@@ -32,7 +59,7 @@ async def receber_webhook(payload: WebhookPayload):
         if not texto_usuario:
             return {"status": "ignorado", "motivo": "mensagem sem texto ou formato incompatível"}
 
-        dados_sessao = obter_sessao(remote_jid)
+        dados_sessao = await session_repository.obter_sessao_async(remote_jid)
         estado_atual = dados_sessao.get("estado", "inicio")
 
         resposta, proximo_estado, dados_atualizados = await processar_fluxo_atendimento(
@@ -40,26 +67,38 @@ async def receber_webhook(payload: WebhookPayload):
         )
 
         dados_atualizados["estado"] = proximo_estado
-        salvar_sessao(remote_jid, dados_atualizados)
+        await session_repository.salvar_sessao_async(remote_jid, dados_atualizados)
 
         if proximo_estado == "concluido":
-            agendamento_repository.salvar_agendamento(remote_jid, dados_atualizados)
+            await agendamento_repository.salvar_agendamento_async(remote_jid, dados_atualizados)
 
         envio = await evolution_service.send_text_message(remote_jid, resposta)
         if envio.get("status") == "erro":
             logger.warning("Resposta processada, mas nao enviada pela Evolution")
 
         if proximo_estado == "urgencia_detectada":
-            return {"status": "urgencia_detectada", "resposta": resposta, "envio": envio}
+            return {
+                "status": "urgencia_detectada",
+                "resposta": resposta,
+                "resposta_enviada": resposta,
+                "estado_anterior": estado_atual,
+                "estado_final": proximo_estado,
+                "proximo_estado": proximo_estado,
+                "envio": envio,
+            }
 
         return {
             "status": "sucesso",
             "estado_anterior": estado_atual,
+            "estado_final": proximo_estado,
             "proximo_estado": proximo_estado,
             "resposta": resposta,
+            "resposta_enviada": resposta,
             "envio": envio,
         }
 
+    except HTTPException:
+        raise
     except Exception:
         logger.exception("Erro interno ao processar webhook")
         raise HTTPException(status_code=500, detail="Erro interno ao processar webhook")

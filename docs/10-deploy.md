@@ -1,13 +1,49 @@
 # Deploy
 
-Nao ha Dockerfile, Docker Compose, workflow de CI/CD ou configuracao de provedor versionada neste repositorio.
+Este repositorio nao inclui infraestrutura versionada de deploy (Docker, CI/CD ou provedor), pois a camada de infraestrutura e administrada externamente.
 
-O briefing informa que a infraestrutura de deploy e administrada externamente. Para uma entrega reprodutivel, ainda devem ser documentados:
+## Comando de inicializacao
 
-- comando de inicializacao;
-- variaveis obrigatorias;
-- URL publica do webhook;
-- health check;
-- estrategia de logs;
-- rollback;
-- verificacao pos-deploy.
+```bash
+uvicorn main:app --reload --host 0.0.0.0 --port 8000
+```
+
+## Variaveis de ambiente obrigatorias
+
+- `OPENAI_API_KEY`
+- `EVOLUTION_API_URL`
+- `EVOLUTION_API_KEY`
+- `EVOLUTION_INSTANCE_NAME`
+- `EVOLUTION_SEND_ENABLED=true`
+- `DATABASE_URL`
+- `WEBHOOK_SECRET` (opcional, recomendado)
+- `WEBHOOK_GLOBAL_ENABLED=true`
+- `WEBHOOK_GLOBAL_URL`
+- `WEBHOOK_GLOBAL_WEBHOOK_BY_EVENTS=false`
+
+## URL publica do webhook
+
+A aplicacao expoe o endpoint:
+
+- `POST /webhook`
+
+O EvolutionGO deve enviar eventos para a URL publica configurada em `WEBHOOK_GLOBAL_URL` com a rota `/webhook`.
+
+## Health check
+
+Ainda nao ha endpoint de health check versionado. Recomenda-se adicionar um endpoint simples de disponibilidade no futuro.
+
+## Estrategia de logs
+
+Logs sao gerados pelo logger Python e devem ser coletados pela infraestrutura de deploy.
+
+## Rollback
+
+Rollback e feito repondo a versao anterior do app no ambiente de deploy externo.
+
+## Verificacao pos-deploy
+
+- Confirmar que o webhook responde `200` para payloads `messages.upsert`
+- Confirmar que `envio.status` aparece em respostas do webhook
+- Confirmar persistencia de agendamento no PostgreSQL
+- Confirmar que `EVOLUTION_SEND_ENABLED=true` esta ativo em producao somente quando desejado

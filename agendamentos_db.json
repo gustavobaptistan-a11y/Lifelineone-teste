@@ -17,5 +17,24 @@
             "preferencia_periodo": "Manhã",
             "opcao_horario_escolhida": "1"
         }
+    },
+    {
+        "id_agendamento": "AG-1784922872",
+        "whatsapp_jid": "5561999997777@s.whatsapp.net",
+        "data_criacao": "2026-07-24 16:54:32",
+        "status_agendamento": "CONFIRMADO",
+        "paciente": {
+            "nome_completo": "Carlos Eduardo Mendes",
+            "contato": "5561999997777"
+        },
+        "triagem": {
+            "sintoma_principal": "Dor nas costas intensa",
+            "modalidade_atendimento": "Particular",
+            "tipo_consulta": "Primeira consulta"
+        },
+        "agendamento": {
+            "preferencia_periodo": "tarde",
+            "opcao_horario_escolhida": "27/07/2026 13:40"
+        }
     }
 ]

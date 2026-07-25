@@ -7,7 +7,7 @@ load_dotenv(find_dotenv(), override=True)
 
 EVOLUTION_URL = os.getenv("EVOLUTION_API_URL")
 EVOLUTION_KEY = os.getenv("EVOLUTION_API_KEY")
-INSTANCE_NAME = os.getenv("EVOLUTION_INSTANCE")
+INSTANCE_NAME = os.getenv("EVOLUTION_INSTANCE_NAME")
 
 def testar_conexao():
     print(f"URL Lida: {EVOLUTION_URL}")

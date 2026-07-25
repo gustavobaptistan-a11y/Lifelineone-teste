@@ -1,13 +1,19 @@
-﻿import psycopg2
+﻿import logging
+
+import psycopg2
 from psycopg2.extras import RealDictCursor
+
 from app.config import settings
 
-DATABASE_URL = settings.DATABASE_URL
+logger = logging.getLogger(__name__)
+
 
 def obter_conexao():
-    if not DATABASE_URL:
+    database_url = settings.DATABASE_URL
+    if not database_url:
         raise RuntimeError("DATABASE_URL não configurada")
-    return psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
+    return psycopg2.connect(database_url, cursor_factory=RealDictCursor)
+
 
 def inicializar_banco():
     try:
@@ -20,16 +26,26 @@ def inicializar_banco():
                 atualizado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
         """)
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS agendamentos_confirmados (
+                id SERIAL PRIMARY KEY,
+                remote_jid VARCHAR(255) NOT NULL,
+                dados JSONB NOT NULL,
+                criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        """)
         conn.commit()
         cursor.close()
         conn.close()
-        print("[Banco de Dados] Tabela 'sessoes' verificada/criada com sucesso no PostgreSQL.")
+        logger.info("Tabela 'sessoes' verificada/criada com sucesso no PostgreSQL.")
     except Exception as e:
-        print(f"[Banco de Dados] Erro ao conectar ou inicializar o PostgreSQL: {e}")
+        logger.exception("Erro ao conectar ou inicializar o PostgreSQL: %s", e)
+
 
 # Função assíncrona para compatibilidade com o await do main.py
 async def connect_to_db():
     inicializar_banco()
+
 
 async def close_db_connection():
     pass

@@ -104,6 +104,9 @@ def _parse_event_datetime(event_time: dict | str) -> datetime:
 
 
 def _obter_eventos_calendario(inicio: datetime, fim: datetime) -> list[dict]:
+    if not calendar_service.enabled:
+        return []
+
     try:
         return calendar_service.listar_eventos(inicio, fim)
     except Exception:
@@ -127,8 +130,11 @@ async def _obter_horarios_disponiveis(periodo: str, limite: int = 3) -> list[dic
         return []
 
     timezone = ZoneInfo(clinic_schedule_config.calendar.timezone)
-    inicio_busca = datetime.now(timezone).replace(hour=0, minute=0, second=0, microsecond=0)
+    agora = datetime.now(timezone)
+    inicio_busca = agora.replace(hour=0, minute=0, second=0, microsecond=0)
     fim_busca = inicio_busca + timedelta(days=clinic_schedule_config.availability.search_days)
+    min_notice = timedelta(hours=clinic_schedule_config.appointment.minimum_notice_hours)
+    disponivel_a_partir = agora + min_notice
 
     opcoes = []
 
@@ -173,6 +179,9 @@ async def _obter_horarios_disponiveis(periodo: str, limite: int = 3) -> list[dic
             horario_atual = inicio_janela
 
             while horario_atual + duracao <= fim_janela:
+                if horario_atual < disponivel_a_partir:
+                    horario_atual += intervalo
+                    continue
                 if periodo == "manha" and horario_atual.hour >= 12:
                     break
                 if periodo == "tarde" and horario_atual.hour < 12:

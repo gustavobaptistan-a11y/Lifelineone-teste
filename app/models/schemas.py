@@ -30,11 +30,14 @@ class WebhookData(BaseModel):
 
     key: WebhookKey
     message: WebhookMessage
+    push_name: Optional[str] = Field(default=None, alias="pushName")
 
 
 class WebhookPayload(BaseModel):
     model_config = ConfigDict(extra="ignore")
 
+    event: Optional[str] = None
+    instance: Optional[str] = None
     data: WebhookData
 
 class DadosExtraidos(BaseModel):

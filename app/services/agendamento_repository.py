@@ -1,6 +1,15 @@
 import json
 import os
+import logging
 from datetime import datetime
+import asyncio
+
+from psycopg2.extras import Json
+
+from app.database import obter_conexao
+
+logger = logging.getLogger(__name__)
+
 
 class AgendamentoRepository:
     def __init__(self, arquivo_db="agendamentos_db.json"):
@@ -16,12 +25,6 @@ class AgendamentoRepository:
         """
         Salva o agendamento completo estruturado com todas as variáveis do fluxo.
         """
-        try:
-            with open(self.arquivo_db, "r", encoding="utf-8") as f:
-                lista = json.load(f)
-        except Exception:
-            lista = []
-
         # Mapeamento completo e padronizado do registro clínico
         registro_completo = {
             "id_agendamento": f"AG-{int(datetime.now().timestamp())}",
@@ -47,11 +50,32 @@ class AgendamentoRepository:
             }
         }
 
-        lista.append(registro_completo)
+        try:
+            conn = obter_conexao()
+            cursor = conn.cursor()
+            cursor.execute(
+                "INSERT INTO agendamentos_confirmados (remote_jid, dados) VALUES (%s, %s)",
+                (remote_jid, Json(registro_completo)),
+            )
+            conn.commit()
+            cursor.close()
+            conn.close()
+            logger.info(
+                "Agendamento salvo no Postgres: id=%s paciente=%s",
+                registro_completo["id_agendamento"],
+                registro_completo["paciente"]["nome_completo"],
+            )
+        except RuntimeError as exc:
+            logger.warning(
+                "Não há DATABASE_URL configurada. Agendamento confirmado não foi salvo no PostgreSQL: %s",
+                exc,
+            )
+        except Exception:
+            logger.exception("Falha ao persistir agendamento confirmado no PostgreSQL")
 
-        with open(self.arquivo_db, "w", encoding="utf-8") as f:
-            json.dump(lista, f, ensure_ascii=False, indent=4)
-        
-        print(f"💾 [BANCO DE DADOS] Agendamento estruturado de '{registro_completo['paciente']['nome_completo']}' salvo com ID: {registro_completo['id_agendamento']}")
+
+    async def salvar_agendamento_async(self, remote_jid: str, dados_sessao: dict):
+        return await asyncio.to_thread(self.salvar_agendamento, remote_jid, dados_sessao)
+
 
 agendamento_repository = AgendamentoRepository()

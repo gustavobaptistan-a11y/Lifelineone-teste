@@ -1,5 +1,10 @@
 ﻿import json
+import logging
+import asyncio
 from app.database import obter_conexao
+
+logger = logging.getLogger(__name__)
+
 
 def obter_sessao(remote_jid: str) -> dict:
     try:
@@ -18,8 +23,9 @@ def obter_sessao(remote_jid: str) -> dict:
         salvar_sessao(remote_jid, sessao_inicial)
         return sessao_inicial
     except Exception as e:
-        print(f"[Sessão] Erro ao obter sessão do Postgres: {e}")
+        logger.exception("Erro ao obter sessão do Postgres: %s", e)
         return {"estado": "inicio"}
+
 
 def salvar_sessao(remote_jid: str, dados_sessao: dict):
     try:
@@ -35,4 +41,12 @@ def salvar_sessao(remote_jid: str, dados_sessao: dict):
         cursor.close()
         conn.close()
     except Exception as e:
-        print(f"[Sessão] Erro ao salvar sessão no Postgres: {e}")
+        logger.exception("Erro ao salvar sessão no Postgres: %s", e)
+
+
+async def obter_sessao_async(remote_jid: str) -> dict:
+    return await asyncio.to_thread(obter_sessao, remote_jid)
+
+
+async def salvar_sessao_async(remote_jid: str, dados_sessao: dict):
+    return await asyncio.to_thread(salvar_sessao, remote_jid, dados_sessao)
