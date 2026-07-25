@@ -85,3 +85,12 @@ O fluxo de interação com o paciente é gerenciado por uma máquina de estados 
 - **Controle Centralizado vs. Liberdade do LLM**: Optou-se por um fluxo controlado pelo backend para garantir a conformidade com os requisitos e a previsibilidade do processo. O LLM é uma ferramenta de NLU (Natural Language Understanding), não um tomador de decisões de negócio.
 - **Persistência de Sessão com Fallback**: O uso de Redis para produção garante escalabilidade e persistência entre reinicializações do serviço, enquanto o fallback para um dicionário em memória simplifica o desenvolvimento e os testes locais.
 - **Health Check Detalhado**: O endpoint `/health` fornece um diagnóstico claro do estado do serviço, informando quais integrações estão ativas e se o sistema está pronto para operar em produção, o que é vital para depuração e monitoramento.
+
+## 10. Status Atual e Entregas da Versão
+
+- Redis passou a ser suportado como cache primário de sessão em `app/services/session_repository.py`.
+- Implementado fallback de sessão para PostgreSQL e, quando necessário, para memória local.
+- Atualizadas as variáveis de ambiente e a documentação para Redis em `.env.example`, `README.md` e `docs/06-integracoes.md` / `docs/08-api.md`.
+- Corrigido o comportamento do envio Evolution para retornar `envio.status = desabilitado` quando a funcionalidade estiver desligada.
+- Adicionados testes focados de sessão para o fluxo Redis/fallback em `tests/test_session_repository.py`.
+- Suite completa validada com `24 passed`.
