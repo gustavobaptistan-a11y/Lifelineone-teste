@@ -18,4 +18,4 @@ Usado atualmente para sessoes por meio de `psycopg2`.
 
 Usada nos simuladores de pacientes. Nao esta conectada ao fluxo principal.
 
-Redis, filas, OAuth e outros gateways nao foram encontrados no repositorio.
+O backend agora suporta persistência de sessão via Redis quando `REDIS_ENABLED=true`. Em produção, Redis é usado como cache primário de sessão com fallback para PostgreSQL e depois para memória local se ambos estiverem indisponíveis.

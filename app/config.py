@@ -7,6 +7,10 @@ class Settings(BaseSettings):
     EVOLUTION_INSTANCE_NAME: str = ""
     EVOLUTION_SEND_ENABLED: bool = False
     DATABASE_URL: str = ""
+    REDIS_ENABLED: bool = False
+    REDIS_URL: str = ""
+    REDIS_SESSION_PREFIX: str = "session:"
+    REDIS_SESSION_TTL_SECONDS: int = 86400
     WEBHOOK_SECRET: str = ""
     WEBHOOK_GLOBAL_ENABLED: bool = False
     WEBHOOK_GLOBAL_URL: str = ""
