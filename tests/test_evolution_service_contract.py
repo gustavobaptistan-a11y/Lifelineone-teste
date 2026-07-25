@@ -25,7 +25,8 @@ class FakeClient:
         return FakeResponse()
 
 
-def test_send_text_message_is_disabled_by_default():
+def test_send_text_message_is_disabled_by_default(monkeypatch):
+    monkeypatch.setattr(service_module.settings, "EVOLUTION_SEND_ENABLED", False)
     service = service_module.EvolutionService()
     result = asyncio.run(
         service.send_text_message("5511999999999@s.whatsapp.net", "Ola")

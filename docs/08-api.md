@@ -22,7 +22,7 @@ O endpoint consome payloads no formato abaixo:
 - Mensagens com `fromMe=true` sao ignoradas.
 - Mensagens sem texto retornam `status: ignorado`.
 - O estado da conversa e carregado da sessao existente via `remoteJid`.
-- A sessao e atualizada e salva em Redis/PostgreSQL conforme configurado.
+- A sessao e atualizada e salva no PostgreSQL via `app/services/session_repository.py`; a integracao com Redis e outros caches e prevista, mas ainda nao esta implementada.
 - Se o fluxo chegar em `concluido`, o agendamento e salvo no banco.
 - O sistema tenta enviar resposta usando EvolutionGO.
 

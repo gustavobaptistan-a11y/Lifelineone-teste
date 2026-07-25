@@ -4,7 +4,7 @@
 
 O cliente esta em `app/services/evolution_service.py`. Ele prepara envio de texto por HTTP e usa a chave da API no header `apikey`.
 
-A chamada e feita pelo router depois que a resposta e a sessao sao processadas. O envio e controlado por `EVOLUTION_SEND_ENABLED` e fica desabilitado por padrao para testes locais.
+A chamada e feita pelo router depois que a resposta e a sessao sao processadas. O envio e controlado por `EVOLUTION_SEND_ENABLED` e esta desabilitado por padrao para testes locais; quando desabilitado, o webhook retorna `envio.status = desabilitado` sem tentar a chamada HTTP externa.
 
 Para testar o envio real ao WhatsApp, configure `EVOLUTION_SEND_ENABLED=true` no `.env` e garanta que `EVOLUTION_API_KEY` e `EVOLUTION_INSTANCE_NAME` estejam definidos. Em seguida, execute o servidor local e poste um webhook para `/webhook`; o resultado da entrega aparece em `envio.status`.
 
