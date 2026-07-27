@@ -87,3 +87,15 @@ def test_webhook_endpoint_rejects_missing_webhook_secret(monkeypatch):
 
     assert response.status_code == 401
     assert response.json()["detail"] == "Webhook nao autorizado"
+
+
+def test_webhook_global_url_validation_logs_warning(monkeypatch, caplog):
+    from main import _validar_webhook_global_config
+
+    monkeypatch.setattr(settings, "WEBHOOK_GLOBAL_ENABLED", True)
+    monkeypatch.setattr(settings, "WEBHOOK_GLOBAL_URL", "https://example.com/not-webhook")
+
+    with caplog.at_level("WARNING"):
+        _validar_webhook_global_config()
+
+    assert "deve terminar com /webhook" in caplog.text

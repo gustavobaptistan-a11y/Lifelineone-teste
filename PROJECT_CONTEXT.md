@@ -15,7 +15,18 @@ O projeto é construído sobre uma arquitetura de microsserviço com os seguinte
 - **Gerenciamento de Sessão**: **Redis** é responsável por persistir o estado da conversa de cada paciente, com um fallback para um dicionário em memória para desenvolvimento local.
 - **Inteligência Artificial**: A biblioteca **LangChain** integra-se com um modelo de linguagem da **OpenAI** (como o GPT-4o-mini) para interpretar as respostas do usuário de forma estruturada.
 - **Comunicação WhatsApp**: A **Evolution API** atua como um gateway para enviar e receber mensagens do WhatsApp.
+- **Orquestração Local**: **Docker e Docker Compose** são utilizados para criar um ambiente de desenvolvimento local consistente e replicável, gerenciando todos os serviços.
 
+## 3. Ambiente de Desenvolvimento (Docker)
+
+Para executar o projeto localmente, utilize o Docker Compose. Ele irá configurar e conectar todos os serviços necessários.
+
+1.  **Pré-requisitos**: Ter Docker e Docker Compose instalados.
+2.  **Configuração**: Copie `.env.example` para `.env` e ajuste as variáveis, especialmente as URLs para apontarem para os serviços do Docker (ex: `DATABASE_URL="postgresql://user:password@db:5432/lifeline"`).
+3.  **Execução**: Rode o comando `docker-compose up --build` na raiz do projeto.
+4.  **Acesso**:
+    -   **API do Lifeline**: `http://localhost:8000`
+    -   **Evolution GO API**: `http://localhost:8080`
 ## 3. Fluxo Completo de Agendamento
 
 O fluxo de interação com o paciente é gerenciado por uma máquina de estados determinística no backend, seguindo uma ordem precisa:

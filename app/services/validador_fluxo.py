@@ -9,6 +9,7 @@ import asyncpg
 from app.config import settings
 from app.services.clinic_config import clinic_schedule_config
 from app.services.google_calendar_service import calendar_service
+from app.services.llm_service import llm_service
 from app.services import schedule_repository
 
 logger = logging.getLogger(__name__)
@@ -25,6 +26,8 @@ PALAVRAS_CHAVE_URGENCIA = [
     "emergência"
 ]
 
+SAUDACOES = {"ola", "olá", "oi", "bom dia", "boa tarde", "boa noite", "ei", "ola!", "oi!"}
+
 def verificar_urgencia(texto: str) -> bool:
     texto_lower = _normalizar_texto(texto)
     for termo in PALAVRAS_CHAVE_URGENCIA:
@@ -40,6 +43,26 @@ def _normalizar_texto(texto: str) -> str:
         if not unicodedata.combining(caractere)
     )
     return " ".join(texto_sem_acentos.lower().split())
+
+
+def _eh_saudacao(texto: str) -> bool:
+    txt = _normalizar_texto(texto)
+    return any(txt == s for s in SAUDACOES)
+
+
+def _eh_possivelmente_nome(texto: str) -> bool:
+    """Heurística simples para aceitar nomes: 2-4 palavras, sem palavras indicativas de ação."""
+    palavras = texto.strip().split()
+    if len(palavras) < 2 or len(palavras) > 4:
+        return False
+    texto_normalizado = _normalizar_texto(texto)
+    palavras_acao = {"quero", "agendar", "marcar", "consulta", "preciso", "ajuda"}
+    if any(p in texto_normalizado for p in palavras_acao):
+        return False
+    # evitar frases com pontuação que indicam sentença
+    if any(c in texto for c in ",.;:"):
+        return False
+    return True
 
 
 def _resposta_primeira_consulta(texto: str) -> bool | None:
@@ -212,6 +235,19 @@ def _formatar_opcoes_horario(opcoes: list[dict]) -> str:
     )
 
 
+def _extrair_payload_llm(estado_atual: str, texto_usuario: str) -> dict:
+    if not llm_service.enabled:
+        return {"dados_extraidos": {}, "urgente": False}
+
+    resultado = llm_service.extract_structured(estado_atual, texto_usuario)
+    if not isinstance(resultado, dict):
+        return {"dados_extraidos": {}, "urgente": False}
+
+    return {
+        "dados_extraidos": resultado.get("dados_extraidos", {}) or {},
+        "urgente": bool(resultado.get("urgente", False)),
+    }
+
 async def processar_fluxo_atendimento(estado_atual: str, texto_usuario: str, dados_sessao: dict) -> tuple:
     # 0. Interceptação crítica de urgência
     if verificar_urgencia(texto_usuario):
@@ -223,36 +259,74 @@ async def processar_fluxo_atendimento(estado_atual: str, texto_usuario: str, dad
         return resposta_emergencia, "urgencia_detectada", dados_sessao
 
     texto = texto_usuario.strip()
+    dados_llm = _extrair_payload_llm(estado_atual, texto)
+    if dados_llm.get("urgente"):
+        resposta_emergencia = (
+            "⚠️ **ATENÇÃO: Identificamos um possível caso de urgência médica.**\n\n"
+            "Por favor, procure o pronto-socorro mais próximo ou ligue imediatamente para o **SAMU (192)**. "
+            "Este canal automatizado não substitui o atendimento médico de emergência."
+        )
+        return resposta_emergencia, "urgencia_detectada", dados_sessao
+
+    dados_extraidos_llm = dados_llm.get("dados_extraidos", {}) or {}
     proximo_estado = estado_atual
 
     # Máquina de Estados da Jornada do Paciente
     if estado_atual == "inicio":
-        resposta = "Olá! Bem-vindo ao sistema de atendimento. Para começarmos, qual é o seu **nome completo**?"
+        resposta = "Olá! 👋 Bem-vindo ao atendimento da Lifeline. Para eu te localizar, qual é o seu nome completo, por favor?"
         proximo_estado = "aguardando_nome"
 
     elif estado_atual == "aguardando_nome":
-        if len(texto.split()) < 2:
-            return "Por favor, informe seu **nome completo** para continuarmos.", estado_atual, dados_sessao
-        dados_sessao["nome"] = texto
-        resposta = f"Obrigado, {texto}. Qual é o principal **sintoma ou motivo** da sua consulta?"
+        nome_extraido = dados_extraidos_llm.get("nome", "").strip()
+        nome = nome_extraido if nome_extraido else texto
+
+        if _eh_saudacao(nome) or not _eh_possivelmente_nome(nome):
+            return (
+                "Desculpe, não entendi — poderia informar seu nome completo (nome e sobrenome)?",
+                estado_atual,
+                dados_sessao,
+            )
+
+        dados_sessao["nome"] = nome
+        resposta = (
+            f"Obrigado, {nome}! Pra entender melhor, qual é o principal sintoma ou motivo da sua consulta?"
+        )
         proximo_estado = "aguardando_sintoma"
 
     elif estado_atual == "aguardando_sintoma":
-        if len(texto) < 3:
-            return "Pode descrever brevemente o **motivo ou sintoma** da consulta?", estado_atual, dados_sessao
-        dados_sessao["sintoma"] = texto
-        resposta = "Qual é o seu **convênio médico** (ou se prefere atendimento particular)?"
+        sintoma_extraido = dados_extraidos_llm.get("sintoma", "").strip()
+        sintoma = sintoma_extraido if sintoma_extraido else texto
+
+        if len(sintoma) < 3:
+            return (
+                "Poderia descrever brevemente o motivo ou sintoma? Uma frase é suficiente.",
+                estado_atual,
+                dados_sessao,
+            )
+        dados_sessao["sintoma"] = sintoma
+        resposta = (
+            "Entendi. Você irá pelo convênio ou prefere atendimento particular?"
+        )
         proximo_estado = "aguardando_convenio"
 
     elif estado_atual == "aguardando_convenio":
-        if not _resposta_convenio_valida(texto):
-            return "Informe se o atendimento será **particular** ou qual é o seu **convênio**.", estado_atual, dados_sessao
-        dados_sessao["convenio"] = texto
-        resposta = "Esta é a sua **primeira consulta** conosco? (Responda Sim ou Não)"
+        convenio_extraido = dados_extraidos_llm.get("convenio", "").strip()
+        convenio = convenio_extraido if convenio_extraido else texto
+
+        if not _resposta_convenio_valida(convenio):
+            return (
+                "Pode me dizer se é atendimento **particular** ou qual é o nome do seu **convênio**?",
+                estado_atual,
+                dados_sessao,
+            )
+        dados_sessao["convenio"] = convenio
+        resposta = "Perfeito. Esta é a sua primeira consulta conosco? (Responda Sim ou Não)"
         proximo_estado = "aguardando_primeira_consulta"
 
     elif estado_atual == "aguardando_primeira_consulta":
-        primeira_consulta = _resposta_primeira_consulta(texto)
+        primeira_consulta_extraida = dados_extraidos_llm.get("primeira_consulta", "").strip()
+        primeira_consulta_valor = primeira_consulta_extraida if primeira_consulta_extraida else texto
+        primeira_consulta = _resposta_primeira_consulta(primeira_consulta_valor)
         if primeira_consulta is None:
             return "Por favor, responda se é sua **primeira consulta** ou se é um **retorno**.", estado_atual, dados_sessao
         dados_sessao["primeira_consulta"] = primeira_consulta
@@ -260,9 +334,15 @@ async def processar_fluxo_atendimento(estado_atual: str, texto_usuario: str, dad
         proximo_estado = "aguardando_preferencia_horario"
 
     elif estado_atual == "aguardando_preferencia_horario":
-        periodo = _periodo_valido(texto)
+        periodo_extraido = dados_extraidos_llm.get("preferencia_periodo", "").strip()
+        periodo_texto = periodo_extraido if periodo_extraido else texto
+        periodo = _periodo_valido(periodo_texto)
         if periodo is None:
-            return "Informe sua preferência de período: **manhã** ou **tarde**.", estado_atual, dados_sessao
+            return (
+                "Qual período você prefere: **manhã** ou **tarde**?",
+                estado_atual,
+                dados_sessao,
+            )
 
         opcoes = await _obter_horarios_disponiveis(periodo)
         if not opcoes:
@@ -276,9 +356,9 @@ async def processar_fluxo_atendimento(estado_atual: str, texto_usuario: str, dad
         dados_sessao["preferencia_horario"] = periodo
         dados_sessao["opcoes_horario"] = opcoes
         resposta = (
-            f"Perfeito. Tenho os seguintes horários disponíveis para {periodo}:\n\n"
+            f"Ótimo — aqui estão as opções para {periodo}:\n\n"
             f"{_formatar_opcoes_horario(opcoes)}\n\n"
-            "Digite o número da opção desejada:"
+            "Por favor, digite o número da opção que prefere."
         )
         proximo_estado = "aguardando_horario"
 
@@ -291,16 +371,18 @@ async def processar_fluxo_atendimento(estado_atual: str, texto_usuario: str, dad
                 dados_sessao,
             )
 
+        escolha_extraida = dados_extraidos_llm.get("escolha", "").strip()
+        escolha_texto = escolha_extraida if escolha_extraida else texto
         escolha = None
         selected = None
-        if texto.isdigit():
-            escolha = int(texto)
+        if escolha_texto.isdigit():
+            escolha = int(escolha_texto)
             for opcao in opcoes_horario:
                 if opcao["opcao"] == escolha:
                     selected = opcao
                     break
         else:
-            texto_normalizado = _normalizar_texto(texto)
+            texto_normalizado = _normalizar_texto(escolha_texto)
             selected = next(
                 (
                     opcao
@@ -312,7 +394,7 @@ async def processar_fluxo_atendimento(estado_atual: str, texto_usuario: str, dad
 
         if selected is None:
             return (
-                "Escolha uma opção válida entre os horários apresentados.",
+                "Desculpe, não reconheci essa opção. Escolha um número válido entre os horários apresentados.",
                 estado_atual,
                 dados_sessao,
             )
@@ -361,9 +443,9 @@ async def processar_fluxo_atendimento(estado_atual: str, texto_usuario: str, dad
         convenio = dados_sessao.get("convenio", "Particular")
         horario = dados_sessao.get("horario", texto)
         resposta = (
-            f"✅ **Consulta Agendada com Sucesso!**\n\n"
-            f"Resumo:\n- Nome: {nome}\n- Convênio: {convenio}\n- Horário: {horario}\n\n"
-            "Te aguardamos na clínica!"
+            f"✅ Consulta confirmada!\n\n"
+            f"Resumo da sua reserva:\n- Nome: {nome}\n- Convênio: {convenio}\n- Horário: {horario}\n\n"
+            "Aguardamos você na clínica. Se precisar alterar, é só avisar."
         )
         proximo_estado = "concluido"
 

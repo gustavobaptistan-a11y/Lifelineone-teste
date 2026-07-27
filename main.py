@@ -10,7 +10,27 @@ logger = logging.getLogger(__name__)
 app = FastAPI(title="LifelineOne IA Bot", version="1.0.0")
 
 @app.on_event("startup")
+def _validar_webhook_global_config() -> None:
+    if settings.WEBHOOK_GLOBAL_ENABLED:
+        if not settings.WEBHOOK_GLOBAL_URL:
+            logger.error(
+                "WEBHOOK_GLOBAL_ENABLED=true, mas WEBHOOK_GLOBAL_URL não está configurada. "
+                "Configure a URL pública do webhook com o sufixo /webhook."
+            )
+        elif not settings.WEBHOOK_GLOBAL_URL.strip().endswith("/webhook"):
+            logger.warning(
+                "WEBHOOK_GLOBAL_URL deve terminar com /webhook. URL atual: %s",
+                settings.WEBHOOK_GLOBAL_URL,
+            )
+    elif settings.WEBHOOK_GLOBAL_URL:
+        logger.info(
+            "WEBHOOK_GLOBAL_URL está definida, mas WEBHOOK_GLOBAL_ENABLED=false. "
+            "Se você quer usar essa URL, habilite WEBHOOK_GLOBAL_ENABLED=true."
+        )
+
+
 async def startup_event():
+    _validar_webhook_global_config()
     # Diagnóstico: verificar se DATABASE_URL está configurada e logar instrução clara se ausente
     if not settings.DATABASE_URL:
         logger.error(

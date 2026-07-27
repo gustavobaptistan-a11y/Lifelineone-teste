@@ -1,10 +1,43 @@
 import asyncio
+from unittest.mock import MagicMock
 
+import app.services.validador_fluxo as validador_fluxo
 from app.services.validador_fluxo import processar_fluxo_atendimento, verificar_urgencia
 
 
 def processar(estado, texto, dados=None):
     return asyncio.run(processar_fluxo_atendimento(estado, texto, dados or {}))
+
+def test_fluxo_utiliza_dados_extraidos_do_llm(monkeypatch):
+    llm_stub = MagicMock()
+    llm_stub.enabled = True
+    llm_stub.extract_structured.return_value = {
+        "dados_extraidos": {"nome": "Maria Silva"},
+        "urgente": False,
+    }
+    monkeypatch.setattr(validador_fluxo, "llm_service", llm_stub)
+
+    resposta, estado, dados = processar("aguardando_nome", "Maria Silva")
+
+    assert estado == "aguardando_sintoma"
+    assert dados["nome"] == "Maria Silva"
+    llm_stub.extract_structured.assert_called_once_with("aguardando_nome", "Maria Silva")
+
+
+def test_fluxo_interrompe_por_urgencia_via_llm(monkeypatch):
+    llm_stub = MagicMock()
+    llm_stub.enabled = True
+    llm_stub.extract_structured.return_value = {
+        "dados_extraidos": {},
+        "urgente": True,
+    }
+    monkeypatch.setattr(validador_fluxo, "llm_service", llm_stub)
+
+    resposta, estado, dados = processar("aguardando_nome", "Estou sentindo dor no peito")
+
+    assert estado == "urgencia_detectada"
+    assert "SAMU" in resposta
+    assert dados == {}
 
 
 def test_urgencia_com_acentuacao_e_interceptada():
