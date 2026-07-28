@@ -5,8 +5,12 @@ import app.services.validador_fluxo as validador_fluxo
 from app.services.validador_fluxo import processar_fluxo_atendimento, verificar_urgencia
 
 
-def processar(estado, texto, dados=None):
-    return asyncio.run(processar_fluxo_atendimento(estado, texto, dados or {}))
+def processar(estado, texto, dados=None, remote_jid=None):
+    return asyncio.run(processar_fluxo_atendimento(estado, texto, dados or {}, remote_jid=remote_jid))
+
+async def processar_async(estado, texto, dados=None, remote_jid=None):
+    return await processar_fluxo_atendimento(estado, texto, dados or {}, remote_jid=remote_jid)
+
 
 def test_fluxo_utiliza_dados_extraidos_do_llm(monkeypatch):
     llm_stub = MagicMock()
@@ -70,6 +74,34 @@ def test_fluxo_valido_coleta_preferencia_antes_do_horario():
     assert dados["preferencia_horario"] == "manha"
     assert dados["primeira_consulta"] is True
     assert dados["convenio"] == "Unimed"
+
+
+def test_paciente_cadastrado_saudacao_avanca_para_sintoma(monkeypatch):
+    agendamento_stub = {
+        "paciente": {"nome_completo": "Maria Silva"},
+    }
+    async def buscar_ultimo_agendamento_confirmado_async(remote_jid):
+        return agendamento_stub
+
+    monkeypatch.setattr(
+        validador_fluxo.agendamento_repository,
+        "buscar_ultimo_agendamento_confirmado_async",
+        buscar_ultimo_agendamento_confirmado_async,
+    )
+
+    resposta, estado, dados = asyncio.run(
+        processar_fluxo_atendimento(
+            "inicio",
+            "Olá",
+            {},
+            remote_jid="5511999999999@c.us",
+        )
+    )
+
+    assert estado == "aguardando_sintoma"
+    assert "Olá Maria Silva" in resposta
+    assert dados["nome"] == "Maria Silva"
+    assert dados["paciente_cadastrado"] is True
 
 
 def test_nome_incompleto_nao_avanca():
