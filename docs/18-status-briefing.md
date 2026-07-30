@@ -29,7 +29,8 @@ Ainda nao deve ser considerado entrega final do briefing enquanto nao houver val
 | Persistir agendamento em PostgreSQL | Pronto parcial | `app/services/agendamento_repository.py`, `schedule_repository.py` | Persistencia existe; falta validar concorrencia e schema real em producao. |
 | Reserva atomica de horario | Pronto parcial | `schedule_repository.reserve_slot()` | Usa `WHERE status = 'disponivel'`; falta teste forte de concorrencia. |
 | Google Calendar | Extra/parcial | `app/services/google_calendar_service.py` | Nao e requisito central do briefing, mas agrega. Precisa evitar OAuth interativo em producao. |
-| Deploy em producao | Pendente | `docs/10-deploy.md` | Infra externa; falta evidencia de URL publica e health check. |
+| Health check para deploy | Pronto | `GET /health`, `tests/test_health.py` | Endpoint retorna apenas flags booleanas e nao expoe segredos. |
+| Deploy em producao | Pendente | `docs/10-deploy.md` | Infra externa; falta evidencia de URL publica. |
 | Teste real WhatsApp | Pendente | `README.md` | Checklist ainda nao marcado. |
 | Demonstracao final | Pendente | Briefing | Depende de deploy e teste real. |
 
@@ -43,7 +44,6 @@ Ainda nao deve ser considerado entrega final do briefing enquanto nao houver val
 ## Proxima sequencia segura
 
 1. Estabilizar testes para rodarem sem `.env` real e sem chamadas externas.
-2. Adicionar `/health` sem expor segredos.
-3. Definir com o CTO o canal real do alerta humano de urgencia.
-4. Validar E2E local com mocks.
-5. Validar WhatsApp real e deploy publico.
+2. Definir com o CTO o canal real do alerta humano de urgencia.
+3. Validar E2E local com mocks.
+4. Validar WhatsApp real e deploy publico.
