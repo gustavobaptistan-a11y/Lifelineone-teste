@@ -24,3 +24,46 @@ def test_init_and_close_db_pool(monkeypatch):
     assert created.get('created')
     asyncio.run(db_async.close_db_pool())
     assert created.get('closed')
+
+
+def test_inicializar_banco_cria_tabela_agendamentos(monkeypatch):
+    executed_queries = []
+    committed = []
+    closed = []
+
+    class DummyCursor:
+        def execute(self, query, params=None):
+            executed_queries.append(query)
+
+        def close(self):
+            pass
+
+    class DummyConnection:
+        def __init__(self, cursor):
+            self._cursor = cursor
+
+        def cursor(self):
+            return self._cursor
+
+        def commit(self):
+            committed.append(True)
+
+        def close(self):
+            closed.append(True)
+
+    cursor = DummyCursor()
+    conn = DummyConnection(cursor)
+
+    def fake_obter_conexao():
+        return conn
+
+    import app.database as database
+    monkeypatch.setattr(database, 'obter_conexao', fake_obter_conexao)
+
+    database.inicializar_banco()
+
+    assert any(
+        "CREATE TABLE IF NOT EXISTS agendamentos" in query
+        for query in executed_queries
+    )
+    assert committed

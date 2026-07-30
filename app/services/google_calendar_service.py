@@ -1,4 +1,4 @@
-import logging
+﻿import logging
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -26,11 +26,30 @@ class GoogleCalendarService:
                 f"Credencial Google nao encontrada: {self.credentials_file}"
             )
 
+        import json
         from google.auth.transport.requests import Request
         from google.oauth2.credentials import Credentials
         from google_auth_oauthlib.flow import InstalledAppFlow
         from googleapiclient.discovery import build
 
+        # Detect if provided credentials file is a service account
+        try:
+            raw = self.credentials_file.read_text(encoding="utf-8")
+            parsed = json.loads(raw)
+        except Exception:
+            parsed = {}
+
+        # If it's a service account key, use service account credentials (suitable for servers)
+        if parsed.get("type") == "service_account":
+            from google.oauth2 import service_account
+
+            credentials = service_account.Credentials.from_service_account_file(
+                str(self.credentials_file), scopes=SCOPES
+            )
+            self._service = build("calendar", "v3", credentials=credentials)
+            return self._service
+
+        # Fallback to user OAuth flow (installed app)
         credentials = None
         if self.token_file.exists():
             credentials = Credentials.from_authorized_user_file(
@@ -39,12 +58,22 @@ class GoogleCalendarService:
         if credentials and credentials.expired and credentials.refresh_token:
             credentials.refresh(Request())
         if not credentials or not credentials.valid:
+            if not settings.GOOGLE_CALENDAR_ALLOW_LOCAL_AUTH:
+                raise RuntimeError(
+                    "Autorizacao OAuth local do Google Calendar desabilitada. "
+                    "Use service account em producao ou habilite GOOGLE_CALENDAR_ALLOW_LOCAL_AUTH=true apenas localmente."
+                )
             flow = InstalledAppFlow.from_client_secrets_file(
                 str(self.credentials_file), SCOPES
             )
             credentials = flow.run_local_server(port=0)
         self.token_file.parent.mkdir(parents=True, exist_ok=True)
-        self.token_file.write_text(credentials.to_json(), encoding="utf-8")
+        # persist token for subsequent runs
+        try:
+            self.token_file.write_text(credentials.to_json(), encoding="utf-8")
+        except Exception:
+            # ignore write failures in restricted environments
+            pass
         self._service = build("calendar", "v3", credentials=credentials)
         return self._service
 

@@ -1,4 +1,4 @@
-from pydantic_settings import BaseSettings, SettingsConfigDict
+﻿from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     OPENAI_API_KEY: str = ""
@@ -19,6 +19,7 @@ class Settings(BaseSettings):
     GOOGLE_CALENDAR_ID: str = "primary"
     GOOGLE_CREDENTIALS_FILE: str = "app/config/credentials.json.json"
     GOOGLE_TOKEN_FILE: str = "app/config/token.json"
+    GOOGLE_CALENDAR_ALLOW_LOCAL_AUTH: bool = False
 
     model_config = SettingsConfigDict(
         env_file=".env",

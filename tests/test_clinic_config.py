@@ -1,4 +1,4 @@
-from pathlib import Path
+﻿from pathlib import Path
 
 import pytest
 
@@ -6,6 +6,7 @@ from app.services.clinic_config import load_clinic_config
 
 
 CONFIG_PATH = Path(__file__).parents[1] / "config" / "clinic.yaml"
+ARTIFACTS_DIR = Path(__file__).parents[1] / ".test_artifacts" / "clinic_config"
 
 
 def test_configuracao_padrao_da_clinica():
@@ -22,8 +23,9 @@ def test_configuracao_padrao_da_clinica():
     assert config.availability.weekly_hours["sunday"] == []
 
 
-def test_configuracao_rejeita_janela_invertida(tmp_path):
-    config_path = tmp_path / "clinic.yaml"
+def test_configuracao_rejeita_janela_invertida():
+    ARTIFACTS_DIR.mkdir(parents=True, exist_ok=True)
+    config_path = ARTIFACTS_DIR / "clinic_invertida.yaml"
     config_path.write_text(
         """
 calendar:

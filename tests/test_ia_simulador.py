@@ -1,124 +1,116 @@
-﻿import requests
+﻿import asyncio
 import time
-import asyncio
+
 import asyncpg
+import pytest
+import requests
 from openai import OpenAI
+
 from app.config import settings
 
+
 URL = "http://127.0.0.1:8000/webhook"
+
+if not settings.OPENAI_API_KEY:
+    pytest.skip("Simulador externo requer OPENAI_API_KEY", allow_module_level=True)
+
 client = OpenAI(api_key=settings.OPENAI_API_KEY)
 
-# Personas que a IA Simuladora vai adotar para testar o bot
 personas_teste = [
     {
         "id": "pacq_01",
-        "objetivo": "Marcar uma consulta particular. Seu nome é Beatriz Lima, está com dor lombar há 2 dias, primeira consulta, prefere período da tarde.",
-        "tipo": "fluxo_normal"
+        "objetivo": "Marcar uma consulta particular. Seu nome e Beatriz Lima, esta com dor lombar ha 2 dias, primeira consulta, prefere periodo da tarde.",
+        "tipo": "fluxo_normal",
     },
     {
         "id": "pacq_02",
-        "objetivo": "Testar urgência. Diga que está sentindo uma forte dor no peito e falta de ar repentina.",
-        "tipo": "urgencia"
-    }
+        "objetivo": "Testar urgencia. Diga que esta sentindo uma forte dor no peito e falta de ar repentina.",
+        "tipo": "urgencia",
+    },
 ]
 
+
 def simular_resposta_paciente(historico_conversa: list, objetivo_persona: str) -> str:
-    """Usa uma IA para gerar a próxima resposta realista do paciente com base no histórico."""
-    prompt_sistema = f"""Você está testando um chatbot de atendimento médico (LifelineOne).
+    prompt_sistema = f"""Voce esta testando um chatbot de atendimento medico (LifelineOne).
 Seu objetivo/persona: {objetivo_persona}
-Responda de forma natural, humana e direta, simulando um paciente real no WhatsApp. 
-Não invente explicações longas, apenas responda o que a assistente do bot está pedindo passo a passo (como seu nome, sintoma, convênio, etc.).
-Retorne APENAS o texto da mensagem que você enviará como paciente."""
+Responda de forma natural, humana e direta, simulando um paciente real no WhatsApp.
+Nao invente explicacoes longas, apenas responda o que a assistente do bot esta pedindo passo a passo.
+Retorne APENAS o texto da mensagem que voce enviara como paciente."""
 
     mensagens = [{"role": "system", "content": prompt_sistema}]
-    for h in historico_conversa:
-        mensagens.append({"role": "user" if h["autor"] == "bot" else "assistant", "content": h["texto"]})
+    for item in historico_conversa:
+        role = "user" if item["autor"] == "bot" else "assistant"
+        mensagens.append({"role": role, "content": item["texto"]})
 
     resposta = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=mensagens,
         temperature=0.7,
-        max_tokens=60
+        max_tokens=60,
     )
     return resposta.choices[0].message.content.strip()
 
+
 async def verificar_banco_pos_teste():
-    print("\n" + "="*50)
-    print("📊 VERIFICAÇÃO DE PERSISTÊNCIA NO BANCO (SUPABASE)")
-    print("="*50)
+    if not settings.DATABASE_URL:
+        print("DATABASE_URL ausente; verificacao de banco ignorada.")
+        return
+
     try:
         conn = await asyncpg.connect(settings.DATABASE_URL)
-        rows = await conn.fetch("SELECT id, status, paciente FROM agendamentos WHERE status = 'reservado';")
-        if rows:
-            print(f"✅ SUCESSO! Agendamentos salvos no banco:")
-            for r in rows:
-                print(f"   - Slot ID: {r['id']} | Status: {r['status']} | Paciente: {r['paciente']}")
-        else:
-            print("⚠️ Nenhum agendamento 'reservado' encontrado.")
+        rows = await conn.fetch(
+            "SELECT id, status, paciente FROM agendamentos WHERE status = 'reservado';"
+        )
+        for row in rows:
+            print(f"Slot ID: {row['id']} | Status: {row['status']} | Paciente: {row['paciente']}")
         await conn.close()
-    except Exception as e:
-        print(f"❌ Erro ao conectar no PostgreSQL: {e}")
+    except Exception as exc:
+        print(f"Erro ao conectar no PostgreSQL: {exc}")
+
 
 def rodar_testes_com_ia_paciente():
-    print("🚀 Iniciando testes em massa com IA Simuladora de Pacientes...\n")
-    
     for persona in personas_teste:
-        print(f"--------------------------------------------------")
-        print(f"🤖 [Iniciando Teste] Persona ID: {persona['id']} | Tipo: {persona['tipo']}")
-        print(f"🎯 Objetivo: {persona['objetivo']}")
-        print(f"--------------------------------------------------")
-        
         jid = f"5561888{persona['id'][-3:]}@s.whatsapp.net"
         historico = []
         estado_atual = "inicio"
-        
-        # Roda a conversação em turnos (máximo de 8 interações por paciente)
+
         for turno in range(1, 9):
-            if estado_atual == "finalizado":
-                print(f"🏁 Fluxo concluído com sucesso para {persona['id']}!\n")
+            if estado_atual in {"finalizado", "concluido"}:
                 break
-                
-            # A IA do Paciente gera a mensagem com base na conversa
+
             if turno == 1:
-                mensagem_usuario = "Olá, bom dia! Gostaria de agendar um atendimento." if persona['tipo'] == "fluxo_normal" else "Socorro, estou sentindo uma dor no peito muito forte e falta de ar!"
+                mensagem_usuario = (
+                    "Ola, bom dia! Gostaria de agendar um atendimento."
+                    if persona["tipo"] == "fluxo_normal"
+                    else "Socorro, estou sentindo uma dor no peito muito forte e falta de ar!"
+                )
             else:
-                mensagem_usuario = simular_resposta_paciente(historico, persona['objetivo'])
-                
+                mensagem_usuario = simular_resposta_paciente(historico, persona["objetivo"])
+
             historico.append({"autor": "usuario", "texto": mensagem_usuario})
-            
-            # Envia para o Webhook do Bot
             payload = {
                 "data": {
                     "key": {"remoteJid": jid, "fromMe": False},
-                    "message": {"conversation": mensagem_usuario}
+                    "message": {"conversation": mensagem_usuario},
                 }
             }
-            
+
             try:
-                resp = requests.post(URL, json=payload, timeout=10)
-                if resp.status_code == 200:
-                    data = resp.json()
-                    resposta_bot = data.get('resposta_enviada', '')
-                    estado_atual = data.get('estado_final', '')
-                    
-                    print(f"  [Turno {turno}] 👤 Paciente IA: '{mensagem_usuario}'")
-                    print(f"           🤖 Bot Lifeline: '{resposta_bot[:90]}...'")
-                    print(f"           📍 Estado Atual: {estado_atual}\n")
-                    
-                    historico.append({"autor": "bot", "texto": resposta_bot})
-                    
-                    # Se caiu em urgência, encerra o teste desta persona com sucesso de segurança
-                    if "pronto-socorro" in resposta_bot.lower() or "samu" in resposta_bot.lower():
-                        print(f"🚨 Protocolo de Urgência acionado perfeitamente para {persona['id']}!\n")
-                        break
-                else:
-                    print(f"  [Turno {turno}] 🔴 Erro HTTP {resp.status_code}")
+                response = requests.post(URL, json=payload, timeout=10)
+                if response.status_code != 200:
                     break
-            except Exception as e:
-                print(f"  [Turno {turno}] ❌ Erro de conexão: {e}")
+                data = response.json()
+                resposta_bot = data.get("resposta_enviada", "")
+                estado_atual = data.get("estado_final", "")
+                historico.append({"autor": "bot", "texto": resposta_bot})
+                if "pronto-socorro" in resposta_bot.lower() or "samu" in resposta_bot.lower():
+                    break
+            except Exception as exc:
+                print(f"Erro de conexao: {exc}")
                 break
-                
+
             time.sleep(0.5)
+
 
 if __name__ == "__main__":
     rodar_testes_com_ia_paciente()

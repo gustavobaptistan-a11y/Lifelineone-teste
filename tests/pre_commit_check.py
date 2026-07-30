@@ -17,7 +17,7 @@ except Exception:
     pass
 
 # Varredura por chaves expostas no código
-padroes_proibidos = ["1dcd4e3bc", "sk-proj-"]
+padroes_proibidos = ["sk-proj-", "GOCSPX-", "BEGIN PRIVATE KEY", "GOOGLE_CLIENT_SECRET="]
 suspeitas = 0
 
 for root, dirs, files in os.walk("."):

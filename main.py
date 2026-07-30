@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+﻿from fastapi import FastAPI
 from app.database import connect_to_db, close_db_connection
 from app.routers import webhook
 from app import database_async
@@ -55,6 +55,39 @@ async def shutdown_event():
 
 # Registra as rotas modularizadas
 app.include_router(webhook.router)
+
+from app.routers.dashboard import router as dashboard_router
+from app.routers.admin import router as admin_router
+
+app.include_router(dashboard_router)
+app.include_router(admin_router)
+
+
+@app.get("/health")
+def health():
+    evolution_configured = bool(settings.EVOLUTION_API_URL and settings.EVOLUTION_API_KEY and settings.EVOLUTION_INSTANCE_NAME)
+    calendar_credentials_configured = bool(settings.GOOGLE_CREDENTIALS_FILE or settings.GOOGLE_TOKEN_FILE)
+    return {
+        "status": "ok",
+        "service": "lifeline-bot",
+        "integrations": {
+            "database": {"configured": bool(settings.DATABASE_URL)},
+            "redis": {
+                "enabled": settings.REDIS_ENABLED,
+                "configured": bool(settings.REDIS_URL),
+            },
+            "evolution": {
+                "send_enabled": settings.EVOLUTION_SEND_ENABLED,
+                "configured": evolution_configured,
+            },
+            "openai": {"configured": bool(settings.OPENAI_API_KEY)},
+            "google_calendar": {
+                "enabled": settings.GOOGLE_CALENDAR_ENABLED,
+                "credentials_configured": calendar_credentials_configured,
+                "local_oauth_allowed": settings.GOOGLE_CALENDAR_ALLOW_LOCAL_AUTH,
+            },
+        },
+    }
 
 @app.get("/")
 def home():

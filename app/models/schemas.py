@@ -7,6 +7,7 @@ class WebhookKey(BaseModel):
 
     remote_jid: str = Field(alias="remoteJid", min_length=1)
     from_me: bool = Field(default=False, alias="fromMe")
+    id: Optional[str] = Field(default=None, alias="id")
 
 
 class ExtendedTextMessage(BaseModel):

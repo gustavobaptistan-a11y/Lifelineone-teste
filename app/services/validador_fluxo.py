@@ -161,6 +161,7 @@ def _obter_eventos_calendario(inicio: datetime, fim: datetime) -> list[dict]:
         logger.warning(
             "Não foi possível obter eventos do Google Calendar; usando disponibilidade local"
         )
+        calendar_service.enabled = False
         return []
 
 

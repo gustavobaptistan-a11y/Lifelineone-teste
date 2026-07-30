@@ -1,4 +1,6 @@
-﻿import logging
+﻿import inspect
+import logging
+import uuid
 
 from fastapi import APIRouter, Header, HTTPException
 from app.config import settings
@@ -10,6 +12,29 @@ from app.services import session_repository
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
+
+async def _salvar_sessao_compat(remote_jid: str, dados_sessao: dict, conversation_id: str | None) -> None:
+    salvar = session_repository.salvar_sessao_async
+    try:
+        signature = inspect.signature(salvar)
+    except (TypeError, ValueError):
+        await salvar(remote_jid, dados_sessao, conversation_id)
+        return
+
+    params = signature.parameters.values()
+    supports_varargs = any(param.kind == inspect.Parameter.VAR_POSITIONAL for param in params)
+    supports_conversation_id = "conversation_id" in signature.parameters
+    positional_params = [
+        param
+        for param in signature.parameters.values()
+        if param.kind in (inspect.Parameter.POSITIONAL_ONLY, inspect.Parameter.POSITIONAL_OR_KEYWORD)
+    ]
+
+    if supports_varargs or supports_conversation_id or len(positional_params) >= 3:
+        await salvar(remote_jid, dados_sessao, conversation_id)
+    else:
+        await salvar(remote_jid, dados_sessao)
+
 
 @router.post("/webhook")
 async def receber_webhook(
@@ -59,15 +84,19 @@ async def receber_webhook(
         if not texto_usuario:
             return {"status": "ignorado", "motivo": "mensagem sem texto ou formato incompatível"}
 
+        message_id = data.key.id or str(uuid.uuid4())
         dados_sessao = await session_repository.obter_sessao_async(remote_jid)
+        conversation_id = dados_sessao.get("conversation_id") or message_id
         estado_atual = dados_sessao.get("estado", "inicio")
 
         resposta, proximo_estado, dados_atualizados = await processar_fluxo_atendimento(
-            estado_atual, texto_usuario, dados_sessao
+            estado_atual, texto_usuario, dados_sessao, remote_jid
         )
 
         dados_atualizados["estado"] = proximo_estado
-        await session_repository.salvar_sessao_async(remote_jid, dados_atualizados)
+        dados_atualizados["conversation_id"] = conversation_id
+        dados_atualizados["last_message_id"] = message_id
+        await _salvar_sessao_compat(remote_jid, dados_atualizados, None)
 
         if proximo_estado == "concluido":
             await agendamento_repository.salvar_agendamento_async(remote_jid, dados_atualizados)

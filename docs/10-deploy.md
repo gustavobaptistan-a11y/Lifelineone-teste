@@ -1,4 +1,4 @@
-# Deploy
+﻿# Deploy
 
 Este repositorio nao inclui infraestrutura versionada de deploy (Docker, CI/CD ou provedor), pois a camada de infraestrutura e administrada externamente.
 
@@ -23,6 +23,7 @@ uvicorn main:app --reload --host 0.0.0.0 --port 8000
 - `EVOLUTION_INSTANCE_NAME` (necessario se `EVOLUTION_SEND_ENABLED=true`)
 - `EVOLUTION_SEND_ENABLED` (opcional, false por padrao para testes locais; ative em producao apenas quando quiser envio externo de mensagens)
 - `WEBHOOK_SECRET` (opcional, recomendado)
+- `GOOGLE_CALENDAR_ALLOW_LOCAL_AUTH` (opcional, false por padrao; habilite apenas em desenvolvimento local quando precisar abrir OAuth no navegador)
 
 ## URL publica do webhook
 
@@ -34,7 +35,7 @@ O EvolutionGO deve enviar eventos para a URL publica configurada em `WEBHOOK_GLO
 
 ## Health check
 
-Ainda nao ha endpoint de health check versionado. Recomenda-se adicionar um endpoint simples de disponibilidade no futuro.
+A aplicacao expoe `GET /health` com status e flags booleanas de integracoes. O endpoint nao revela chaves, URLs de banco, tokens ou outros segredos.
 
 ## Estrategia de logs
 

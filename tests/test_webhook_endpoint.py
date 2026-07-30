@@ -41,7 +41,7 @@ class FakeAsyncClient:
         return FakeEvolutionResponse()
 
 
-async def fake_obter_sessao_async(remote_jid: str):
+async def fake_obter_sessao_async(remote_jid: str, conversation_id: str | None = None):
     return {"estado": "inicio"}
 
 
@@ -74,6 +74,35 @@ def test_webhook_endpoint_accepts_valid_webhook_secret(monkeypatch):
     data = response.json()
     assert data["status"] in {"sucesso", "ignorado"}
     assert data["envio"]["status"] in {"desabilitado", "enviado"}
+
+
+def test_webhook_endpoint_stores_conversation_id(monkeypatch):
+    client = TestClient(app)
+    payload = make_evolution_payload("5561999990003@s.whatsapp.net")
+    payload["data"]["key"]["id"] = "TEST_CONVERSATION_ID"
+
+    saved_data = {}
+
+    async def fake_salvar_sessao_capture(remote_jid: str, dados_sessao: dict):
+        saved_data["remote_jid"] = remote_jid
+        saved_data["dados_sessao"] = dados_sessao
+
+    monkeypatch.setattr("app.services.evolution_service.httpx.AsyncClient", FakeAsyncClient)
+    monkeypatch.setattr("app.services.session_repository.obter_sessao_async", fake_obter_sessao_async)
+    monkeypatch.setattr("app.services.session_repository.salvar_sessao_async", fake_salvar_sessao_capture)
+    import app.services.agendamento_repository as agendamento_module
+    monkeypatch.setattr(agendamento_module.agendamento_repository, "salvar_agendamento_async", fake_salvar_agendamento_async)
+    monkeypatch.setattr(settings, "WEBHOOK_SECRET", "test-secret")
+
+    response = client.post(
+        "/webhook",
+        json=payload,
+        headers={"X-Webhook-Secret": "test-secret"},
+    )
+
+    assert response.status_code == 200
+    assert saved_data["dados_sessao"]["conversation_id"] == "TEST_CONVERSATION_ID"
+    assert saved_data["remote_jid"] == "5561999990003@s.whatsapp.net"
 
 
 def test_webhook_endpoint_rejects_missing_webhook_secret(monkeypatch):

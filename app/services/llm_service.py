@@ -122,6 +122,8 @@ class LLMService:
             return parsed
         except Exception:
             logger.exception("Erro ao extrair dados estruturados com LLM")
+            self.enabled = False
+            self._client = None
             return {"dados_extraidos": {}, "urgente": False}
 
 llm_service = LLMService()

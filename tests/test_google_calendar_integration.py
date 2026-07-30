@@ -37,5 +37,6 @@ def test_cria_evento_no_google_calendar_com_mock(monkeypatch):
 
         assert proximo_estado == "concluido"
         criar_evento_mock.assert_called_once()
-        assert "Consulta Agendada" in resposta
+        assert "Seu agendamento foi confirmado" in resposta
+        assert "Connect Tower" in resposta
         assert dados_atualizados["horario"] == "25/07/2026 09:00"

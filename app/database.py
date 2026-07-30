@@ -34,6 +34,15 @@ def inicializar_banco():
                 criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
         """)
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS agendamentos (
+                id SERIAL PRIMARY KEY,
+                horario TIMESTAMP NOT NULL,
+                status VARCHAR(50) NOT NULL DEFAULT 'disponivel',
+                paciente TEXT,
+                criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        """)
         conn.commit()
         cursor.close()
         conn.close()
