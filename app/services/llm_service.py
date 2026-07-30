@@ -1,72 +1,110 @@
 import json
 import logging
+from typing import Any
 
 from app.config import settings
 
 try:
-    from openai import OpenAI
+    from openai import OpenAI as OpenAIClient
 except Exception:  # pragma: no cover
-    OpenAI = None
+    OpenAIClient = None  # type: ignore[assignment]
 
 logger = logging.getLogger(__name__)
 
 SYSTEM_PROMPT = (
-    "Você é um assistente de interpretação interno que ajuda a extrair informações estruturadas das respostas do paciente. "
-    "Para cada mensagem do paciente, responda apenas com um JSON válido contendo as chaves abaixo." 
-    "Não inclua explicações, comentários ou texto fora do JSON."
+    "Voce e um assistente interno de interpretacao que ajuda a extrair "
+    "informacoes estruturadas das respostas do paciente. Para cada mensagem "
+    "do paciente, responda apenas com um JSON valido contendo as chaves "
+    "abaixo. Nao inclua explicacoes, comentarios ou texto fora do JSON."
 )
 
+
 class LLMService:
-    def __init__(self):
+    def __init__(self) -> None:
         self.enabled = bool(settings.OPENAI_API_KEY)
         self.model = "gpt-4o-mini"
-        self._client = None
+        self._client: Any = None
 
-        if self.enabled and OpenAI is not None:
+        if self.enabled and OpenAIClient is not None:
             try:
-                self._client = OpenAI(api_key=settings.OPENAI_API_KEY)
+                self._client = OpenAIClient(api_key=settings.OPENAI_API_KEY)
             except Exception:
                 logger.exception("Falha ao inicializar o cliente OpenAI")
                 self.enabled = False
         elif self.enabled:
-            logger.warning("OpenAI não está disponível; LLM desabilitado.")
+            logger.warning("OpenAI nao esta disponivel; LLM desabilitado.")
             self.enabled = False
 
     def verificar_urgencia(self, texto_usuario: str) -> bool:
-        """
-        Verificação local simulada baseada em palavras-chave de urgência.
-        """
+        """Verificacao local baseada em palavras-chave de urgencia."""
         texto = texto_usuario.lower()
-        palavras_urgentes = ["socorro", "emergência", "dor no peito", "falta de ar", "desmaio", "sangramento"]
-        return any(p in texto for p in palavras_urgentes)
+        palavras_urgentes = [
+            "socorro",
+            "emergencia",
+            "dor no peito",
+            "falta de ar",
+            "desmaio",
+            "sangramento",
+        ]
+        return any(palavra in texto for palavra in palavras_urgentes)
 
-    def gerar_resposta_contextual(self, estado_atual: str, texto_usuario: str, historico: list = None) -> str:
-        """
-        Gera respostas imaginárias e contextuais baseadas puramente no estado atual.
-        """
+    def gerar_resposta_contextual(
+        self,
+        estado_atual: str,
+        texto_usuario: str,
+        historico: list | None = None,
+    ) -> str:
+        """Gera respostas mockadas para testes locais e fallback."""
         respostas_mock = {
-            "inicio": "Olá! Seja muito bem-vindo(a) à Clínica Lifeline. Para começarmos o seu atendimento, qual é o seu nome completo?",
-            "coletar_name": f"Obrigado pelas informações. Poderia me descrever qual é o seu principal sintoma ou o motivo da sua consulta?",
-            "coletar_sintoma": "Compreendo perfeitamente. O atendimento será na modalidade Particular ou por Convênio?",
-            "coletar_convenio": "Perfeito. É a sua primeira consulta com o nosso especialista ou trata-se de um retorno?",
-            "coletar_primeira_consulta": "Entendido. Qual período do dia você prefere para o atendimento? (Manhã ou Tarde)",
-            "coletar_horario_preferencia": (
-                "📋 **Horários disponíveis:**\n"
-                "1️⃣ Amanhã às 09:00\n"
-                "2️⃣ Amanhã às 14:30\n"
-                "3️⃣ Depois de amanhã às 10:00\n\n"
-                "Digite o número da opção desejada:"
+            "inicio": (
+                "Ola! Seja muito bem-vindo(a) a Clinica Lifeline. Para "
+                "comecarmos o seu atendimento, qual e o seu nome completo?"
             ),
-            "finalizado": "✅ **Consulta agendada com sucesso!** Enviamos os detalhes para você. Esperamos sua visita!"
+            "coletar_name": (
+                "Obrigado pelas informacoes. Poderia me descrever qual e o "
+                "seu principal sintoma ou o motivo da sua consulta?"
+            ),
+            "coletar_sintoma": (
+                "Compreendo perfeitamente. O atendimento sera na modalidade "
+                "particular ou por convenio?"
+            ),
+            "coletar_convenio": (
+                "Perfeito. E a sua primeira consulta com o nosso especialista "
+                "ou trata-se de um retorno?"
+            ),
+            "coletar_primeira_consulta": (
+                "Entendido. Qual periodo do dia voce prefere para o "
+                "atendimento? Manha ou tarde?"
+            ),
+            "coletar_horario_preferencia": (
+                "Horarios disponiveis:\n"
+                "1. Amanha as 09:00\n"
+                "2. Amanha as 14:30\n"
+                "3. Depois de amanha as 10:00\n\n"
+                "Digite o numero da opcao desejada:"
+            ),
+            "finalizado": (
+                "Consulta agendada com sucesso! Enviamos os detalhes para "
+                "voce. Esperamos sua visita!"
+            ),
         }
 
-        return respostas_mock.get(estado_atual, f"Recebido: '{texto_usuario}'. Vamos prosseguir para a próxima etapa.")
+        resposta_padrao = (
+            f"Recebido: '{texto_usuario}'. "
+            "Vamos prosseguir para a proxima etapa."
+        )
 
-    def extract_structured(self, estado_atual: str, texto_usuario: str) -> dict:
+        return respostas_mock.get(estado_atual, resposta_padrao)
+
+    def extract_structured(
+        self,
+        estado_atual: str,
+        texto_usuario: str,
+    ) -> dict:
         """
         Extrai dados estruturados usando o cliente de LLM se habilitado.
 
-        Retorna um dicionário com pelo menos:
+        Retorna um dicionario com pelo menos:
         - dados_extraidos: dict
         - urgente: bool
         """
@@ -88,7 +126,8 @@ class LLMService:
             "  },\n"
             "  \"urgente\": false\n"
             "}\n"
-            "Se não for possível extrair algum campo, deixe-o como string vazia ou não o inclua.\n"
+            "Se nao for possivel extrair algum campo, deixe-o como string "
+            "vazia ou nao o inclua.\n"
             f"Estado atual: {estado_atual}\n"
             f"Mensagem do paciente: {texto_usuario}"
         )
@@ -107,7 +146,10 @@ class LLMService:
             content = None
             if hasattr(response, "choices") and len(response.choices) > 0:
                 choice = response.choices[0]
-                if hasattr(choice, "message") and hasattr(choice.message, "content"):
+                if hasattr(choice, "message") and hasattr(
+                    choice.message,
+                    "content",
+                ):
                     content = choice.message.content
                 elif hasattr(choice, "text"):
                     content = choice.text
@@ -125,5 +167,6 @@ class LLMService:
             self.enabled = False
             self._client = None
             return {"dados_extraidos": {}, "urgente": False}
+
 
 llm_service = LLMService()
