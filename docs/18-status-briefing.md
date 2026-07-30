@@ -19,6 +19,7 @@ Ainda nao deve ser considerado entrega final do briefing enquanto nao houver val
 | API Python com FastAPI | Pronto | `main.py`, `app/routers/webhook.py` | App registra webhook, admin e dashboard. |
 | Receber mensagens Evolution/WhatsApp | Pronto parcial | `POST /webhook` | Contrato `messages.upsert` coberto por testes; falta validacao real com webhook publico. |
 | Enviar respostas pelo WhatsApp | Pronto parcial | `app/services/evolution_service.py` | Cliente usa `EVOLUTION_INSTANCE_NAME`, header `apikey` e payload padronizado; falta validar envio real em WhatsApp. |
+| E2E local com mocks | Pronto | `tests/test_webhook_e2e.py` | Simula conversa completa pelo webhook, envio Evolution mockado e persistencia de sessao. |
 | Maquina de estados da conversa | Pronto | `app/services/validador_fluxo.py` | Fluxo cobre nome, sintoma, convenio, primeira consulta, periodo, horarios e conclusao. |
 | Refinamento humanizado da conversa | Pronto parcial | `app/services/validador_fluxo.py` | Nome e normalizado, convenio generico nao avanca, textos de acolhimento e confirmacao foram refinados. |
 | Validar respostas antes de avancar | Pronto parcial | `tests/test_validador_fluxo.py` | Ha validacoes principais; ainda faltam mais casos fora de ordem, mensagens duplicadas e cancelamento. |
@@ -45,5 +46,4 @@ Ainda nao deve ser considerado entrega final do briefing enquanto nao houver val
 
 1. Estabilizar testes para rodarem sem `.env` real e sem chamadas externas.
 2. Definir com o CTO o canal real do alerta humano de urgencia.
-3. Validar E2E local com mocks.
-4. Validar WhatsApp real e deploy publico.
+3. Validar WhatsApp real e deploy publico.
