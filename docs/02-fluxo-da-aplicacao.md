@@ -4,9 +4,10 @@
 2. O router extrai `remoteJid` e o texto da mensagem.
 3. A sessao e carregada pelo repositorio de sessoes.
 4. A urgencia e verificada antes da maquina de estados.
-5. O estado atual processa a resposta do paciente.
-6. O novo estado e salvo.
-7. O endpoint devolve JSON ao chamador.
+5. Quando ha urgencia, o fluxo normal e interrompido, o paciente recebe orientacao de emergencia e um alerta interno e registrado.
+6. O estado atual processa a resposta do paciente.
+7. O novo estado e salvo.
+8. O endpoint devolve JSON ao chamador.
 
 Estados de qualificacao atuais:
 
@@ -22,4 +23,4 @@ Estados de qualificacao atuais:
 
 As respostas sao validadas localmente antes de avancar. A verificacao de urgencia continua sendo executada antes de qualquer estado.
 
-Limitacao atual: a resposta ainda nao e enviada de volta ao WhatsApp pelo fluxo principal.
+Limitacao atual: o alerta humano de urgencia ainda e log interno; o canal real deve ser definido antes de producao.

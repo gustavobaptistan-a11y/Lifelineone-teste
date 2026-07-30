@@ -7,8 +7,10 @@
 5. Implementar persistencia de sessao com Redis.
 6. Definir schema e reserva transacional da agenda.
 7. Integrar LLM com saida estruturada.
-8. Implementar escalonamento de urgencia.
+8. Implementar escalonamento de urgencia inicial por log estruturado.
 9. Alinhar testes automatizados.
 10. Documentar e validar deploy.
 
 Cada etapa deve ser implementada e validada isoladamente.
+
+Proxima decisao externa: definir o canal operacional do alerta humano de urgencia (ex: e-mail, Slack, painel interno ou WhatsApp da equipe).
