@@ -3,7 +3,7 @@
 1. Consolidar configuracao e dependencias.
 2. Definir contrato seguro do webhook.
 3. Consolidar a maquina de estados e validacoes.
-4. Conectar envio de respostas pela Evolution API.
+4. Conectar envio de respostas pela Evolution API com contrato testado.
 5. Implementar persistencia de sessao com Redis.
 6. Definir schema e reserva transacional da agenda.
 7. Integrar LLM com saida estruturada.
@@ -14,3 +14,5 @@
 Cada etapa deve ser implementada e validada isoladamente.
 
 Proxima decisao externa: definir o canal operacional do alerta humano de urgencia (ex: e-mail, Slack, painel interno ou WhatsApp da equipe).
+
+Validacao externa pendente: envio real pelo WhatsApp com `EVOLUTION_SEND_ENABLED=true`.

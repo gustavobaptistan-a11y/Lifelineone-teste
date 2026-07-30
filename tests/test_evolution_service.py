@@ -1,3 +1,5 @@
+import json
+
 import pytest
 import httpx
 import respx
@@ -54,10 +56,18 @@ async def test_send_message_success(evolution_service: EvolutionService):
     message = "Hello, world!"
     settings.EVOLUTION_SEND_ENABLED = True
     mock_response = {"status": "success"}
-    respx.post(f"{settings.EVOLUTION_API_URL}/message/sendText/{instance_name}").mock(return_value=httpx.Response(200, json=mock_response))
+    route = respx.post(
+        f"{settings.EVOLUTION_API_URL}/message/sendText/{instance_name}"
+    ).mock(return_value=httpx.Response(200, json=mock_response))
 
     result = await evolution_service.send_message(instance_name, phone_number, message)
+
     assert result == mock_response
+    assert route.calls.last.request.headers["apikey"] == settings.EVOLUTION_API_KEY
+    assert json.loads(route.calls.last.request.read()) == {
+        "number": "123456789",
+        "text": "Hello, world!",
+    }
 
 @pytest.mark.asyncio
 async def test_send_message_disabled(evolution_service: EvolutionService):
