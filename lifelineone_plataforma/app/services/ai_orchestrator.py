@@ -6,21 +6,22 @@ from sqlalchemy import select
 
 from app.models.patient import Patient
 from app.models.conversation import ConversationMessage, ConversationSummary
+from app.models.ticket import SupportTicket, TicketStatus
 from app.schemas.patient import PatientCreate, PatientStateResponse
 from app.services.patient_service import PatientService
 from app.services.journey_service import JourneyService
 from app.services.tools_service import PlatformToolsService
 from app.services.llm_engine import llm_engine
+from app.core.websocket_manager import ws_manager
 
 def normalize_text(text: str) -> str:
-    """Remove acentos e converte texto para minúsculas."""
     nfkd_form = unicodedata.normalize('NFKD', text)
     return "".join([c for c in nfkd_form if not unicodedata.combining(c)]).lower()
 
 class LifelineAIOrchestrator:
     """
     O Cérebro Operacional da plataforma Lifeline One.
-    Orquestra o raciocínio em 11 passos antes de gerar uma resposta ao paciente.
+    Orquestra o raciocínio em 11 passos e suporta transbordo para atendimento humano.
     """
 
     @staticmethod
@@ -48,6 +49,31 @@ class LifelineAIOrchestrator:
         user_msg = ConversationMessage(patient_id=patient.id, sender="paciente", content=message_text)
         db.add(user_msg)
         await db.flush()
+
+        # Checa se há atendimento humano ativo (Transbordo Humano)
+        if patient.active_ticket_id:
+            ticket_res = await db.execute(
+                select(SupportTicket).where(SupportTicket.id == int(patient.active_ticket_id))
+            )
+            active_ticket = ticket_res.scalar_one_or_none()
+            if active_ticket and active_ticket.status == TicketStatus.ASSUMIDO_HUMANO:
+                # Transmite a mensagem recebida ao vivo para a tela do atendente
+                await ws_manager.broadcast({
+                    "type": "human_message_received",
+                    "ticket_id": active_ticket.id,
+                    "patient_id": patient.id,
+                    "patient_name": patient.name,
+                    "message": message_text,
+                    "assigned_agent": active_ticket.assigned_agent
+                })
+                return {
+                    "patient_id": patient.id,
+                    "current_stage": patient.current_stage.value,
+                    "detected_intent": "transbordo_humano",
+                    "tools_executed": [],
+                    "tool_outputs": {},
+                    "ai_response": f"[Atendimento Humano Assumido por {active_ticket.assigned_agent}] Mensagem encaminhada ao painel."
+                }
 
         # -------------------------------------------------------------
         # PASSO 2: Buscar o estado atual da jornada
@@ -85,13 +111,9 @@ class LifelineAIOrchestrator:
             "insurance_name": patient_state.insurance.name,
             "insurance_plan": patient_state.insurance.plan
         }
-        pending_events = {
-            "pending_tasks": patient_state.pending_tasks,
-            "expected_return": patient_state.expected_return_date
-        }
 
         # -------------------------------------------------------------
-        # PASSO 7: Entender a intenção atual (normalizada sem acentos)
+        # PASSO 7: Entender a intenção atual
         # -------------------------------------------------------------
         msg_normalized = normalize_text(message_text)
         detected_intent = "duvida_geral"
@@ -99,7 +121,7 @@ class LifelineAIOrchestrator:
             detected_intent = "agendamento"
         elif any(w in msg_normalized for w in ["convenio", "plano", "aceita"]):
             detected_intent = "duvida_convenio"
-        elif any(w in msg_normalized for w in ["onde", "endereco", "localizacao", "localizacao", "chegar", "local"]):
+        elif any(w in msg_normalized for w in ["onde", "endereco", "localizacao", "local", "chegar"]):
             detected_intent = "localizacao"
         elif any(w in msg_normalized for w in ["cancelar", "desmarcar"]):
             detected_intent = "cancelamento"
