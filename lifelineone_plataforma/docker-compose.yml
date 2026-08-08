@@ -1,0 +1,86 @@
+version: '3.8'
+
+services:
+  # -------------------------------------------------------------
+  # 1. BANCO DE DADOS POSTGRESQL (Fonte da Verdade)
+  # -------------------------------------------------------------
+  postgres:
+    image: postgres:16-alpine
+    container_name: lifeline_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: lifeline_user
+      POSTGRES_PASSWORD: lifeline_password
+      POSTGRES_DB: lifeline_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lifeline_user -d lifeline_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # -------------------------------------------------------------
+  # 2. REDIS (Barramento de Eventos e Caching)
+  # -------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: lifeline_redis
+    restart: always
+    ports:
+      - "6379:6379"
+
+  # -------------------------------------------------------------
+  # 3. BACKEND API & LIFELINE AI ORCHESTRATOR (Python FastAPI)
+  # -------------------------------------------------------------
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: lifeline_backend
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      - PROJECT_NAME=Lifeline One - Plataforma e AI Orchestrator
+      - DATABASE_URL=postgresql+asyncpg://lifeline_user:lifeline_password@postgres:5432/lifeline_db
+      - REDIS_URL=redis://redis:6379/0
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+  # -------------------------------------------------------------
+  # 4. EVOLUTION API (WhatsApp Gateway Open-Source Gratuito)
+  # -------------------------------------------------------------
+  evolution_api:
+    image: atendai/evolution-api:v1.8.2
+    container_name: lifeline_evolution_api
+    restart: always
+    ports:
+      - "8080:8080"
+    environment:
+      - SERVER_URL=http://localhost:8080
+      - API_KEY=lifeline_secret_key
+      - AUTHENTICATION_TYPE=apikey
+
+  # -------------------------------------------------------------
+  # 5. FRONTEND DASHBOARD (React + TypeScript + Nginx)
+  # -------------------------------------------------------------
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: lifeline_frontend
+    restart: always
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
