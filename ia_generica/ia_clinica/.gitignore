@@ -1,0 +1,33 @@
+# Arquivos de Ambiente & Segredos (NUNCA SUBIR PRO GIT)
+.env
+.env.*
+*.env
+backend/.env
+
+# Python & Cache
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+ENV/
+env/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Logs e Arquivos Temporários de Teste
+*.log
+scratch/
+copia_roberta/
+
+# IDE e Sistema Operacional
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Node / Web
+node_modules/
+dist/
+build/

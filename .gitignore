@@ -1,104 +1,25 @@
-﻿# ======================================================
-# LIFELINE BOT - .gitignore
-# ======================================================
-
-# ------------------------------------------------------
-# Ambiente virtual
-# ------------------------------------------------------
-.venv/
-venv/
-env/
-
-# ------------------------------------------------------
-# Python
-# ------------------------------------------------------
-__pycache__/
-*.py[cod]
-*$py.class
-
-# Cache e cobertura
-.pytest_cache/
-.pytest_tmp/
-.test_artifacts/
-.mypy_cache/
-.ruff_cache/
-.coverage
-htmlcov/
-
-# Logs
-*.log
-
-# ------------------------------------------------------
-# Variaveis de ambiente
-# ------------------------------------------------------
-.env
-.env.*
-!.env.example
-
-# ------------------------------------------------------
-# Credenciais e segredos
-# ------------------------------------------------------
-credentials.json
-token.json
-credentials.json.json
-app/config/credentials.json
-app/config/credentials.json.json
-app/config/token.json
-app/config/*.pem
-app/config/*.key
-app/config/*.crt
-
-# ------------------------------------------------------
-# Backups
-# ------------------------------------------------------
-config_backup/
-*.bak
-*.backup
-
-# ------------------------------------------------------
-# Banco de dados local
-# ------------------------------------------------------
-*.db
-*.sqlite
-*.sqlite3
-
-# ------------------------------------------------------
-# Arquivos temporarios
-# ------------------------------------------------------
-*.tmp
-*.temp
-*.cache
-
-# ------------------------------------------------------
-# Executaveis locais
-# ------------------------------------------------------
+# Arquivos Grandes e Binários (Executáveis / Instaladores)
 *.exe
-ngrok.exe
+*.msi
+*.zip
+*.tar.gz
+*.rar
+ARQUIVOS_FORA_DO_PROJETO_TESTE/
+TESTE/
+ia/
+lifeline-bot/
 
-# ------------------------------------------------------
-# IDEs
-# ------------------------------------------------------
-.vscode/
-.idea/
+# Segredos & Ambientes
+.env
+*.env
+backend/.env
 
-# ------------------------------------------------------
-# Sistema operacional
-# ------------------------------------------------------
-.DS_Store
-Thumbs.db
-desktop.ini
+# Python Cache & Logs
+__pycache__/
+*.pyc
+*.log
+.pytest_cache/
 
-# ------------------------------------------------------
-# Scripts e artefatos locais de teste
-# ------------------------------------------------------
-testar_rotas_evolution.py
-sessions.json
-app/services/sessions_db.json
-agendamentos_db.json
-
-# ------------------------------------------------------
-# Build e distribuicao
-# ------------------------------------------------------
-build/
+# Node
+node_modules/
 dist/
-*.egg-info/

@@ -1,0 +1,48 @@
+Você é um agente de desenvolvimento para este repositório de backend FastAPI para atendimento clínico via WhatsApp.
+
+Contexto do projeto:
+- Repositório: LifelineOne Bot
+- Objetivo principal: manter o runtime atual funcionando e evoluir a arquitetura gradualmente para um modelo mais seguro, modular e compatível com estados de domínio.
+- Regras obrigatórias: ler o fluxo e os usos antes de editar; preservar compatibilidade com o runtime legado; fazer uma tarefa por vez; validar com o teste mais focado; não expor credenciais ou dados sensíveis; não versionar .env, bancos locais, binários ou ambientes virtuais; manter urgência determinística antes do LLM; manter estados e regras de negócio no backend; não permitir diagnóstico médico; atualizar documentação quando contratos ou fluxos mudarem.
+
+Arquitetura atual:
+- O projeto já tem domínio formalizado em app/domain/conversation_state.py, app/domain/enums.py e app/domain/state_machine.py.
+- Há uma camada de aplicação em app/application/workflow_orchestrator.py e app/application/workflow_service.py.
+- O runtime legado ainda vive em app/services/validador_fluxo.py e deve continuar compatível enquanto a arquitetura evolui.
+- O webhook está em app/routers/webhook.py.
+- O backend principal entra em main.py.
+- Interação local com a IA acontece via tools/interactive_conversation.py.
+
+Estado atual verificado:
+- Mapeamento de estados do domínio e compatibilidade com legado já está implementado.
+- O estado de confirmação “confirmar_agendamento” foi corrigido para mapear corretamente para ConversationStage.CONFIRMATION.
+- A suíte focada do fluxo está verde com:
+  python -m pytest tests/test_application_workflow.py tests/test_validador_fluxo.py tests/test_health.py tests/test_logging_redaction.py tests/test_webhook_endpoint.py -q
+- Resultado verificado: 27 passed, 0 failed.
+
+Próxima etapa recomendada:
+- Consolidar mais a lógica de decisão e transições em app/application/workflow_orchestrator.py.
+- Reduzir a duplicidade da regra de negócio em app/services/validador_fluxo.py, deixando esse módulo como compatibilidade/bridge do runtime legado e não como fonte da verdade final.
+- Preservar comportamento atual, sem quebrar integração com webhook e sessão persistida.
+
+Instruções operacionais:
+1. Leia primeiro os arquivos relevantes: [AGENTS.md](AGENTS.md), [README.md](README.md), [PROJECT_CONTEXT.md](PROJECT_CONTEXT.md), app/application/workflow_orchestrator.py, app/domain/conversation_state.py, app/services/validador_fluxo.py, app/routers/webhook.py.
+2. Faça uma tarefa por vez.
+3. Não reescreva o fluxo legado de forma destrutiva.
+4. Sempre mantenha compatibilidade com payloads legados e com serialização dual status/estado.
+5. Faça validação mínima e focada após cada mudança.
+6. Atualize documentação quando houver mudança de contrato ou arquitetura.
+7. Não grave ou exponha tokens, chaves, .env, dados sensíveis, payloads privados ou logs com PII.
+
+Tarefa atual:
+Continue a consolidação da orquestração do fluxo, reduzindo a lógica duplicada do validador legado e deixando a camada de aplicação como fonte de decisão e transição da conversa.
+
+Validação obrigatória antes de concluir:
+- Rodar a suíte focada mais relevante para a área afetada.
+- Se mexer em estados/transições, rodar pelo menos:
+  python -m pytest tests/test_application_workflow.py tests/test_validador_fluxo.py tests/test_health.py tests/test_logging_redaction.py tests/test_webhook_endpoint.py -q
+
+Observação final:
+- A emergência determinística deve ficar antes do LLM.
+- Não permita diagnóstico médico pelo agente.
+- A arquitetura deve evoluir incrementalmente, sem quebrar o que já está funcionando.

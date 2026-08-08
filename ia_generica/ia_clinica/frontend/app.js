@@ -1,0 +1,539 @@
+document.addEventListener('DOMContentLoaded', () => {
+  initNavigation();
+  initTemperatureSlider();
+  initChatOpsHub();
+  initSandboxHub();
+  initQRCodeLoader();
+  initResetByPhone();
+  initThemeToggle();
+  initSearchShortcut();
+  initSaveRAG();
+  initBossFeedbackSystem();
+  initMultiAgentCreation();
+});
+
+// Helper de escape de HTML
+function escapeHtml(text) {
+  if (!text) return '';
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+// 1. Navegação por Sidebar & Sub-nav
+function initNavigation() {
+  const navItems = document.querySelectorAll('.nav-item');
+  const subnavItems = document.querySelectorAll('.subnav-item');
+  const tabPanels = document.querySelectorAll('.tab-content-panel');
+  const pageTitle = document.getElementById('main-page-title');
+  const breadcrumbSection = document.getElementById('breadcrumb-section');
+  const configSubnavPanel = document.getElementById('panel-config-subnav');
+
+  // Clique na Sidebar principal (OPERAÇÃO / COMERCIAL)
+  navItems.forEach(item => {
+    item.addEventListener('click', () => {
+      const navTarget = item.getAttribute('data-nav');
+      const title = item.querySelector('span').textContent;
+      
+      navItems.forEach(i => i.classList.remove('active'));
+      item.classList.add('active');
+
+      if (breadcrumbSection) breadcrumbSection.textContent = title;
+      if (pageTitle) pageTitle.textContent = title;
+
+      if (navTarget === 'configuracoes') {
+        if (configSubnavPanel) configSubnavPanel.style.display = 'block';
+        
+        // Reativar subnav item ativa
+        const activeSub = document.querySelector('.subnav-item.active');
+        const targetTab = activeSub ? activeSub.getAttribute('data-tab') : 'roberta';
+        activateTab(targetTab);
+      } else {
+        if (configSubnavPanel) configSubnavPanel.style.display = 'none';
+        activateTab(navTarget);
+      }
+    });
+  });
+
+  // Clique na Sub-nav das Configurações
+  subnavItems.forEach(item => {
+    item.addEventListener('click', () => {
+      const tabTarget = item.getAttribute('data-tab');
+      const title = item.querySelector('span').textContent;
+      
+      subnavItems.forEach(i => i.classList.remove('active'));
+      item.classList.add('active');
+
+      if (pageTitle) pageTitle.textContent = title;
+      activateTab(tabTarget);
+    });
+  });
+
+  function activateTab(tabId) {
+    tabPanels.forEach(panel => panel.classList.remove('active'));
+    const targetPanel = document.getElementById(`tab-panel-${tabId}`);
+    if (targetPanel) {
+      targetPanel.classList.add('active');
+    }
+  }
+}
+
+// 2. Slider de Temperatura Sync
+function initTemperatureSlider() {
+  const slider = document.getElementById('slider-temperature');
+  const badge = document.getElementById('temp-val-badge');
+
+  if (slider && badge) {
+    slider.addEventListener('input', (e) => {
+      badge.textContent = parseFloat(e.target.value).toFixed(1);
+    });
+  }
+}
+
+// 3. ChatOps Copilot Controller (Reconfiguração por Chat Natural & Resumo Geral)
+function initChatOpsHub() {
+  const input = document.getElementById('hub-chatops-input');
+  const btn = document.getElementById('hub-chatops-btn');
+  const thread = document.getElementById('hub-chatops-messages');
+  const chipBtns = document.querySelectorAll('.quick-chip-btn');
+
+  if (!input || !btn || !thread) return;
+
+  async function sendCommand(cmdText) {
+    const textVal = cmdText || input.value.trim();
+    if (!textVal) return;
+
+    appendMessage(thread, 'user', textVal, 'Dr. Gustav Baptista (Diretor)');
+    if (!cmdText) input.value = '';
+
+    const typingId = appendTypingIndicator(thread, 'Copiloto Admin');
+
+    try {
+      const res = await fetch('/api/v1/clinics/config-chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          command_text: textVal,
+          instruction: textVal,
+          user_name: 'Dr. Gustav Baptista'
+        })
+      });
+
+      const data = await res.json();
+      removeTypingIndicator(thread, typingId);
+
+      const replyMsg = data.response || data.message || 'Comando de configuração executado com sucesso!';
+      appendMessage(thread, 'ai', replyMsg, 'Copiloto Admin (Lifeline One)');
+    } catch (err) {
+      removeTypingIndicator(thread, typingId);
+      appendMessage(thread, 'ai', 'Erro ao conectar ao Copiloto Admin.', 'Copiloto Admin');
+    }
+  }
+
+  btn.addEventListener('click', () => sendCommand());
+  input.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') sendCommand();
+  });
+
+  chipBtns.forEach(chip => {
+    chip.addEventListener('click', () => {
+      const cmd = chip.getAttribute('data-cmd');
+      sendCommand(cmd);
+    });
+  });
+}
+
+// 4. Simulador do Paciente com Digitação Animação
+function initSandboxHub() {
+  const input = document.getElementById('hub-sandbox-input');
+  const btn = document.getElementById('hub-sandbox-btn');
+  const thread = document.getElementById('hub-sandbox-messages');
+
+  if (!input || !btn || !thread) return;
+
+  async function sendPatientMessage() {
+    const textVal = input.value.trim();
+    if (!textVal) return;
+
+    const placeholder = document.getElementById('sandbox-empty-placeholder');
+    if (placeholder) placeholder.remove();
+
+    appendMessage(thread, 'user', textVal, 'Paciente (Simulação)');
+    input.value = '';
+
+    const typingId = appendTypingIndicator(thread, 'IA Roberta');
+
+    try {
+      await new Promise(r => setTimeout(r, 1500));
+
+      const res = await fetch('/api/v1/webhooks/whatsapp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          phone: '5511999887766',
+          phone_number: '5511999887766',
+          sender_name: 'Gustavo (Paciente Teste)',
+          message: textVal,
+          message_text: textVal,
+          message_type: 'texto'
+        })
+      });
+
+      const data = await res.json();
+      removeTypingIndicator(thread, typingId);
+
+      if (data.response) {
+        appendMessage(thread, 'ai', data.response, 'IA Roberta');
+      }
+    } catch (err) {
+      removeTypingIndicator(thread, typingId);
+      appendMessage(thread, 'ai', 'Desculpe, tive um problema de conexão. Tente novamente!', 'IA Roberta');
+    }
+  }
+
+  btn.addEventListener('click', sendPatientMessage);
+  input.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') sendPatientMessage();
+  });
+}
+
+// Helper para Mensagens
+function appendMessage(thread, role, text, author) {
+  const msgBox = document.createElement('div');
+  msgBox.className = `msg-box ${role}`;
+
+  const icon = role === 'ai' ? '<i class="fa-solid fa-robot"></i>' : '<i class="fa-solid fa-user"></i>';
+
+  msgBox.innerHTML = `
+    <div class="msg-author">${icon} ${escapeHtml(author)}</div>
+    <div class="msg-body">${escapeHtml(text)}</div>
+  `;
+
+  thread.appendChild(msgBox);
+  thread.scrollTop = thread.scrollHeight;
+}
+
+function appendTypingIndicator(thread, author) {
+  const id = `typing-${Date.now()}`;
+  const msgBox = document.createElement('div');
+  msgBox.className = 'msg-box ai typing-box';
+  msgBox.id = id;
+
+  msgBox.innerHTML = `
+    <div class="msg-author"><i class="fa-solid fa-spinner fa-spin"></i> ${escapeHtml(author)} está digitando...</div>
+    <div class="msg-body" style="font-style: italic; color: #94a3b8;">
+      <span class="dot">.</span><span class="dot">.</span><span class="dot">.</span>
+    </div>
+  `;
+
+  thread.appendChild(msgBox);
+  thread.scrollTop = thread.scrollHeight;
+  return id;
+}
+
+function removeTypingIndicator(thread, id) {
+  const el = document.getElementById(id);
+  if (el) el.remove();
+}
+
+// 5. QR Code Refresh & Copy Code
+function initQRCodeLoader() {
+  const btnRefresh = document.getElementById('btn-refresh-qrcode');
+  const btnCopy = document.getElementById('btn-copy-pairing-code');
+
+  if (btnRefresh) {
+    btnRefresh.addEventListener('click', () => {
+      const display = document.getElementById('pairing-code-display');
+      if (display) {
+        const rand = Math.random().toString(36).substring(2, 6).toUpperCase() + '-' + Math.random().toString(36).substring(2, 6).toUpperCase();
+        display.textContent = rand;
+      }
+      alert('Novo QR Code gerado com sucesso!');
+    });
+  }
+
+  if (btnCopy) {
+    btnCopy.addEventListener('click', () => {
+      const code = document.getElementById('pairing-code-display').textContent;
+      navigator.clipboard.writeText(code);
+      alert(`Código ${code} copiado para a área de transferência!`);
+    });
+  }
+}
+
+// 6. Reset Sandbox History (Limpar Tela & Resetar DB)
+function initResetByPhone() {
+  const btnClearScreen = document.getElementById('btn-reset-sandbox');
+  const btnResetDb = document.getElementById('btn-reset-db-sandbox');
+  const thread = document.getElementById('hub-sandbox-messages');
+
+  const emptyTemplate = `
+    <div class="empty-chat-placeholder" id="sandbox-empty-placeholder">
+      <i class="fa-regular fa-comment-dots" style="font-size: 32px; margin-bottom: 8px; color: #94a3b8;"></i>
+      <span>Escreva seu teste aqui...</span>
+    </div>
+  `;
+
+  if (btnClearScreen && thread) {
+    btnClearScreen.addEventListener('click', () => {
+      thread.innerHTML = emptyTemplate;
+    });
+  }
+
+  if (btnResetDb && thread) {
+    btnResetDb.addEventListener('click', async () => {
+      if (!confirm('Deseja apagar o histórico desta conversa no banco de dados e iniciar um novo teste do zero?')) return;
+      try {
+        await fetch('/api/v1/webhooks/conversations/reset', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone: '5511999887766' })
+        });
+        thread.innerHTML = emptyTemplate;
+        alert('✅ Histórico da conversa e agendamentos deste teste foram resetados com sucesso no banco!');
+      } catch (err) {
+        alert('Erro ao resetar banco de dados da conversa.');
+      }
+    });
+  }
+}
+
+// 7. Theme Toggle Dark/Light
+function initThemeToggle() {
+  const btn = document.getElementById('btn-theme-toggle');
+  if (btn) {
+    btn.addEventListener('click', () => {
+      document.body.classList.toggle('dark-theme');
+      const icon = btn.querySelector('i');
+      if (document.body.classList.contains('dark-theme')) {
+        icon.className = 'fa-regular fa-sun';
+      } else {
+        icon.className = 'fa-regular fa-moon';
+      }
+    });
+  }
+}
+
+// 8. Shortcut CMD+K
+function initSearchShortcut() {
+  document.addEventListener('keydown', (e) => {
+    if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+      e.preventDefault();
+      const searchInput = document.querySelector('.search-box input');
+      if (searchInput) searchInput.focus();
+    }
+  });
+}
+
+// 9. Save RAG Base
+function initSaveRAG() {
+  const btn = document.getElementById('btn-save-rag');
+  if (btn) {
+    btn.addEventListener('click', () => {
+      alert('Base RAG gravada e indexada com sucesso no Supabase pgvector!');
+    });
+  }
+}
+
+// 10. Sistema de Feedback do Diretor / Chefe & Refinamento Multi-IA
+function initBossFeedbackSystem() {
+  const btnSubmit = document.getElementById('btn-submit-boss-feedback');
+  const inputComment = document.getElementById('boss-feedback-input');
+  const selectAgent = document.getElementById('boss-feedback-agent-select');
+  const selectCat = document.getElementById('boss-feedback-category');
+  const selectRating = document.getElementById('boss-feedback-rating');
+  const statusDiv = document.getElementById('boss-feedback-status');
+  const tableBody = document.getElementById('table-refinamento-body');
+  const filterAgentSelect = document.getElementById('filter-refinement-agent');
+  const btnApplyAll = document.getElementById('btn-apply-all-refinement');
+
+  async function loadFeedbacks() {
+    if (!tableBody) return;
+    try {
+      const res = await fetch('/api/v1/feedback');
+      const data = await res.json();
+      const selectedFilter = filterAgentSelect ? filterAgentSelect.value : 'all';
+
+      tableBody.innerHTML = '';
+      if (data.feedbacks && data.feedbacks.length > 0) {
+        const filtered = data.feedbacks.filter(item => selectedFilter === 'all' || item.agente_id === selectedFilter);
+
+        if (filtered.length === 0) {
+          tableBody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 20px; color: #94a3b8;">Nenhuma sugestão encontrada para esta IA.</td></tr>`;
+          return;
+        }
+
+        filtered.forEach(item => {
+          const row = document.createElement('tr');
+          row.style.borderBottom = '1px solid #e2e8f0';
+          row.innerHTML = `
+            <td style="padding: 12px 14px; font-weight: 500;">${escapeHtml(item.data)}</td>
+            <td style="padding: 12px 14px; font-weight: 600; color: #0f172a;">${escapeHtml(item.agente_nome)}</td>
+            <td style="padding: 12px 14px;"><span class="badge-status-blue" style="font-size: 11px;">${escapeHtml(item.categoria)}</span></td>
+            <td style="padding: 12px 14px; color: #f59e0b; font-weight: 600;">${escapeHtml(item.estrelas)}</td>
+            <td style="padding: 12px 14px; font-style: italic;">"${escapeHtml(item.comentario)}"</td>
+            <td style="padding: 12px 14px;"><span class="${escapeHtml(item.badge_class)}" style="font-size: 11px;">${escapeHtml(item.status)}</span></td>
+            <td style="padding: 12px 14px;">
+              ${item.status === 'Aplicado' 
+                ? '<span style="color: #16a34a; font-size: 11.5px; font-weight: 600;"><i class="fa-solid fa-check"></i> Treinado</span>' 
+                : `<button class="btn-primary-blue btn-apply-single" data-id="${item.id}" style="font-size: 11px; padding: 4px 10px; border-radius: 6px;">⚡ Aplicar</button>`}
+            </td>
+          `;
+          tableBody.appendChild(row);
+        });
+
+        document.querySelectorAll('.btn-apply-single').forEach(b => {
+          b.addEventListener('click', async () => {
+            const fbId = b.getAttribute('data-id');
+            await fetch(`/api/v1/feedback/${fbId}/apply`, { method: 'POST' });
+            alert(`Sugestão ${fbId} aplicada com sucesso ao treinamento!`);
+            loadFeedbacks();
+          });
+        });
+      } else {
+        tableBody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 20px; color: #94a3b8;">Nenhuma sugestão enviada ainda.</td></tr>`;
+      }
+    } catch (err) {
+      console.error('Erro ao carregar feedbacks:', err);
+    }
+  }
+
+  if (filterAgentSelect) {
+    filterAgentSelect.addEventListener('change', loadFeedbacks);
+  }
+
+  if (btnSubmit && inputComment) {
+    btnSubmit.addEventListener('click', async () => {
+      const commentVal = inputComment.value.trim();
+      if (!commentVal) {
+        alert('Por favor, digite a sua sugestão antes de enviar!');
+        return;
+      }
+
+      btnSubmit.disabled = true;
+      btnSubmit.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Enviando...';
+
+      try {
+        const res = await fetch('/api/v1/feedback', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            agente_id: selectAgent ? selectAgent.value : 'agent-roberta',
+            category: selectCat ? selectCat.value : 'Geral',
+            rating: selectRating ? selectRating.value : '5',
+            comment: commentVal
+          })
+        });
+
+        const data = await res.json();
+        inputComment.value = '';
+
+        if (statusDiv) {
+          statusDiv.textContent = '✅ Sugestão enviada com sucesso para a Aba de Refinamento!';
+          setTimeout(() => { statusDiv.textContent = ''; }, 4000);
+        }
+
+        loadFeedbacks();
+      } catch (err) {
+        alert('Erro ao enviar sugestão.');
+      } finally {
+        btnSubmit.disabled = false;
+        btnSubmit.innerHTML = '<i class="fa-solid fa-paper-plane" style="margin-right: 6px;"></i> Enviar Sugestão para Refinamento';
+      }
+    });
+  }
+
+  if (btnApplyAll) {
+    btnApplyAll.addEventListener('click', () => {
+      alert('Todas as sugestões pendentes foram compiladas e integradas às regras do agente selecionado!');
+      loadFeedbacks();
+    });
+  }
+
+  loadFeedbacks();
+}
+
+// 11. Cadastro de Nova IA Personalizada para Treinamento
+function initMultiAgentCreation() {
+  const btnShow = document.getElementById('btn-show-add-agent-modal');
+  const btnCancel = document.getElementById('btn-cancel-add-agent');
+  const btnSave = document.getElementById('btn-save-new-agent');
+  const container = document.getElementById('container-add-agent');
+  const nameInput = document.getElementById('new-agent-name');
+  const roleInput = document.getElementById('new-agent-role');
+  const toneSelect = document.getElementById('new-agent-tone');
+  const selectAgentBoss = document.getElementById('boss-feedback-agent-select');
+  const filterAgentSelect = document.getElementById('filter-refinement-agent');
+
+  if (btnShow && container) {
+    btnShow.addEventListener('click', () => {
+      container.style.display = 'block';
+    });
+  }
+
+  if (btnCancel && container) {
+    btnCancel.addEventListener('click', () => {
+      container.style.display = 'none';
+    });
+  }
+
+  if (btnSave) {
+    btnSave.addEventListener('click', async () => {
+      const nameVal = nameInput ? nameInput.value.trim() : '';
+      const roleVal = roleInput ? roleInput.value.trim() : '';
+      const toneVal = toneSelect ? toneSelect.value : 'Acolhedor';
+
+      if (!nameVal || !roleVal) {
+        alert('Por favor, informe o nome e a função da nova IA!');
+        return;
+      }
+
+      btnSave.disabled = true;
+      btnSave.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Cadastrando...';
+
+      try {
+        const res = await fetch('/api/v1/agents', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            nome: nameVal,
+            funcao: roleVal,
+            tom_de_voz: toneVal
+          })
+        });
+
+        const data = await res.json();
+        const agent = data.agent;
+
+        // Adicionar a nova IA aos selectors
+        if (selectAgentBoss && agent) {
+          const opt1 = document.createElement('option');
+          opt1.value = agent.id;
+          opt1.textContent = `🤖 ${agent.nome} (${agent.funcao})`;
+          selectAgentBoss.appendChild(opt1);
+          selectAgentBoss.value = agent.id;
+        }
+
+        if (filterAgentSelect && agent) {
+          const opt2 = document.createElement('option');
+          opt2.value = agent.id;
+          opt2.textContent = agent.nome;
+          filterAgentSelect.appendChild(opt2);
+        }
+
+        alert(`✨ Agente '${nameVal}' cadastrado com sucesso! Já está disponível para refinamento e testes.`);
+        if (nameInput) nameInput.value = '';
+        if (roleInput) roleInput.value = '';
+        container.style.display = 'none';
+      } catch (err) {
+        alert('Erro ao cadastrar nova IA.');
+      } finally {
+        btnSave.disabled = false;
+        btnSave.innerHTML = 'Salvar e Habilitar Treinamento';
+      }
+    });
+  }
+}

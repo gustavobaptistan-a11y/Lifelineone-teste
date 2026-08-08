@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vittamed | Clinical Hub — Painel Lifelineone</title>
+  
+  <!-- Fonts Inter & FontAwesome Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div class="vittamed-layout">
+    
+    <!-- 1. SIDEBAR DE NAVEGAÇÃO PRINCIPAL (NAVY DARK) -->
+    <aside class="sidebar">
+      <div>
+        <div class="sidebar-header">
+          <div class="brand-icon-circle">
+            <i class="fa-solid fa-heart-pulse"></i>
+          </div>
+          <div class="brand-titles">
+            <h1>VittaMed</h1>
+            <span>PAINEL LIFELINEONE</span>
+          </div>
+        </div>
+
+        <div class="sidebar-menu">
+          <div class="menu-section-label">OPERAÇÃO</div>
+          
+          <button class="nav-item" data-nav="omnichannel">
+            <i class="fa-solid fa-comments"></i>
+            <span>Chat Omnichannel</span>
+          </button>
+          
+          <button class="nav-item" data-nav="followups">
+            <i class="fa-solid fa-list-check"></i>
+            <span>Follow-ups & Lembretes</span>
+          </button>
+          
+          <button class="nav-item" data-nav="agenda">
+            <i class="fa-regular fa-calendar"></i>
+            <span>Agenda & Horários</span>
+          </button>
+          
+          <button class="nav-item" data-nav="pacientes">
+            <i class="fa-solid fa-users"></i>
+            <span>Pacientes & Prontuários</span>
+          </button>
+          
+          <button class="nav-item" data-nav="fila">
+            <i class="fa-solid fa-user-doctor"></i>
+            <span>Fila de Atendimento</span>
+          </button>
+          
+          <button class="nav-item" data-nav="fichas">
+            <i class="fa-regular fa-file-lines"></i>
+            <span>Fichas Pré-Consulta</span>
+          </button>
+          
+          <button class="nav-item active" data-nav="configuracoes">
+            <i class="fa-solid fa-gear"></i>
+            <span>Configurações</span>
+          </button>
+
+          <div class="menu-section-label" style="margin-top: 12px;">COMERCIAL</div>
+          
+          <button class="nav-item" data-nav="dashboard">
+            <i class="fa-solid fa-chart-pie"></i>
+            <span>Dashboard Comercial</span>
+          </button>
+          
+          <button class="nav-item" data-nav="funil">
+            <i class="fa-solid fa-chart-simple"></i>
+            <span>Funil Roberta</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="sidebar-footer">
+        <div class="user-avatar">GB</div>
+        <div class="user-meta">
+          <div class="name">Gustav Baptista</div>
+          <div class="role">Médico(a)</div>
+        </div>
+        <button class="icon-btn-ghost" title="Perfil">
+          <i class="fa-regular fa-user"></i>
+        </button>
+        <button class="icon-btn-ghost" title="Sair">
+          <i class="fa-solid fa-arrow-right-from-bracket"></i>
+        </button>
+      </div>
+    </aside>
+
+    <!-- 2. WRAPPER CONTEÚDO PRINCIPAL -->
+    <div class="main-wrapper">
+      
+      <!-- TOPBAR HEADER -->
+      <header class="topbar">
+        <div class="topbar-left">
+          <div class="breadcrumb">Painel Lifelineone / <span id="breadcrumb-section">Configurações</span></div>
+          <h2 class="page-title-text" id="main-page-title">Central de Configurações & Testes</h2>
+        </div>
+
+        <div class="topbar-right">
+          <div class="search-box">
+            <i class="fa-solid fa-magnifying-glass search-icon"></i>
+            <input type="text" placeholder="Buscar configuração ou paciente...">
+            <span class="shortcut-badge">⌘ K</span>
+          </div>
+
+          <button class="topbar-action-btn" id="btn-theme-toggle" title="Alternar Tema">
+            <i class="fa-regular fa-moon"></i>
+          </button>
+
+          <button class="topbar-action-btn" title="Notificações">
+            <i class="fa-regular fa-bell"></i>
+          </button>
+        </div>
+      </header>
+
+      <!-- CONTENT BODY (DUAS COLUNAS NAS CONFIGURAÇÕES OU VIEWPORT INTEGRADO) -->
+      <div class="content-body">
+        
+        <!-- SUB-NAVEGAÇÃO ESQUERDA (EXIBIDA NA SEÇÃO CONFIGURAÇÕES) -->
+        <aside class="config-subnav" id="panel-config-subnav">
+          <div class="subnav-header">
+            <h2>Configurações</h2>
+            <p>Global · Lifeline One</p>
+          </div>
+
+          <div class="subnav-group-title">INTELIGÊNCIA ARTIFICIAL</div>
+          
+          <button class="subnav-item active" data-tab="roberta">
+            <i class="fa-solid fa-wand-magic-sparkles"></i>
+            <span>Central & Teste Integrado (Dual)</span>
+          </button>
+
+          <button class="subnav-item" data-tab="refinamento">
+            <i class="fa-solid fa-lightbulb" style="color: #f59e0b;"></i>
+            <span>Refinamento Multi-IA (Sugestões)</span>
+          </button>
+
+          <button class="subnav-item" data-tab="copiloto">
+            <i class="fa-solid fa-brain"></i>
+            <span>Copiloto IA Médico (Dr. AI)</span>
+          </button>
+          
+          <button class="subnav-item" data-tab="convenios">
+            <i class="fa-solid fa-hospital"></i>
+            <span>Convênios & Base RAG</span>
+          </button>
+          
+          <button class="subnav-item" data-tab="triagem">
+            <i class="fa-solid fa-phone"></i>
+            <span>IA Triagem (Ligação Enfermagem)</span>
+          </button>
+          
+          <button class="subnav-item" data-tab="medica">
+            <i class="fa-solid fa-stethoscope"></i>
+            <span>IA Médica (Escuta de Consulta)</span>
+          </button>
+
+          <div class="subnav-group-title">SISTEMA E EQUIPE</div>
+          
+          <button class="subnav-item" data-tab="usuarios">
+            <i class="fa-solid fa-user-gear"></i>
+            <span>Usuários e Acessos</span>
+          </button>
+          
+          <button class="subnav-item" data-tab="lgpd">
+            <i class="fa-solid fa-shield-halved"></i>
+            <span>Gestão de Pacientes (LGPD)</span>
+          </button>
+          
+          <button class="subnav-item" data-tab="conexoes">
+            <i class="fa-brands fa-whatsapp" style="color: #25d366;"></i>
+            <span>Conexões WhatsApp (QR Code)</span>
+          </button>
+        </aside>
+
+        <!-- WORKSPACE DE CONTEÚDO PRINCIPAL (DIREITA) -->
+        <main class="workspace-content">
+          
+          <!-- TAB 1: CENTRAL INTEGRADA (DUAL CHAT: TESTE DA IA + COPILOTO ADMIN LADO A LADO) -->
+          <div class="tab-content-panel active" id="tab-panel-roberta">
+            
+            <!-- Header Card IA Roberta -->
+            <div class="card-panel">
+              <div class="card-panel-header" style="margin-bottom: 0;">
+                <div class="card-title-group">
+                  <div class="card-title-icon-circle">
+                    <i class="fa-solid fa-brain"></i>
+                  </div>
+                  <div class="card-title-text">
+                    <h3>IA Roberta — Central Integrada de Testes & Gestão ChatOps</h3>
+                    <p>Testes em tempo real no WhatsApp lado a lado com o Copiloto Admin para gestão total por chat.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- PAINEL LADO A LADO (DUAL CHAT CONTAINER) -->
+            <div class="dual-chat-grid">
+              
+              <!-- COLUNA ESQUERDA: CHAT DE TESTES DO PACIENTE (WHATSAPP SIMULATOR) -->
+              <div class="card-panel" style="margin-bottom: 0; display: flex; flex-direction: column;">
+                <div class="card-panel-header" style="margin-bottom: 12px;">
+                  <div class="card-title-group">
+                    <div class="card-title-icon-circle" style="background-color: #25d366;">
+                      <i class="fa-brands fa-whatsapp"></i>
+                    </div>
+                    <div class="card-title-text">
+                      <h3>Simulador de Testes (WhatsApp)</h3>
+                      <p>Atendimento direto ao paciente com identificação por ID</p>
+                    </div>
+                  </div>
+                  <div style="display: flex; gap: 6px;">
+                    <button class="btn-secondary-outline" id="btn-reset-sandbox" style="height: 32px; padding: 0 10px; font-size: 11px;" title="Limpar visualmente a tela do chat">
+                      <i class="fa-solid fa-eraser"></i> Limpar Tela
+                    </button>
+                    <button class="btn-secondary-outline" id="btn-reset-db-sandbox" style="height: 32px; padding: 0 10px; font-size: 11px; color: #dc2626; border-color: #fecaca; background: #fff5f5;" title="Apagar histórico e resetar a sessão do paciente no Banco de Dados">
+                      <i class="fa-solid fa-arrow-rotate-left"></i> Resetar DB
+                    </button>
+                  </div>
+                </div>
+
+                <div style="font-size: 11px; color: var(--primary-blue); font-weight: 600; margin-bottom: 8px;" id="sandbox-tracking-badge">
+                  [ID: conversação ativa • Tel: 5511999887766]
+                </div>
+
+                <div class="chat-thread-container" id="hub-sandbox-messages" style="height: 330px; position: relative;">
+                  <div class="empty-chat-placeholder" id="sandbox-empty-placeholder">
+                    <i class="fa-regular fa-comment-dots" style="font-size: 32px; margin-bottom: 8px; color: #94a3b8;"></i>
+                    <span>Escreva seu teste aqui...</span>
+                  </div>
+                </div>
+
+                <div class="chat-input-bar">
+                  <input type="text" id="hub-sandbox-input" placeholder="Simule uma mensagem como paciente...">
+                  <button class="btn-primary-blue" id="hub-sandbox-btn">
+                    <i class="fa-solid fa-paper-plane"></i>
+                  </button>
+                </div>
+              </div>
+
+              <!-- COLUNA DIREITA: COPILOTO ADMIN (CHAT DE GESTÃO DO PROJETO E DA IA) -->
+              <div class="card-panel" style="margin-bottom: 0; display: flex; flex-direction: column;">
+                <div class="card-panel-header" style="margin-bottom: 12px;">
+                  <div class="card-title-group">
+                    <div class="card-title-icon-circle" style="background-color: #0f172a;">
+                      <i class="fa-solid fa-robot" style="color: #60a5fa;"></i>
+                    </div>
+                    <div class="card-title-text">
+                      <h3>Copiloto Admin (Gestão por Chat)</h3>
+                      <p>Controle rotas, treinamentos e parametros da IA via texto</p>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Chips de Ações Rápidas -->
+                <div class="copilot-quick-chips">
+                  <button class="quick-chip-btn" data-cmd="resumo da ia">📋 Resumo do Projeto</button>
+                  <button class="quick-chip-btn" data-cmd="fluxo de atendimento">🗺️ Fluxo de Atendimento</button>
+                  <button class="quick-chip-btn" data-cmd="mude a temperatura para 0.3">⚙️ Temperatura 0.3</button>
+                  <button class="quick-chip-btn" data-cmd="mude o tom para Ultra-Humano">💬 Tom Ultra-Humano</button>
+                </div>
+
+                <div class="chat-thread-container" id="hub-chatops-messages" style="height: 300px;">
+                  <div class="msg-box ai">
+                    <div class="msg-author"><i class="fa-solid fa-robot"></i> Copiloto Admin (Lifeline One)</div>
+                    <div class="msg-body">
+                      Olá, Direção! Sou o Copiloto Admin. Conheço toda a estrutura do projeto, rotas Supabase e treinamentos da IA Roberta. Digite o que deseja alterar ou clique nos atalhos acima!
+                    </div>
+                  </div>
+                </div>
+
+                <div class="chat-input-bar">
+                  <input type="text" id="hub-chatops-input" placeholder="Digite uma instrução admin ou alteração de IA...">
+                  <button class="btn-primary-blue" id="hub-chatops-btn">
+                    <i class="fa-solid fa-paper-plane"></i>
+                  </button>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- CAIXA DE FEEDBACK E SUGESTÕES DO CHEFE / DIREÇÃO -->
+            <div class="card-panel" style="margin-top: 16px; border: 1px solid rgba(37, 99, 235, 0.25); background: linear-gradient(135deg, rgba(239, 246, 255, 0.6), rgba(255, 255, 255, 0.95));">
+              <div class="card-panel-header" style="margin-bottom: 12px;">
+                <div class="card-title-group">
+                  <div class="card-title-icon-circle" style="background-color: #0f172a;">
+                    <i class="fa-solid fa-user-tie" style="color: #fbbf24;"></i>
+                  </div>
+                  <div class="card-title-text">
+                    <h3 style="color: #0f172a; font-size: 15px; font-weight: 700;">💡 Espaço do Diretor — Enviar Sugestões & Avaliação da IA</h3>
+                    <p style="font-size: 12px; color: #475569;">Envie suas observações ao testar a IA. Suas sugestões serão enviadas diretamente para a aba de Refinamento da IA.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div style="display: flex; gap: 12px; margin-bottom: 12px; flex-wrap: wrap;">
+                <div style="width: 220px;">
+                  <label style="font-size: 11.5px; font-weight: 600; color: #334155; display: block; margin-bottom: 4px;">SELECIONE A IA PARA REFINAR</label>
+                  <select id="boss-feedback-agent-select" style="width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 12.5px; background: #f8fafc; font-weight: 600;">
+                    <option value="agent-roberta">👩‍⚕️ IA Roberta (Recepção & Agendamentos)</option>
+                    <option value="agent-drai">🩺 Copiloto IA Médico (Dr. AI)</option>
+                    <option value="agent-triagem">📞 IA Triagem Telefônica</option>
+                  </select>
+                </div>
+                <div style="flex: 1; min-width: 180px;">
+                  <label style="font-size: 11.5px; font-weight: 600; color: #334155; display: block; margin-bottom: 4px;">CATEGORIA DA SUGESTÃO</label>
+                  <select id="boss-feedback-category" style="width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 12.5px; background: white;">
+                    <option value="Tom de Voz & Empatia">Tom de Voz & Empatia</option>
+                    <option value="Agendamento & Horários">Agendamento & Horários</option>
+                    <option value="Convênios & Preços">Convênios & Preços</option>
+                    <option value="Regras de Atendimento">Regras de Atendimento</option>
+                    <option value="Outros Ajustes">Outros Ajustes</option>
+                  </select>
+                </div>
+                <div style="width: 180px;">
+                  <label style="font-size: 11.5px; font-weight: 600; color: #334155; display: block; margin-bottom: 4px;">AVALIAÇÃO DO ATENDIMENTO</label>
+                  <select id="boss-feedback-rating" style="width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 12.5px; background: white;">
+                    <option value="5">⭐⭐⭐⭐⭐ (Excelente)</option>
+                    <option value="4">⭐⭐⭐⭐ (Muito Bom)</option>
+                    <option value="3">⭐⭐⭐ (Bom, ajustar)</option>
+                    <option value="2">⭐⭐ (Regular)</option>
+                    <option value="1">⭐ (Precisa Ajustar)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div style="margin-bottom: 12px;">
+                <textarea id="boss-feedback-input" rows="3" placeholder="Escreva aqui a sua sugestão ou o que gostaria que esta IA respondesse diferente..." style="width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 13px; font-family: 'Inter', sans-serif; resize: vertical; background: white;"></textarea>
+              </div>
+
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div id="boss-feedback-status" style="font-size: 12.5px; font-weight: 600; color: #16a34a;"></div>
+                <button class="btn-primary-blue" id="btn-submit-boss-feedback" style="padding: 9px 22px; font-size: 13px; font-weight: 600;">
+                  <i class="fa-solid fa-paper-plane" style="margin-right: 6px;"></i> Enviar Sugestão para Refinamento
+                </button>
+              </div>
+            </div>
+
+            <!-- CONFIGURAÇÃO DE PARÂMETROS ADICIONAL -->
+            <div class="card-panel" style="margin-top: 16px;">
+              <div class="card-panel-header">
+                <div class="card-title-group">
+                  <div class="card-title-icon-circle">
+                    <i class="fa-solid fa-sliders"></i>
+                  </div>
+                  <div class="card-title-text">
+                    <h3>Parâmetros de Execução da IA Roberta</h3>
+                    <p>Controle do modelo motor LLM e criatividade de resposta.</p>
+                  </div>
+                </div>
+                <div class="version-indicator">
+                  <i class="fa-regular fa-clock"></i>
+                  <span>Versão Atual: v1.8 · Lifeline One Multi-IA</span>
+                </div>
+              </div>
+
+              <div class="parameters-grid">
+                <div>
+                  <label class="form-label-custom">Modelo LLM Motor</label>
+                  <select class="select-custom" id="select-llm-model">
+                    <option value="gpt-4o-mini">GPT-4o Mini (Rápido / Ultra-Econômico)</option>
+                    <option value="gpt-4o">GPT-4o (Alta Precisão Clínica)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <div class="temperature-header">
+                    <label class="form-label-custom" style="margin-bottom: 0;">Temperatura de Criatividade</label>
+                    <span class="temp-badge" id="temp-val-badge">0.7</span>
+                  </div>
+                  <input type="range" class="range-slider-custom" min="0" max="1" step="0.1" value="0.7" id="slider-temperature">
+                  <div class="range-labels">
+                    <span>0.0 · Focado/Estrito</span>
+                    <span>1.0 · Criativo</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- TAB REFINAMENTO MULTI-IA (SUGESTÕES DO CHEFE E CADASTRO DE NOVAS IAS) -->
+          <div class="tab-content-panel" id="tab-panel-refinamento">
+            
+            <!-- HEADER REFINAMENTO E NOVO CADASTRO DE IA -->
+            <div class="card-panel">
+              <div class="card-panel-header">
+                <div class="card-title-group">
+                  <div class="card-title-icon-circle" style="background-color: #f59e0b;">
+                    <i class="fa-solid fa-lightbulb"></i>
+                  </div>
+                  <div class="card-title-text">
+                    <h3>Central de Refinamento Multi-IA — Gestão & Treinamento de Agentes</h3>
+                    <p>Filtre por IA, treine novos modelos ou cadastre um novo Agente Personalizado.</p>
+                  </div>
+                </div>
+                <button class="btn-primary-blue" id="btn-show-add-agent-modal" style="background-color: #0f172a;">
+                  <i class="fa-solid fa-plus"></i> Cadastrar Nova IA para Treinamento
+                </button>
+              </div>
+
+              <!-- FORMULÁRIO RÁPIDO DE NOVA IA (INLINE EXPANDABLE) -->
+              <div id="container-add-agent" style="display: none; background: #f8fafc; padding: 16px; border-radius: 10px; border: 1px dashed #cbd5e1; margin-top: 14px;">
+                <h4 style="font-size: 13.5px; font-weight: 700; color: #0f172a; margin-bottom: 8px;">✨ Cadastrar Novo Agente de IA Personalizado</h4>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 10px;">
+                  <div>
+                    <label style="font-size: 11px; font-weight: 600; color: #475569;">NOME DA NOVA IA</label>
+                    <input type="text" id="new-agent-name" placeholder="Ex: Dra. Júlia (Nutrição)" style="width: 100%; padding: 8px 10px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 12px; background: white;">
+                  </div>
+                  <div>
+                    <label style="font-size: 11px; font-weight: 600; color: #475569;">FUNÇÃO / ESPECIALIDADE</label>
+                    <input type="text" id="new-agent-role" placeholder="Ex: Atendimento de Odontologia Pediátrica" style="width: 100%; padding: 8px 10px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 12px; background: white;">
+                  </div>
+                  <div>
+                    <label style="font-size: 11px; font-weight: 600; color: #475569;">TOM DE VOZ INICIAL</label>
+                    <select id="new-agent-tone" style="width: 100%; padding: 8px 10px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 12px; background: white;">
+                      <option value="Acolhedor e Empático">Acolhedor e Empático</option>
+                      <option value="Direto e Clínico">Direto e Clínico</option>
+                      <option value="Formal e Corporativo">Formal e Corporativo</option>
+                    </select>
+                  </div>
+                </div>
+                <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                  <button class="btn-secondary-outline" id="btn-cancel-add-agent" style="font-size: 11.5px; height: 32px;">Cancelar</button>
+                  <button class="btn-primary-blue" id="btn-save-new-agent" style="font-size: 11.5px; height: 32px;">Salvar e Habilitar Treinamento</button>
+                </div>
+              </div>
+
+              <!-- Filtro de IA e Tabela -->
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px; margin-bottom: 12px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <label style="font-size: 12px; font-weight: 600; color: #334155;">Filtrar Sugestões por IA:</label>
+                  <select id="filter-refinement-agent" style="padding: 6px 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 12px; background: white; font-weight: 600;">
+                    <option value="all">Todas as IAs</option>
+                    <option value="agent-roberta">IA Roberta</option>
+                    <option value="agent-drai">Copiloto IA Médico</option>
+                    <option value="agent-triagem">IA Triagem</option>
+                  </select>
+                </div>
+                <button class="btn-primary-blue" id="btn-apply-all-refinement" style="font-size: 12px; padding: 7px 14px;">
+                  <i class="fa-solid fa-wand-magic-sparkles"></i> Aplicar Todas as Sugestões ao Prompt
+                </button>
+              </div>
+
+              <!-- Tabela de Feedbacks Enviados -->
+              <div class="table-container">
+                <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                  <thead>
+                    <tr style="background: #f8fafc; border-bottom: 2px solid #e2e8f0; text-align: left;">
+                      <th style="padding: 10px 14px;">Data/Hora</th>
+                      <th style="padding: 10px 14px;">IA Alvo</th>
+                      <th style="padding: 10px 14px;">Categoria</th>
+                      <th style="padding: 10px 14px;">Avaliação</th>
+                      <th style="padding: 10px 14px;">Sugestão / Comentário</th>
+                      <th style="padding: 10px 14px;">Status</th>
+                      <th style="padding: 10px 14px;">Ação</th>
+                    </tr>
+                  </thead>
+                  <tbody id="table-refinamento-body">
+                    <!-- Linhas carregadas dinamicamente -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB 2: CHATOPS / COPILOTO IA MÉDICO (DR. AI) -->
+          <div class="tab-content-panel" id="tab-panel-copiloto">
+            <div class="card-panel">
+              <div class="card-panel-header">
+                <div class="card-title-group">
+                  <div class="card-title-icon-circle" style="background-color: #0f172a;">
+                    <i class="fa-solid fa-user-doctor" style="color: #60a5fa;"></i>
+                  </div>
+                  <div class="card-title-text">
+                    <h3>Copiloto IA Médico (Dr. AI) — Assistente Clínico de Anamnese</h3>
+                    <p>Suporte ao médico durante o atendimento presencial, auxílio em laudos e transcrição.</p>
+                  </div>
+                </div>
+                <span class="badge-status-blue"><i class="fa-solid fa-stethoscope"></i> Módulo Médico Ativo</span>
+              </div>
+
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-top: 16px;">
+                <div style="background: #f8fafc; padding: 16px; border-radius: 10px; border: 1px solid #cbd5e1;">
+                  <h4 style="font-size: 13px; font-weight: 700; color: #0f172a; margin-bottom: 8px;">⚙️ Configuração do Prompt Clínico (Dr. AI)</h4>
+                  <label style="font-size: 11px; font-weight: 600; color: #475569;">DIRETRIZES DA ANAMNESE AUTOMÁTICA</label>
+                  <textarea rows="5" style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 12px; font-family: sans-serif; resize: vertical;" readonly>Gerar resumo no padrão SOAP (Subjetivo, Objetivo, Avaliação, Plano) destacando histórico de alergias, medicamentos de uso contínuo e hipótese diagnóstica inicial.</textarea>
+                </div>
+
+                <div style="background: #f8fafc; padding: 16px; border-radius: 10px; border: 1px solid #cbd5e1;">
+                  <h4 style="font-size: 13px; font-weight: 700; color: #0f172a; margin-bottom: 8px;">🩺 Especialidades Médicas Ativas</h4>
+                  <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                    <span class="badge-status-green">Alergia Pediátrica</span>
+                    <span class="badge-status-green">Imunologia Clínica</span>
+                    <span class="badge-status-green">Tricologia & Dermatologia</span>
+                    <span class="badge-status-blue">+ Adicionar Especialidade</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB 3: OMNICHANNEL / PLAYGROUND WHATSAPP -->
+          <div class="tab-content-panel" id="tab-panel-omnichannel">
+            <div class="card-panel">
+              <div class="card-panel-header">
+                <div class="card-title-group">
+                  <div class="card-title-icon-circle" style="background-color: #25d366;">
+                    <i class="fa-brands fa-whatsapp"></i>
+                  </div>
+                  <div class="card-title-text">
+                    <h3>Chat Omnichannel & Central Multi-Canais</h3>
+                    <p>Gestão unificada de mensagens do WhatsApp, Instagram Direct e Webchat.</p>
+                  </div>
+                </div>
+                <span class="badge-status-green"><i class="fa-solid fa-signal"></i> Conexão Estável</span>
+              </div>
+
+              <div style="font-size: 13px; color: var(--text-dark); margin-top: 12px; background: #f8fafc; padding: 16px; border-radius: 10px; border: 1px solid #cbd5e1;">
+                💡 <strong>Central Integrada de Testes:</strong> Você pode realizar testes em tempo real no simulador WhatsApp lado a lado com o Copiloto Admin na aba <strong>Central & Teste Integrado (Dual)</strong>.
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB 4: CONVÊNIOS & BASE RAG -->
+          <div class="tab-content-panel" id="tab-panel-convenios">
+            <div class="card-panel">
+              <div class="card-panel-header">
+                <div class="card-title-group">
+                  <div class="card-title-icon-circle">
+                    <i class="fa-solid fa-hospital"></i>
+                  </div>
+                  <div class="card-title-text">
+                    <h3>Base de Conhecimento Clínica & Convênios (RAG Supabase)</h3>
+                    <p>Documentação médica, coberturas de planos e regras de preparo de exames.</p>
+                  </div>
+                </div>
+                <button class="btn-primary-blue" id="btn-save-rag">
+                  <i class="fa-solid fa-floppy-disk"></i> Salvar Base RAG
+                </button>
+              </div>
+
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-top: 14px; margin-bottom: 14px;">
+                <div style="background: #f8fafc; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                  <span style="font-size: 11px; color: #64748b; display: block;">CONVÊNIOS CADASTRADOS</span>
+                  <span style="font-size: 16px; font-weight: 700; color: #0f172a;">Unimed, Bradesco, SulAmérica</span>
+                </div>
+                <div style="background: #f8fafc; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                  <span style="font-size: 11px; color: #64748b; display: block;">VETORES pgvector INDEXADOS</span>
+                  <span style="font-size: 16px; font-weight: 700; color: #16a34a;">128 Documentos RAG</span>
+                </div>
+              </div>
+
+              <div class="form-group-custom">
+                <label class="form-label-custom">Protocolo RAG Ativo (Regras Médicas & Convênios)</label>
+                <textarea class="textarea-custom" id="rag-content-area" rows="8" placeholder="Digite as regras de convênios, valores e procedimentos de preparo...">- Convênios Aceitos: Unimed Nacional, Bradesco Saúde, SulAmérica Exato.
+- Consulta Particular: R$ 350,00 (com direito a retorno em até 15 dias).
+- Exames em Clínica: Prick Test (Picada na pele) e Teste de Contato (Patch test).
+- Preparo Patch Test: Pausar antialérgicos orais 7 dias antes do exame.
+- Endereço: Av. Paulista, 1000 — Estacionamento no local com manobrista.
+- Horário de Funcionamento: Segunda a Sexta-feira das 08h00 às 19h00.</textarea>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB 5: DEDICADA WHATSAPP CONEXÕES (QR CODE) -->
+          <div class="tab-content-panel" id="tab-panel-conexoes">
+            <div class="card-panel">
+              <div class="card-panel-header">
+                <div class="card-title-group">
+                  <div class="card-title-icon-circle" style="background-color: #25d366;">
+                    <i class="fa-brands fa-whatsapp"></i>
+                  </div>
+                  <div class="card-title-text">
+                    <h3>Conexão do WhatsApp Comercial — Instância Evolution API</h3>
+                    <p>Conecte o número do WhatsApp da clínica apontando a câmera do celular para o QR Code abaixo.</p>
+                  </div>
+                </div>
+                <button class="btn-secondary-outline" id="btn-refresh-qrcode">
+                  <i class="fa-solid fa-rotate"></i> Gerar Novo QR Code
+                </button>
+              </div>
+
+              <div style="display: flex; gap: 24px; align-items: center; flex-wrap: wrap; margin-top: 16px;">
+                <!-- Container do QR Code -->
+                <div style="background: #ffffff; padding: 16px; border-radius: 12px; border: 1px solid var(--border-color); text-align: center; width: 220px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+                  <div id="qrcode-canvas-container" style="width: 180px; height: 180px; margin: 0 auto; display: flex; align-items: center; justify-content: center; background: #f8fafc; border-radius: 8px;">
+                    <i class="fa-solid fa-qrcode" style="font-size: 100px; color: #334155;"></i>
+                  </div>
+                  <div style="margin-top: 10px; font-size: 11.5px; color: var(--text-muted); font-weight: 500;">
+                    Escaneie com seu WhatsApp <br> (Aparelhos Conectados)
+                  </div>
+                </div>
+
+                <!-- Detalhes da Conexão e Código de Pareamento -->
+                <div style="flex: 1; min-width: 280px;">
+                  <div style="background: #f8fafc; padding: 16px; border-radius: 10px; border: 1px solid var(--border-color); margin-bottom: 16px;">
+                    <div style="font-size: 12px; font-weight: 600; color: var(--navy-dark); margin-bottom: 6px;">
+                      🔑 Código de Pareamento Rápido (8 Dígitos)
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                      <span id="pairing-code-display" style="font-family: monospace; font-size: 20px; font-weight: 700; color: var(--primary-blue); letter-spacing: 2px;">83A9-4K12</span>
+                      <button class="btn-secondary-outline" id="btn-copy-pairing-code" style="height: 32px; padding: 0 10px; font-size: 11px;">
+                        <i class="fa-regular fa-copy"></i> Copiar Código
+                      </button>
+                    </div>
+                  </div>
+
+                  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px;">
+                    <div style="background: var(--bg-card); padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border-color);">
+                      <span style="font-size: 10.5px; color: var(--text-muted); display: block;">STATUS DA INSTÂNCIA</span>
+                      <span style="font-size: 12.5px; font-weight: 600; color: #16a34a;"><i class="fa-solid fa-circle-check"></i> Aguardando Leitura</span>
+                    </div>
+                    <div style="background: var(--bg-card); padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border-color);">
+                      <span style="font-size: 10.5px; color: var(--text-muted); display: block;">NOME DA INSTÂNCIA</span>
+                      <span style="font-size: 12.5px; font-weight: 600; color: var(--text-dark);">clinica_alergia_br</span>
+                    </div>
+                    <div style="background: var(--bg-card); padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border-color);">
+                      <span style="font-size: 10.5px; color: var(--text-muted); display: block;">WEBHOOK STATUS</span>
+                      <span style="font-size: 12.5px; font-weight: 600; color: #2563eb;"><i class="fa-solid fa-link"></i> Ativo / Conectado</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB 6: IA TRIAGEM DE ENFERMAGEM (VOZ/TELEFONE) -->
+          <div class="tab-content-panel" id="tab-panel-triagem">
+            <div class="card-panel">
+              <div class="card-panel-header">
+                <div class="card-title-group">
+                  <div class="card-title-icon-circle" style="background-color: #ef4444;">
+                    <i class="fa-solid fa-heart-pulse"></i>
+                  </div>
+                  <div class="card-title-text">
+                    <h3>IA Triagem de Enfermagem (Ligação / Voz)</h3>
+                    <p>Triagem telefônica automática com classificação de risco do Protocolo de Manchester.</p>
+                  </div>
+                </div>
+                <span class="badge-status-red"><i class="fa-solid fa-shield-virus"></i> Protocolo Emergência Ativo</span>
+              </div>
+
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-top: 16px;">
+                <div style="background: #fff5f5; padding: 16px; border-radius: 10px; border: 1px solid #fecaca;">
+                  <h4 style="font-size: 13px; font-weight: 700; color: #991b1b; margin-bottom: 6px;">🚨 Gatilhos de Emergência (Alerta Vermelho)</h4>
+                  <ul style="font-size: 12px; color: #7f1d1d; line-height: 1.6; padding-left: 18px;">
+                    <li>Falta de ar / Dificuldade respiratória aguda</li>
+                    <li>Chiado no peito ou reação anafilática</li>
+                    <li>Edema de glote / Reação grave a medicação</li>
+                  </ul>
+                  <div style="margin-top: 10px; font-size: 11.5px; font-weight: 600; color: #991b1b;">
+                    Ação: Redirecionamento instantâneo para Pronto-Socorro
+                  </div>
+                </div>
+
+                <div style="background: #f8fafc; padding: 16px; border-radius: 10px; border: 1px solid #cbd5e1;">
+                  <h4 style="font-size: 13px; font-weight: 700; color: #0f172a; margin-bottom: 6px;">📞 Telefone do Enfermeiro de Plantão</h4>
+                  <input type="text" value="5511999887766 (Enf. Plantão Acolhimento)" style="width: 100%; padding: 8px 10px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 12px; font-weight: 600; background: white;" readonly>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB 7: IA MÉDICA (ESCUTA DE CONSULTA) -->
+          <div class="tab-content-panel" id="tab-panel-medica">
+            <div class="card-panel">
+              <div class="card-panel-header">
+                <div class="card-title-group">
+                  <div class="card-title-icon-circle" style="background-color: #0284c7;">
+                    <i class="fa-solid fa-stethoscope"></i>
+                  </div>
+                  <div class="card-title-text">
+                    <h3>IA Médica (Escuta Ambiental & Transcrição de Consulta)</h3>
+                    <p>Gravador inteligente que escuta a consulta presencial e gera o prontuário automaticamente.</p>
+                  </div>
+                </div>
+                <button class="btn-primary-blue" style="background-color: #0284c7;">
+                  <i class="fa-solid fa-microphone"></i> Iniciar Gravador da Consulta
+                </button>
+              </div>
+
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-top: 16px;">
+                <div style="background: #f8fafc; padding: 16px; border-radius: 10px; border: 1px solid #cbd5e1;">
+                  <h4 style="font-size: 13px; font-weight: 700; color: #0f172a; margin-bottom: 6px;">📝 Modelo de Anamnese SOAP Gerado</h4>
+                  <div style="font-size: 12px; color: #475569; line-height: 1.5; background: white; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
+                    <strong>Subjetivo:</strong> Paciente relata rinite persistente ao acordar.<br>
+                    <strong>Objetivo:</strong> Mucosa nasal hiperemiada.<br>
+                    <strong>Avaliação:</strong> Rinite Alérgica Perene (CID J30.1).<br>
+                    <strong>Plano:</strong> Teste de Contato + Imunoterapia.
+                  </div>
+                </div>
+
+                <div style="background: #f8fafc; padding: 16px; border-radius: 10px; border: 1px solid #cbd5e1;">
+                  <h4 style="font-size: 13px; font-weight: 700; color: #0f172a; margin-bottom: 6px;">⚙️ Opções de Auto-Preenchimento</h4>
+                  <label style="display: flex; align-items: center; gap: 8px; font-size: 12px; color: #334155; margin-bottom: 8px;">
+                    <input type="checkbox" checked> Auto-sugerir código de CID-10
+                  </label>
+                  <label style="display: flex; align-items: center; gap: 8px; font-size: 12px; color: #334155;">
+                    <input type="checkbox" checked> Rascunhar receita digital de medicamentos
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB 8: USUÁRIOS E PERMISSÕES (RBAC) -->
+          <div class="tab-content-panel" id="tab-panel-usuarios">
+            <div class="card-panel">
+              <div class="card-panel-header">
+                <div class="card-title-group">
+                  <div class="card-title-icon-circle" style="background-color: #475569;">
+                    <i class="fa-solid fa-user-gear"></i>
+                  </div>
+                  <div class="card-title-text">
+                    <h3>Usuários & Permissões da Equipe (RBAC)</h3>
+                    <p>Gerencie quem pode acessar prontuários, agendas e configurações da IA.</p>
+                  </div>
+                </div>
+                <button class="btn-primary-blue">
+                  <i class="fa-solid fa-user-plus"></i> Convidar Membro
+                </button>
+              </div>
+
+              <div class="table-container" style="margin-top: 16px;">
+                <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                  <thead>
+                    <tr style="background: #f8fafc; border-bottom: 2px solid #e2e8f0; text-align: left;">
+                      <th style="padding: 10px 14px;">Nome</th>
+                      <th style="padding: 10px 14px;">E-mail</th>
+                      <th style="padding: 10px 14px;">Função / Cargo</th>
+                      <th style="padding: 10px 14px;">Permissão</th>
+                      <th style="padding: 10px 14px;">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr style="border-bottom: 1px solid #e2e8f0;">
+                      <td style="padding: 12px 14px; font-weight: 600;">Dr. Gustav Baptista</td>
+                      <td style="padding: 12px 14px;">gustav@vittamed.com.br</td>
+                      <td style="padding: 12px 14px;">Médico Diretor</td>
+                      <td style="padding: 12px 14px;"><span class="badge-status-blue">Administrador Total</span></td>
+                      <td style="padding: 12px 14px;"><span class="badge-status-green">Ativo</span></td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #e2e8f0;">
+                      <td style="padding: 12px 14px; font-weight: 600;">Dra. Ana Silva</td>
+                      <td style="padding: 12px 14px;">ana.silva@vittamed.com.br</td>
+                      <td style="padding: 12px 14px;">Alergista Pediátrica</td>
+                      <td style="padding: 12px 14px;"><span class="badge-status-blue">Acesso Médico</span></td>
+                      <td style="padding: 12px 14px;"><span class="badge-status-green">Ativo</span></td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #e2e8f0;">
+                      <td style="padding: 12px 14px; font-weight: 600;">Mariana Recepção</td>
+                      <td style="padding: 12px 14px;">recepcao@vittamed.com.br</td>
+                      <td style="padding: 12px 14px;">Atendente / Recepcionista</td>
+                      <td style="padding: 12px 14px;"><span class="badge-status-blue">Atendimento & Agenda</span></td>
+                      <td style="padding: 12px 14px;"><span class="badge-status-green">Ativo</span></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB 9: GESTÃO DE PACIENTES & LGPD -->
+          <div class="tab-content-panel" id="tab-panel-lgpd">
+            <div class="card-panel">
+              <div class="card-panel-header">
+                <div class="card-title-group">
+                  <div class="card-title-icon-circle" style="background-color: #16a34a;">
+                    <i class="fa-solid fa-shield-halved"></i>
+                  </div>
+                  <div class="card-title-text">
+                    <h3>Gestão de Pacientes & Conformidade LGPD</h3>
+                    <p>Políticas de privacidade, criptografia e termo de consentimento médico.</p>
+                  </div>
+                </div>
+                <span class="badge-status-green"><i class="fa-solid fa-lock"></i> Criptografia Supabase AES-256</span>
+              </div>
+
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-top: 16px;">
+                <div style="background: #f8fafc; padding: 16px; border-radius: 10px; border: 1px solid #cbd5e1;">
+                  <h4 style="font-size: 13px; font-weight: 700; color: #0f172a; margin-bottom: 6px;">🔒 Segurança de Dados na Nuvem</h4>
+                  <p style="font-size: 12px; color: #475569; line-height: 1.5;">Prontuários e conversas do WhatsApp armazenados com isolamento RLS (Row Level Security) no Supabase Cloud.</p>
+                </div>
+
+                <div style="background: #f8fafc; padding: 16px; border-radius: 10px; border: 1px solid #cbd5e1;">
+                  <h4 style="font-size: 13px; font-weight: 700; color: #0f172a; margin-bottom: 6px;">📄 Consentimento do Paciente</h4>
+                  <p style="font-size: 12px; color: #475569; line-height: 1.5;">O aceite dos termos de atendimento via WhatsApp é registrado automaticamente na primeira mensagem.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </main>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
