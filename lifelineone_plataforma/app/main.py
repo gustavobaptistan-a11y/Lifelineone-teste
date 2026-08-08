@@ -3,9 +3,13 @@ from fastapi import FastAPI
 from app.core.config import settings
 from app.core.database import engine, Base
 from app.api.v1.api import api_router
+from app.services.event_handlers import setup_event_handlers
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Registra os handlers de eventos
+    setup_event_handlers()
+    
     # Inicializa as tabelas do banco de dados na inicialização
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
