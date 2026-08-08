@@ -1,3 +1,4 @@
+import unicodedata
 from datetime import datetime, timezone
 from typing import Dict, Any, List, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -9,6 +10,12 @@ from app.schemas.patient import PatientCreate, PatientStateResponse
 from app.services.patient_service import PatientService
 from app.services.journey_service import JourneyService
 from app.services.tools_service import PlatformToolsService
+from app.services.llm_engine import llm_engine
+
+def normalize_text(text: str) -> str:
+    """Remove acentos e converte texto para minúsculas."""
+    nfkd_form = unicodedata.normalize('NFKD', text)
+    return "".join([c for c in nfkd_form if not unicodedata.combining(c)]).lower()
 
 class LifelineAIOrchestrator:
     """
@@ -50,7 +57,6 @@ class LifelineAIOrchestrator:
         # -------------------------------------------------------------
         # PASSO 3: Buscar contexto da conversa (Memória em 3 níveis)
         # -------------------------------------------------------------
-        # Nível 1: Conversa Recente (últimas 10 mensagens)
         messages_query = await db.execute(
             select(ConversationMessage)
             .where(ConversationMessage.patient_id == patient.id)
@@ -59,15 +65,12 @@ class LifelineAIOrchestrator:
         )
         recent_messages = list(reversed(messages_query.scalars().all()))
 
-        # Nível 2: Resumo da Conversa
         summary_query = await db.execute(
             select(ConversationSummary)
             .where(ConversationSummary.patient_id == patient.id)
         )
         conversation_summary_obj = summary_query.scalar_one_or_none()
         conversation_summary = conversation_summary_obj.summary if conversation_summary_obj else "Sem resumo prévio."
-
-        # Nível 3: Estado Persistente da Plataforma (Jaz em patient_state)
 
         # -------------------------------------------------------------
         # PASSO 4, 5 e 6: Informações clínicas, comerciais e eventos pendentes
@@ -88,20 +91,19 @@ class LifelineAIOrchestrator:
         }
 
         # -------------------------------------------------------------
-        # PASSO 7: Entender a intenção atual
+        # PASSO 7: Entender a intenção atual (normalizada sem acentos)
         # -------------------------------------------------------------
-        msg_lower = message_text.lower()
+        msg_normalized = normalize_text(message_text)
         detected_intent = "duvida_geral"
-        if any(w in msg_lower for w in ["agendar", "marcar", "horario", "consulta"]):
+        if any(w in msg_normalized for w in ["agendar", "marcar", "horario", "consulta"]):
             detected_intent = "agendamento"
-        elif any(w in msg_lower for w in ["convenio", "plano", "aceita"]):
+        elif any(w in msg_normalized for w in ["convenio", "plano", "aceita"]):
             detected_intent = "duvida_convenio"
-        elif any(w in msg_lower for w in ["onde", "endereco", "localizacao", "chegar"]):
+        elif any(w in msg_normalized for w in ["onde", "endereco", "localizacao", "localizacao", "chegar", "local"]):
             detected_intent = "localizacao"
-        elif any(w in msg_lower for w in ["cancelar", "desmarcar"]):
+        elif any(w in msg_normalized for w in ["cancelar", "desmarcar"]):
             detected_intent = "cancelamento"
 
-        # Atualiza a intenção atual no paciente
         patient.current_intent = detected_intent
         await db.flush()
 
@@ -141,24 +143,24 @@ class LifelineAIOrchestrator:
             )
 
         # -------------------------------------------------------------
-        # PASSO 11: Responder naturalmente com base no estado da jornada e ferramentas
+        # PASSO 11: Responder naturalmente via Motor LLM / Plataforma
         # -------------------------------------------------------------
-        response_text = ""
-        if detected_intent == "agendamento":
-            slots_str = ", ".join([f"{s['doctor']} ({s['date']})" for s in tool_outputs.get("agenda_slots", [])[:2]])
-            response_text = f"Olá, {patient.name}! Verifiquei sua jornada ({patient.current_stage.value}). Temos os seguintes horários disponíveis com {patient_state.medical_info.attending_doctor or 'nossa equipe'}: {slots_str}. Qual horário prefere?"
-        elif detected_intent == "duvida_convenio":
-            convenios_str = ", ".join(tool_outputs.get("convenios", []))
-            conv_paciente = patient_state.insurance.name
-            response_text = f"Olá, {patient.name}! Atendemos os seguintes convênios: {convenios_str}. " + (f"Confirmado que atendemos o seu convênio {conv_paciente}!" if conv_paciente else "Qual o seu convênio?")
-        elif detected_intent == "localizacao":
-            loc = tool_outputs.get("localizacao", {})
-            response_text = f"Nossa unidade {loc.get('unit')} fica no endereço: {loc.get('address')}. Como posso te ajudar mais?"
-        else:
-            conv_info = f" (Convênio: {patient_state.insurance.name})" if patient_state.insurance.name else ""
-            response_text = f"Olá, {patient.name}{conv_info}! Como posso ajudar você hoje?"
+        history_list = [{"sender": m.sender, "text": m.content} for m in recent_messages]
+        
+        response_text = await llm_engine.generate_orchestrated_response(
+            patient_name=patient.name,
+            current_stage=patient.current_stage.value,
+            detected_intent=detected_intent,
+            tools_executed=tools_executed,
+            tool_outputs=tool_outputs,
+            recent_history=history_list,
+            patient_context={
+                "insurance": commercial_info,
+                "medical_info": clinical_info,
+                "summary": conversation_summary
+            }
+        )
 
-        # Salva a resposta da IA na memória
         ia_msg = ConversationMessage(patient_id=patient.id, sender="ia", content=response_text)
         db.add(ia_msg)
         await db.flush()
