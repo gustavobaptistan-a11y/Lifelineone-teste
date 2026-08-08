@@ -357,10 +357,17 @@ class SupervisorAgent:
         # CASO 8: Dúvida de Preço e Localização
         elif any(k in low_content for k in ["valor", "preço", "quanto custa", "endereço", "endereco", "onde fica", "onde e", "onde é", "localização", "localizacao", "como chegar", "estacionamento", "horario de funcionamento"]):
             action_name = "operational_info"
-            response_text = (
-                f"Ficamos na Av. Paulista, 1000 com estacionamento no local e manobrista. 🚗\n\n"
-                f"A consulta particular é R$ 350,00 (com retorno em 15 dias e nota fiscal para reembolso). Deseja consultar nossos horários?"
-            )
+            cfgs = await self._get_clinic_settings(db, clinic_id)
+            address_text = cfgs.get("endereco", "Ficamos na Av. Paulista, 1000 com estacionamento no local e manobrista. 🚗")
+            price_text = cfgs.get("preco_consulta", "A consulta particular é R$ 350,00 (com retorno em 15 dias e nota fiscal para reembolso).")
+            
+            # Formatação limpa se o texto recuperado já incluir descrição
+            if not address_text.startswith("Ficamos"):
+                address_text = f"Ficamos na {address_text} com estacionamento e facilidade de acesso. 🚗"
+            if not price_text.startswith("A consulta"):
+                price_text = f"A consulta particular é {price_text}."
+                
+            response_text = f"{address_text}\n\n{price_text} Deseja consultar nossos horários?"
 
         # CASO 9: Dúvida de Convênio Isolada
         elif any(k in low_content for k in ["unimed", "bradesco", "sulamérica", "sulamerica", "convenio", "plano", "reembolso"]):
@@ -415,5 +422,17 @@ class SupervisorAgent:
             "confidence": 0.99
         }
 
+    async def _get_clinic_settings(self, db: AsyncSession, clinic_id: uuid.UUID) -> Dict[str, Any]:
+        try:
+            stmt = select(Clinic).where(Clinic.id == clinic_id)
+            res = await db.execute(stmt)
+            clinic = res.scalar_one_or_none()
+            if clinic and clinic.configuracoes:
+                return dict(clinic.configuracoes)
+        except Exception as e:
+            logger.warning(f"Erro ao buscar configuracoes da clinica: {e}")
+        return {}
+
 
 supervisor_agent = SupervisorAgent()
+

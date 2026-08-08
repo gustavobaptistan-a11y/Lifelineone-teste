@@ -126,7 +126,25 @@ function initChatOpsHub() {
       removeTypingIndicator(thread, typingId);
 
       const replyMsg = data.response || data.message || 'Comando de configuração executado com sucesso!';
-      appendMessage(thread, 'ai', replyMsg, 'Copiloto Admin (Lifeline One)');
+      const msgBox = appendMessage(thread, 'ai', replyMsg, 'Copiloto Admin (Lifeline One)');
+
+      // Se exigir confirmação, insere um botão interativo de 1 clique
+      if (data.requires_confirmation && msgBox) {
+        const confirmBtn = document.createElement('button');
+        confirmBtn.className = 'btn-primary-blue';
+        confirmBtn.style.marginTop = '10px';
+        confirmBtn.style.padding = '6px 14px';
+        confirmBtn.style.fontSize = '12px';
+        confirmBtn.style.borderRadius = '6px';
+        confirmBtn.innerHTML = '<i class="fa-solid fa-check"></i> Confirmar & Aplicar Alteração Agora';
+        confirmBtn.addEventListener('click', () => {
+          confirmBtn.disabled = true;
+          confirmBtn.innerText = 'Aplicando...';
+          sendCommand('confirmar');
+        });
+        const msgBody = msgBox.querySelector('.msg-body');
+        if (msgBody) msgBody.appendChild(confirmBtn);
+      }
     } catch (err) {
       removeTypingIndicator(thread, typingId);
       appendMessage(thread, 'ai', 'Erro ao conectar ao Copiloto Admin.', 'Copiloto Admin');
