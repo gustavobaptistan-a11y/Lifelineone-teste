@@ -1,13 +1,13 @@
 import uuid
 from typing import Dict, Any, List, Callable, Awaitable
 from sqlalchemy.ext.asyncio import AsyncSession
+from app.core.websocket_manager import ws_manager
 
 HandlerType = Callable[[AsyncSession, int, Dict[str, Any]], Awaitable[Dict[str, Any]]]
 
 class EventBus:
     """
-    Barramento de Eventos da Plataforma Lifeline One.
-    Permite publicação de eventos do sistema e disparo de reações automáticas da IA e do sistema.
+    Barramento de Eventos da Plataforma Lifeline One com transmissão ao vivo via WebSockets.
     """
 
     def __init__(self):
@@ -37,12 +37,18 @@ class EventBus:
                 if "new_stage" in result:
                     new_stage = result["new_stage"]
 
-        return {
+        event_payload = {
+            "type": "system_event",
             "event_id": event_id,
             "event_type": event_type,
             "patient_id": patient_id,
             "actions_triggered": actions_triggered,
             "new_stage": new_stage
         }
+
+        # Transmite via WebSocket em tempo real para o Dashboard
+        await ws_manager.broadcast(event_payload)
+
+        return event_payload
 
 event_bus = EventBus()
