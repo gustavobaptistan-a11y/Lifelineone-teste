@@ -9,6 +9,8 @@ from sqlalchemy import select, delete
 from app.core.database import get_db
 from app.core.config import settings
 from app.agents.supervisor import supervisor_agent
+from app.agents.voice_agent import voice_agent
+from app.agents.documents import documents_agent
 from app.services.whatsapp_service import whatsapp_service
 from app.models.patient import Contact
 from app.models.conversation import Conversation, Message
@@ -335,4 +337,63 @@ async def get_instagram_ads_analytics(
         "taxa_conversao_global": "74.1%",
         "receita_total": "R$ 32.200,00",
         "campanhas": campaigns
+    }
+
+
+@router.post("/voice/inbound-call")
+async def process_inbound_voice_call(
+    payload: WhatsAppMessagePayload,
+    db: AsyncSession = Depends(get_db)
+):
+    """Recebe e atende chamada telefônica do paciente com IA de Voz Humanizada."""
+    clinic_id = uuid.UUID(settings.DEFAULT_CLINIC_ID)
+    phone = payload.phone_number or payload.phone or "5511999887766"
+    name = payload.sender_name or "Gustavo"
+    transcript = payload.message_text or payload.message or "Olá, gostaria de saber sobre minha consulta de amanhã"
+
+    res = await voice_agent.handle_inbound_call(db, clinic_id, phone, name, transcript)
+    return res
+
+
+@router.post("/voice/outbound-call")
+async def process_outbound_voice_call(
+    payload: WhatsAppMessagePayload,
+    db: AsyncSession = Depends(get_db)
+):
+    """Efetua chamada telefônica ativa de confirmação / lembrete pré-consulta."""
+    clinic_id = uuid.UUID(settings.DEFAULT_CLINIC_ID)
+    phone = payload.phone_number or payload.phone or "5511999887766"
+    name = payload.sender_name or "Gustavo"
+
+    res = await voice_agent.trigger_outbound_call(db, clinic_id, phone, name)
+    return res
+
+
+@router.post("/multimodal/process-audio")
+async def process_multimodal_audio(
+    payload: WhatsAppMessagePayload,
+    db: AsyncSession = Depends(get_db)
+):
+    """Recebe e interpreta mensagem de áudio enviada no WhatsApp."""
+    voice_res = await documents_agent.process_voice_audio(payload.media_url or "", payload.sender_name or "Paciente")
+    return {
+        "status": "audio_processed",
+        "transcription": voice_res["transcription"],
+        "emotion": voice_res["patient_emotion"],
+        "message": "Áudio transcrevido e interpretado com sucesso pela IA Roberta!"
+    }
+
+
+@router.post("/multimodal/process-image")
+async def process_multimodal_image(
+    payload: WhatsAppMessagePayload,
+    db: AsyncSession = Depends(get_db)
+):
+    """Recebe e interpreta foto de exame, lesão na pele ou carteirinha."""
+    img_res = await documents_agent.process_medical_image(payload.media_url or "", payload.message_text or "exame")
+    return {
+        "status": "image_processed",
+        "extracted": img_res["extracted_text"],
+        "summary": img_res["summary"],
+        "message": "Foto analisada e anexada ao prontuário do paciente!"
     }

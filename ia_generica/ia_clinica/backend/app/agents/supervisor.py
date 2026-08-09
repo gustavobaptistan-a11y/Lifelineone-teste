@@ -16,6 +16,7 @@ from app.agents.memory import memory_agent
 from app.agents.receptionist import receptionist_agent
 from app.agents.admin_config import admin_config_agent
 from app.services.rag_service import rag_service
+from app.core.context_engine import context_engine
 
 logger = logging.getLogger(__name__)
 
@@ -142,6 +143,25 @@ class SupervisorAgent:
                 f"Nossos médicos alergologistas e dermatologistas farão a avaliação clínica completa e emissão da receita necessária durante a sua consulta. Gostaria de agendar um horário?"
             )
             return {"action": "medical_prescription_guardrail", "response": prescription_response, "confidence": 1.0}
+
+        # 1.9. Tratamento Multimodal: Mensagem de Voz (Áudio)
+        if message_type == "audio":
+            voice_res = await documents_agent.process_voice_audio(media_url or "", sender_name)
+            content = voice_res["transcription"]
+            low_content = content.lower().strip()
+
+        # 1.95. Tratamento Multimodal: Imagem (Exames, Carteirinhas ou Lesões Dermatológicas)
+        if message_type in ["imagem", "image", "foto"]:
+            img_res = await documents_agent.process_medical_image(media_url or "", content)
+            clean_first = clean_patient_first_name(sender_name)
+            name_ack = f", {clean_first}" if clean_first else ""
+            img_response = (
+                f"Recebi a sua imagem com sucesso{name_ack}! 📸\n\n"
+                f"• **Análise Multimodal:** {img_res['summary']}\n"
+                f"• **Prontuário:** A foto já foi anexada ao seu cadastro e estará disponível para a médica na sua consulta.\n\n"
+                f"Como posso te ajudar a organizar seu atendimento hoje?"
+            )
+            return {"action": "multimodal_image_processed", "response": img_response, "confidence": 0.97}
 
         # 1.5. Assegurar clinic_id ativo
         try:

@@ -166,6 +166,16 @@
             <span>BI Tráfego Instagram Ads</span>
           </button>
 
+          <button class="subnav-item" data-tab="voz">
+            <i class="fa-solid fa-phone-volume" style="color: #8b5cf6;"></i>
+            <span>Central de Voz & Ligações</span>
+          </button>
+
+          <button class="subnav-item" data-tab="multimodal">
+            <i class="fa-solid fa-photo-film" style="color: #06b6d4;"></i>
+            <span>Recepção Multimodal (Fotos/Áudios)</span>
+          </button>
+
           <button class="subnav-item" data-tab="refinamento">
             <i class="fa-solid fa-lightbulb" style="color: #f59e0b;"></i>
             <span>Refinamento Multi-IA (Sugestões)</span>
@@ -678,6 +688,88 @@
                 </div>
               </div>
             </div>
+          </div>
+
+          <!-- TAB VOZ: CENTRAL DE VOZ & LIGAÇÕES TELEFÔNICAS -->
+          <div class="tab-content-panel" id="tab-panel-voz">
+            <div class="card-panel">
+              <div class="card-panel-header">
+                <div class="card-title-group">
+                  <div class="card-title-icon-circle" style="background-color: #8b5cf6;">
+                    <i class="fa-solid fa-phone-volume"></i>
+                  </div>
+                  <div class="card-title-text">
+                    <h3>Central de IA de Voz & Ligações Telefônicas (Inbound & Outbound)</h3>
+                    <p>IA com síntese vocal humanizada e escuta empática para atender e efetuar chamadas telefônicas acolhedoras.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px;">
+                <!-- Chamada Receptiva (Inbound) -->
+                <div style="background: #fdf4ff; border: 1px solid #f0abfc; padding: 16px; border-radius: 8px;">
+                  <h4 style="font-size: 13px; font-weight: 700; color: #86198f; margin-bottom: 8px;">📞 LIGAÇÃO RECEPTIVA (PACIENTE LIGANDO)</h4>
+                  <p style="font-size: 11.5px; color: #701a75; margin-bottom: 12px;">Simule uma chamada recebida do paciente (resgate de contexto e confirmação verbal):</p>
+                  <button class="btn-primary-blue" id="btn-sim-inbound" style="background: #a855f7; width: 100%;"><i class="fa-solid fa-phone-flip"></i> Simular Chamada Recebida (Inbound)</button>
+                  <div id="voz-inbound-box" style="margin-top: 12px; background: white; padding: 12px; border-radius: 6px; font-size: 12px; border: 1px solid #e9d5ff; display: none;">
+                    <strong>🎙️ Transcrição do Paciente:</strong> "Olá, gostaria de saber se meu agendamento está confirmado para amanhã."<br><br>
+                    <strong style="color: #9333ea;">🗣️ Resposta Verbal da IA Roberta (TTS Humanizado):</strong><br>
+                    <span id="voz-inbound-speech">"Olá, Gustavo! Que alegria falar com você pelo telefone. Sua consulta de Alergia está 100% confirmada para amanhã às 08:00 com a Dra. Ana! Estamos te esperando com um café quentinho na recepção."</span>
+                  </div>
+                </div>
+
+                <!-- Chamada Ativa (Outbound) -->
+                <div style="background: #f0fdf4; border: 1px solid #86efac; padding: 16px; border-radius: 8px;">
+                  <h4 style="font-size: 13px; font-weight: 700; color: #166534; margin-bottom: 8px;">📲 LIGAÇÃO ATIVA (IA LIGANDO PARA O PACIENTE)</h4>
+                  <p style="font-size: 11.5px; color: #14532d; margin-bottom: 12px;">Simule uma ligação ativa de lembrete e confirmação de presença pré-consulta:</p>
+                  <button class="btn-primary-blue" id="btn-sim-outbound" style="background: #16a34a; width: 100%;"><i class="fa-solid fa-phone"></i> Simular Chamada Ativa (Outbound)</button>
+                  <div id="voz-outbound-box" style="margin-top: 12px; background: white; padding: 12px; border-radius: 6px; font-size: 12px; border: 1px solid #bbf7d0; display: none;">
+                    <strong style="color: #15803d;">🗣️ Fala da IA Roberta na Ligação:</strong><br>
+                    <span id="voz-outbound-speech">"Olá, Gustavo! Aqui é a Roberta da Clínica de Alergia. Estou te ligando para lembrar com muito carinho da sua consulta amanhã às 08:00! Lembre-se de chegar 10 minutinhos antes. Tenha um excelente dia!"</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB MULTIMODAL: RECEPÇÃO DE ÁUDIOS DE VOZ & IMAGENS -->
+          <div class="tab-content-panel" id="tab-panel-multimodal">
+            <div class="card-panel">
+              <div class="card-panel-header">
+                <div class="card-title-group">
+                  <div class="card-title-icon-circle" style="background-color: #06b6d4;">
+                    <i class="fa-solid fa-photo-film"></i>
+                  </div>
+                  <div class="card-title-text">
+                    <h3>Recepção Multimodal (Processamento de Áudios de Voz & Fotos de Exames/Pele)</h3>
+                    <p>Interpretação automática de mensagens de voz e análise de imagens/fotos anexadas ao prontuário.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px;">
+                <!-- Áudio de Voz -->
+                <div style="background: #ecfeff; border: 1px solid #67e8f9; padding: 16px; border-radius: 8px;">
+                  <h4 style="font-size: 13px; font-weight: 700; color: #155e75; margin-bottom: 8px;">🎙️ MENSAGEM DE VOZ / ÁUDIO (WHATSAPP)</h4>
+                  <button class="btn-primary-blue" id="btn-sim-audio" style="background: #0891b2; width: 100%;"><i class="fa-solid fa-microphone"></i> Processar Mensagem de Voz</button>
+                  <div id="multimodal-audio-box" style="margin-top: 12px; background: white; padding: 12px; border-radius: 6px; font-size: 12px; border: 1px solid #a5f3fc; display: none;">
+                    <strong>📝 Transcrição da Voz:</strong> "Olá Roberta, estou enviando este áudio porque gostaria de saber se aceita o convênio Bradesco para consulta pediátrica."<br>
+                    <strong>😊 Tom de Sentimento:</strong> Tranquilo / Dúvida Acolhedora
+                  </div>
+                </div>
+
+                <!-- Foto / Imagem Médica -->
+                <div style="background: #f0f9ff; border: 1px solid #7dd3fc; padding: 16px; border-radius: 8px;">
+                  <h4 style="font-size: 13px; font-weight: 700; color: #0369a1; margin-bottom: 8px;">📸 FOTO / IMAGEM DE EXAME OU LESÃO</h4>
+                  <button class="btn-primary-blue" id="btn-sim-image" style="background: #0284c7; width: 100%;"><i class="fa-solid fa-camera"></i> Processar Foto Médica</button>
+                  <div id="multimodal-image-box" style="margin-top: 12px; background: white; padding: 12px; border-radius: 6px; font-size: 12px; border: 1px solid #bae6fd; display: none;">
+                    <strong>👁️ Visão Computacional:</strong> Foto de reação dermatológica / placa eritematosa prévia no antebraço.<br>
+                    <strong>📋 Status no Prontuário:</strong> Anexada ao cadastro do paciente para análise médica durante a consulta.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
 
           <!-- TAB 2: CHATOPS / COPILOTO IA MÉDICO (DR. AI) -->
           <div class="tab-content-panel" id="tab-panel-copiloto">

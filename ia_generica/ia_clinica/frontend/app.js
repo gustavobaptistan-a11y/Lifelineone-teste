@@ -633,4 +633,44 @@ function initCRMFeatures() {
       alert('📸 Carteirinha de convênio lida via OCR Multimodal! Cadastro atualizado.');
     });
   }
+
+  // Simulação de IA de Voz Telefônica Inbound / Outbound
+  const btnSimInbound = document.getElementById('btn-sim-inbound');
+  const btnSimOutbound = document.getElementById('btn-sim-outbound');
+  const vozInboundBox = document.getElementById('voz-inbound-box');
+  const vozOutboundBox = document.getElementById('voz-outbound-box');
+
+  if (btnSimInbound) {
+    btnSimInbound.addEventListener('click', async () => {
+      if (vozInboundBox) vozInboundBox.style.display = 'block';
+      alert('📞 Chamada telefônica recebida do paciente! IA Roberta atendeu a ligação resgatando o histórico e perfil completo.');
+    });
+  }
+
+  if (btnSimOutbound) {
+    btnSimOutbound.addEventListener('click', async () => {
+      if (vozOutboundBox) vozOutboundBox.style.display = 'block';
+      alert('📲 Chamada telefônica ativa efetuada com sucesso! Lembrete pré-consulta falado com voz humanizada acolhedora.');
+    });
+  }
+
+  // Simulação de Recepção Multimodal (Áudio e Foto)
+  const btnSimAudio = document.getElementById('btn-sim-audio');
+  const btnSimImage = document.getElementById('btn-sim-image');
+  const mmAudioBox = document.getElementById('multimodal-audio-box');
+  const mmImageBox = document.getElementById('multimodal-image-box');
+
+  if (btnSimAudio) {
+    btnSimAudio.addEventListener('click', async () => {
+      if (mmAudioBox) mmAudioBox.style.display = 'block';
+      alert('🎙️ Mensagem de voz do WhatsApp transcrevida e interpretada com análise emocional!');
+    });
+  }
+
+  if (btnSimImage) {
+    btnSimImage.addEventListener('click', async () => {
+      if (mmImageBox) mmImageBox.style.display = 'block';
+      alert('📸 Foto de exame/lesão analisada por visão computacional e anexada ao prontuário médico!');
+    });
+  }
 }
