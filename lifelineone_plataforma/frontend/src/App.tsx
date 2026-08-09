@@ -4,9 +4,10 @@ import { JourneyKanbanView } from './components/JourneyKanbanView';
 import { PatientStateView } from './components/PatientStateView';
 import { EventSimulatorView } from './components/EventSimulatorView';
 import { UnifiedPEPView } from './components/UnifiedPEPView';
+import { LabAndAuditView } from './components/LabAndAuditView';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<'chat' | 'kanban' | 'crm' | 'events' | 'pep'>('pep');
+  const [activeTab, setActiveTab] = useState<'chat' | 'kanban' | 'crm' | 'events' | 'pep' | 'lab'>('lab');
 
   return (
     <div style={{ minHeight: '100vh', background: '#0f172a', color: '#f8fafc', fontFamily: 'Inter, system-ui, sans-serif' }}>
@@ -49,6 +50,21 @@ export default function App() {
         {/* Navigation Tabs */}
         <nav style={{ display: 'flex', gap: '8px', background: 'rgba(255, 255, 255, 0.05)', padding: '4px', borderRadius: '12px' }}>
           <button
+            onClick={() => setActiveTab('lab')}
+            style={{
+              padding: '8px 16px',
+              borderRadius: '8px',
+              border: 'none',
+              background: activeTab === 'lab' ? '#10b981' : 'transparent',
+              color: activeTab === 'lab' ? '#fff' : '#94a3b8',
+              fontWeight: 600,
+              cursor: 'pointer',
+              transition: 'all 0.2s'
+            }}
+          >
+            🔬 Laboratório & Guardião IA
+          </button>
+          <button
             onClick={() => setActiveTab('pep')}
             style={{
               padding: '8px 16px',
@@ -76,7 +92,7 @@ export default function App() {
               transition: 'all 0.2s'
             }}
           >
-            🤖 AI Orchestrator (11 Passos)
+            🤖 AI Orchestrator
           </button>
           <button
             onClick={() => setActiveTab('kanban')}
@@ -91,7 +107,7 @@ export default function App() {
               transition: 'all 0.2s'
             }}
           >
-            📊 Kanban da Jornada (10 Etapas)
+            📊 Kanban da Jornada
           </button>
           <button
             onClick={() => setActiveTab('crm')}
@@ -106,7 +122,7 @@ export default function App() {
               transition: 'all 0.2s'
             }}
           >
-            👤 Estado do Paciente (CRM)
+            👤 Estado do Paciente
           </button>
           <button
             onClick={() => setActiveTab('events')}
@@ -128,6 +144,7 @@ export default function App() {
 
       {/* Main Workspace */}
       <main style={{ padding: '32px', maxWidth: '1600px', margin: '0 auto' }}>
+        {activeTab === 'lab' && <LabAndAuditView />}
         {activeTab === 'pep' && <UnifiedPEPView />}
         {activeTab === 'chat' && <AIOrchestratorView />}
         {activeTab === 'kanban' && <JourneyKanbanView />}
