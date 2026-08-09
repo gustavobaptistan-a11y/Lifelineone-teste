@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from app.api.v1.endpoints import patients, journey, orchestrator, events, webhooks, analytics, exams, websockets, tickets
+from app.api.v1.endpoints import patients, journey, orchestrator, events, webhooks, analytics, exams, websockets, tickets, simulation
 
 api_router = APIRouter()
 api_router.include_router(patients.router, prefix="/patients", tags=["Estado do Paciente & CRM"])
@@ -11,3 +11,4 @@ api_router.include_router(analytics.router, prefix="/analytics", tags=["Analytic
 api_router.include_router(exams.router, prefix="/exams", tags=["Prontuário (PEP) & Análise de Exames"])
 api_router.include_router(websockets.router, prefix="/ws", tags=["Transmissão WebSockets ao Vivo"])
 api_router.include_router(tickets.router, prefix="/tickets", tags=["Atendimento Híbrido & Transbordo Humano"])
+api_router.include_router(simulation.router, prefix="/simulation", tags=["Simulador E2E da Jornada Completa"])

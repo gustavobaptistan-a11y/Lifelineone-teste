@@ -1,32 +1,139 @@
 import { useState } from 'react';
-import { Header } from './components/Header';
-import { MetricsOverview } from './components/MetricsOverview';
 import { AIOrchestratorView } from './components/AIOrchestratorView';
 import { JourneyKanbanView } from './components/JourneyKanbanView';
 import { PatientStateView } from './components/PatientStateView';
 import { EventSimulatorView } from './components/EventSimulatorView';
+import { UnifiedPEPView } from './components/UnifiedPEPView';
 
-export function App() {
-  const [activeTab, setActiveTab] = useState<'orchestrator' | 'kanban' | 'patient_state' | 'events'>('orchestrator');
+export default function App() {
+  const [activeTab, setActiveTab] = useState<'chat' | 'kanban' | 'crm' | 'events' | 'pep'>('pep');
 
   return (
-    <div style={{ maxWidth: '1440px', margin: '0 auto', padding: '0 24px 40px 24px' }}>
-      <Header activeTab={activeTab} setActiveTab={setActiveTab} />
+    <div style={{ minHeight: '100vh', background: '#0f172a', color: '#f8fafc', fontFamily: 'Inter, system-ui, sans-serif' }}>
       
-      <MetricsOverview patientCount={4} />
+      {/* Header Bar */}
+      <header style={{
+        borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+        background: 'rgba(15, 23, 42, 0.8)',
+        backdropFilter: 'blur(12px)',
+        position: 'sticky',
+        top: 0,
+        zIndex: 100,
+        padding: '16px 32px',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{
+            width: '40px',
+            height: '40px',
+            borderRadius: '10px',
+            background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontWeight: 'bold',
+            fontSize: '1.2rem',
+            boxShadow: '0 0 20px rgba(59, 130, 246, 0.5)'
+          }}>
+            L1
+          </div>
+          <div>
+            <h1 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700, letterSpacing: '-0.02em' }}>
+              Lifeline One <span style={{ fontSize: '0.85rem', color: '#38bdf8', fontWeight: 500 }}>Plataforma & AI Orchestrator</span>
+            </h1>
+          </div>
+        </div>
 
-      <main>
-        {activeTab === 'orchestrator' && <AIOrchestratorView />}
+        {/* Navigation Tabs */}
+        <nav style={{ display: 'flex', gap: '8px', background: 'rgba(255, 255, 255, 0.05)', padding: '4px', borderRadius: '12px' }}>
+          <button
+            onClick={() => setActiveTab('pep')}
+            style={{
+              padding: '8px 16px',
+              borderRadius: '8px',
+              border: 'none',
+              background: activeTab === 'pep' ? '#3b82f6' : 'transparent',
+              color: activeTab === 'pep' ? '#fff' : '#94a3b8',
+              fontWeight: 600,
+              cursor: 'pointer',
+              transition: 'all 0.2s'
+            }}
+          >
+            📑 PEP Unificado 360°
+          </button>
+          <button
+            onClick={() => setActiveTab('chat')}
+            style={{
+              padding: '8px 16px',
+              borderRadius: '8px',
+              border: 'none',
+              background: activeTab === 'chat' ? '#3b82f6' : 'transparent',
+              color: activeTab === 'chat' ? '#fff' : '#94a3b8',
+              fontWeight: 600,
+              cursor: 'pointer',
+              transition: 'all 0.2s'
+            }}
+          >
+            🤖 AI Orchestrator (11 Passos)
+          </button>
+          <button
+            onClick={() => setActiveTab('kanban')}
+            style={{
+              padding: '8px 16px',
+              borderRadius: '8px',
+              border: 'none',
+              background: activeTab === 'kanban' ? '#3b82f6' : 'transparent',
+              color: activeTab === 'kanban' ? '#fff' : '#94a3b8',
+              fontWeight: 600,
+              cursor: 'pointer',
+              transition: 'all 0.2s'
+            }}
+          >
+            📊 Kanban da Jornada (10 Etapas)
+          </button>
+          <button
+            onClick={() => setActiveTab('crm')}
+            style={{
+              padding: '8px 16px',
+              borderRadius: '8px',
+              border: 'none',
+              background: activeTab === 'crm' ? '#3b82f6' : 'transparent',
+              color: activeTab === 'crm' ? '#fff' : '#94a3b8',
+              fontWeight: 600,
+              cursor: 'pointer',
+              transition: 'all 0.2s'
+            }}
+          >
+            👤 Estado do Paciente (CRM)
+          </button>
+          <button
+            onClick={() => setActiveTab('events')}
+            style={{
+              padding: '8px 16px',
+              borderRadius: '8px',
+              border: 'none',
+              background: activeTab === 'events' ? '#3b82f6' : 'transparent',
+              color: activeTab === 'events' ? '#fff' : '#94a3b8',
+              fontWeight: 600,
+              cursor: 'pointer',
+              transition: 'all 0.2s'
+            }}
+          >
+            ⚡ Eventos & Automacões
+          </button>
+        </nav>
+      </header>
+
+      {/* Main Workspace */}
+      <main style={{ padding: '32px', maxWidth: '1600px', margin: '0 auto' }}>
+        {activeTab === 'pep' && <UnifiedPEPView />}
+        {activeTab === 'chat' && <AIOrchestratorView />}
         {activeTab === 'kanban' && <JourneyKanbanView />}
-        {activeTab === 'patient_state' && <PatientStateView />}
+        {activeTab === 'crm' && <PatientStateView />}
         {activeTab === 'events' && <EventSimulatorView />}
       </main>
-
-      <footer style={{ marginTop: '40px', textAlign: 'center', fontSize: '0.75rem', color: 'var(--text-dim)', borderTop: '1px solid var(--border-color)', paddingTop: '20px' }}>
-        Lifeline One &copy; 2026 — Plataforma & AI Orchestrator da Jornada do Paciente
-      </footer>
     </div>
   );
 }
-
-export default App;
