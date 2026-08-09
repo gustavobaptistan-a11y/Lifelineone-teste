@@ -1,6 +1,6 @@
 import uuid
 import datetime
-from sqlalchemy import Column, String, DateTime, ForeignKey, Float, JSON
+from sqlalchemy import Column, String, DateTime, ForeignKey, Float, JSON, Boolean
 from sqlalchemy.dialects.postgresql import UUID
 from app.core.database import Base
 
@@ -13,6 +13,11 @@ class Conversation(Base):
     contact_id = Column(UUID(as_uuid=True), ForeignKey("contacts.id"), nullable=False)
     status = Column(String(50), default="em_andamento")
     current_goal = Column(String(255), nullable=True)
+    is_ai_paused = Column(Boolean, default=False)
+    is_human_handover_requested = Column(Boolean, default=False)
+    handover_reason = Column(String(255), nullable=True)
+    pre_consultation_summary = Column(String, nullable=True)
+    pre_consultation_status = Column(String(50), default="pendente")
     started_at = Column(DateTime(timezone=True), default=datetime.datetime.utcnow)
 
 

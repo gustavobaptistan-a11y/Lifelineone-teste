@@ -153,6 +153,43 @@ class SupervisorAgent:
         # 2. Cadastro / Identificação do Contato
         contact = await registration_agent.get_or_create_contact(db, clinic_id, phone, sender_name)
         contact_id = contact.id
+
+        # 3. Carregar Histórico e Estado da Conversa
+        conversation = await self._get_or_create_conversation(db, clinic_id, contact_id)
+        conv_id_str = str(conversation.id)
+
+        # 3.1. Verificação de IA Pausada (Atendimento Humano em Andamento no CRM)
+        if getattr(conversation, "is_ai_paused", False):
+            return {
+                "conversation_id": conv_id_str,
+                "contact_id": str(contact_id),
+                "phone": phone,
+                "patient_name": sender_name,
+                "action": "ai_paused_human_operator_active",
+                "response": None,
+                "confidence": 1.0
+            }
+
+        # 3.2. Detecção de Solicitação Explícita de Atendente Humano
+        if any(k in low_content for k in ["falar com pessoa", "atendente humano", "falar com pessoa humana", "falar com secretária", "falar com secretaria", "falar com humano", "passar para atendente"]):
+            conversation.is_human_handover_requested = True
+            conversation.handover_reason = "Solicitação direta de atendente humano pelo paciente"
+            await db.flush()
+            clean_first = clean_patient_first_name(sender_name)
+            name_ack = f", {clean_first}" if clean_first else ""
+            handover_response = (
+                f"Com certeza{name_ack}! Transferi o seu atendimento para nossa recepção humana. 🔔\n\n"
+                f"Nossa equipe notificou o painel e responderá por aqui em instantes!"
+            )
+            return {
+                "conversation_id": conv_id_str,
+                "contact_id": str(contact_id),
+                "phone": phone,
+                "patient_name": sender_name,
+                "action": "human_handover_activated",
+                "response": handover_response,
+                "confidence": 1.0
+            }
         raw_contact_name = str(contact.nome) if contact.nome else sender_name
         
         extracted_name = registration_agent.extract_name_from_text(content)
@@ -168,25 +205,6 @@ class SupervisorAgent:
 
         # 2.5. Verificar se o paciente possui agendamento ativo prévio no sistema
         active_booking = await scheduler_agent.get_active_patient_booking(db, clinic_id, patient_id)
-
-        # 3. Conversa & Histórico de Mensagens
-        stmt_conv = select(Conversation).where(
-            Conversation.clinic_id == clinic_id,
-            Conversation.contact_id == contact_id,
-            Conversation.status.in_(["nova", "em_andamento"])
-        )
-        res_conv = await db.execute(stmt_conv)
-        conversation = res_conv.scalars().first()
-
-        if not conversation:
-            conversation = Conversation(
-                clinic_id=clinic_id,
-                contact_id=contact_id,
-                status="em_andamento",
-                current_goal="atendimento_inicial"
-            )
-            db.add(conversation)
-            await db.flush()
 
         conv_id_str = str(conversation.id)
 
@@ -421,6 +439,27 @@ class SupervisorAgent:
             "response": response_text,
             "confidence": 0.99
         }
+
+    async def _get_or_create_conversation(self, db: AsyncSession, clinic_id: uuid.UUID, contact_id: uuid.UUID) -> Conversation:
+        stmt_conv = select(Conversation).where(
+            Conversation.clinic_id == clinic_id,
+            Conversation.contact_id == contact_id,
+            Conversation.status.in_(["nova", "em_andamento"])
+        )
+        res_conv = await db.execute(stmt_conv)
+        conversation = res_conv.scalars().first()
+
+        if not conversation:
+            conversation = Conversation(
+                clinic_id=clinic_id,
+                contact_id=contact_id,
+                status="em_andamento",
+                current_goal="atendimento_inicial"
+            )
+            db.add(conversation)
+            await db.flush()
+
+        return conversation
 
     async def _get_clinic_settings(self, db: AsyncSession, clinic_id: uuid.UUID) -> Dict[str, Any]:
         try:

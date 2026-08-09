@@ -141,6 +141,31 @@
             <span>Central & Teste Integrado (Dual)</span>
           </button>
 
+          <button class="subnav-item" data-tab="inbox">
+            <i class="fa-solid fa-comments" style="color: #25d366;"></i>
+            <span>Inbox CRM ao Vivo & Transbordo</span>
+          </button>
+
+          <button class="subnav-item" data-tab="noshow">
+            <i class="fa-solid fa-calendar-check" style="color: #6366f1;"></i>
+            <span>Prevenção No-Show & Lembretes</span>
+          </button>
+
+          <button class="subnav-item" data-tab="anamnese">
+            <i class="fa-solid fa-file-medical" style="color: #ec4899;"></i>
+            <span>Anamnese Pré-Consulta (Médico)</span>
+          </button>
+
+          <button class="subnav-item" data-tab="ocr">
+            <i class="fa-solid fa-id-card" style="color: #3b82f6;"></i>
+            <span>OCR Carteirinha por Foto</span>
+          </button>
+
+          <button class="subnav-item" data-tab="bi">
+            <i class="fa-solid fa-chart-line" style="color: #10b981;"></i>
+            <span>BI Tráfego Instagram Ads</span>
+          </button>
+
           <button class="subnav-item" data-tab="refinamento">
             <i class="fa-solid fa-lightbulb" style="color: #f59e0b;"></i>
             <span>Refinamento Multi-IA (Sugestões)</span>
@@ -479,6 +504,180 @@
               </div>
             </div>
           </div>
+
+          <!-- TAB INBOX: CRM ATENDIMENTO HÍBRIDO & TRANSBORDO HUMANO -->
+          <div class="tab-content-panel" id="tab-panel-inbox">
+            <div class="card-panel">
+              <div class="card-panel-header">
+                <div class="card-title-group">
+                  <div class="card-title-icon-circle" style="background-color: #25d366;">
+                    <i class="fa-solid fa-comments"></i>
+                  </div>
+                  <div class="card-title-text">
+                    <h3>Inbox CRM WhatsApp ao Vivo (Atendimento Híbrido & Transbordo)</h3>
+                    <p>Monitore conversas do WhatsApp, receba alertas de transbordo e alterne entre IA e operador humano em 1 clique.</p>
+                  </div>
+                </div>
+                <button class="btn-primary-blue" id="btn-refresh-inbox"><i class="fa-solid fa-rotate"></i> Atualizar Inbox</button>
+              </div>
+
+              <div style="display: grid; grid-template-columns: 320px 1fr; gap: 16px; margin-top: 12px; height: 500px;">
+                <!-- Lista de Conversas Ativas -->
+                <div style="border: 1px solid #cbd5e1; border-radius: 8px; background: #f8fafc; padding: 12px; overflow-y: auto;">
+                  <h4 style="font-size: 12px; font-weight: 700; color: #475569; margin-bottom: 8px;">CONVERSAS ATIVAS NO WHATSAPP</h4>
+                  <div id="inbox-conversations-list" style="display: flex; flex-direction: column; gap: 8px;">
+                    <div style="padding: 10px; background: white; border-radius: 6px; border-left: 4px solid #ef4444; box-shadow: 0 1px 3px rgba(0,0,0,0.05); cursor: pointer;">
+                      <div style="display: flex; justify-content: space-between; font-size: 12px; font-weight: 700;">
+                        <span>Gustavo (Paciente Sandbox)</span>
+                        <span style="color: #ef4444; font-size: 10px;">⚠️ ALERTA HUMANO</span>
+                      </div>
+                      <div style="font-size: 11px; color: #64748b; margin-top: 2px;">5511999887766 · Solicitação de atendente humano</div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Painel de Chat Híbrido -->
+                <div style="border: 1px solid #cbd5e1; border-radius: 8px; display: flex; flex-direction: column; background: white; padding: 12px;">
+                  <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px; border-bottom: 1px solid #e2e8f0; margin-bottom: 10px;">
+                    <div>
+                      <h4 id="inbox-selected-name" style="font-size: 14px; font-weight: 700; color: #0f172a;">Gustavo (5511999887766)</h4>
+                      <span id="inbox-selected-status" class="badge-status-red">⚠️ Transbordo Solicitado pelo Paciente</span>
+                    </div>
+                    <button class="btn-primary-blue" id="btn-toggle-ai-pause" style="background-color: #ef4444;">
+                      <i class="fa-solid fa-pause"></i> <span id="label-ai-pause">Pausar IA Roberta (Assumir Atendimento)</span>
+                    </button>
+                  </div>
+
+                  <div id="inbox-chat-thread" style="flex: 1; overflow-y: auto; background: #f8fafc; padding: 12px; border-radius: 6px; margin-bottom: 10px; font-size: 12.5px;">
+                    <div style="margin-bottom: 8px;"><strong>Paciente:</strong> Gostaria de falar com uma pessoa da recepção por favor.</div>
+                    <div style="margin-bottom: 8px; color: #2563eb;"><strong>IA Roberta:</strong> Com certeza! Transferi o seu atendimento para nossa recepção humana. 🔔</div>
+                  </div>
+
+                  <div style="display: flex; gap: 8px;">
+                    <input type="text" id="input-human-message" placeholder="Digite uma resposta manual como Recepção Humana..." style="flex: 1; padding: 8px 12px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 12px;">
+                    <button class="btn-primary-blue" id="btn-send-human-msg"><i class="fa-solid fa-paper-plane"></i> Enviar Manual</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB NO-SHOW: PREVENÇÃO DE FALTAS & LEMBRETES ATIVOS -->
+          <div class="tab-content-panel" id="tab-panel-noshow">
+            <div class="card-panel">
+              <div class="card-panel-header">
+                <div class="card-title-group">
+                  <div class="card-title-icon-circle" style="background-color: #6366f1;">
+                    <i class="fa-solid fa-calendar-check"></i>
+                  </div>
+                  <div class="card-title-text">
+                    <h3>Prevenção de Faltas & Lembretes Automáticos Pré-Consulta (Zero No-Show)</h3>
+                    <p>Disparo automático de lembretes no WhatsApp 24h e 2h antes com confirmação e reagendamento autônomo.</p>
+                  </div>
+                </div>
+                <button class="btn-primary-blue" id="btn-trigger-reminders"><i class="fa-solid fa-paper-plane"></i> Disparar Lembretes de Amanhã Agora</button>
+              </div>
+
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-top: 16px;">
+                <div style="background: #f8fafc; padding: 16px; border-radius: 8px; border: 1px solid #cbd5e1;">
+                  <h4 style="font-size: 12px; font-weight: 700; color: #475569;">TAXA DE CONFIRMAÇÃO PRÉ-CONSULTA</h4>
+                  <div style="font-size: 28px; font-weight: 800; color: #6366f1; margin: 8px 0;">96.8%</div>
+                  <p style="font-size: 11px; color: #64748b;">+14.2% de presença em relação ao mês anterior</p>
+                </div>
+
+                <div style="background: #f8fafc; padding: 16px; border-radius: 8px; border: 1px solid #cbd5e1;">
+                  <h4 style="font-size: 12px; font-weight: 700; color: #475569;">REAGENDAMENTOS AUTÔNOMOS PELA IA</h4>
+                  <div style="font-size: 28px; font-weight: 800; color: #10b981; margin: 8px 0;">18 Vagas</div>
+                  <p style="font-size: 11px; color: #64748b;">Reagendadas automaticamente sem perder o paciente</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB ANAMNESE: ANAMNESE INTELIGENTE PRÉ-CONSULTA PARA O MÉDICO -->
+          <div class="tab-content-panel" id="tab-panel-anamnese">
+            <div class="card-panel">
+              <div class="card-panel-header">
+                <div class="card-title-group">
+                  <div class="card-title-icon-circle" style="background-color: #ec4899;">
+                    <i class="fa-solid fa-file-medical"></i>
+                  </div>
+                  <div class="card-title-text">
+                    <h3>Anamnese Inteligente Pré-Consulta (Visão do Médico)</h3>
+                    <p>Questionário prévio coletado pela IA Roberta 24h antes e sintetizado em resumo clínico de 3 linhas.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div style="background: #fff; padding: 16px; border-radius: 8px; border: 1px solid #e2e8f0; margin-top: 12px;">
+                <h4 style="font-size: 14px; font-weight: 700; color: #0f172a; margin-bottom: 8px;">📋 Resumo Clínico de Pré-Consulta (Paciente: Gustavo Baptista)</h4>
+                <div style="background: #fdf2f8; padding: 12px; border-radius: 6px; border-left: 4px solid #ec4899; font-size: 12.5px; color: #831843;">
+                  <strong>• Sintomas Relatados:</strong> Queda de cabelo intensa há 4 dias após quadro febril de dengue (Alopécia pós-infecciosa prévia).<br>
+                  <strong>• Histórico Medicamentoso:</strong> Sem alergias medicamentosas conhecidas; fazendo uso de polivitamínico oral.<br>
+                  <strong>• Expectativa da Consulta:</strong> Avaliação do couro cabeludo (Dermatoscopia) e prescrição de tônico fortalecedor.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB OCR: OCR DIGITALIZAÇÃO POR FOTO DE CARTEIRINHA -->
+          <div class="tab-content-panel" id="tab-panel-ocr">
+            <div class="card-panel">
+              <div class="card-panel-header">
+                <div class="card-title-group">
+                  <div class="card-title-icon-circle" style="background-color: #3b82f6;">
+                    <i class="fa-solid fa-id-card"></i>
+                  </div>
+                  <div class="card-title-text">
+                    <h3>Digitalização OCR por Foto de Carteirinha de Convênio</h3>
+                    <p>Leitura por visão computacional do documento enviado pelo paciente no WhatsApp com preenchimento automático.</p>
+                  </div>
+                </div>
+                <button class="btn-primary-blue" id="btn-demo-ocr"><i class="fa-solid fa-camera"></i> Testar Leitura OCR</button>
+              </div>
+
+              <div id="ocr-result-box" style="background: #f8fafc; padding: 16px; border-radius: 8px; border: 1px solid #cbd5e1; margin-top: 12px; display: none;">
+                <h4 style="font-size: 13px; font-weight: 700; color: #1e3a8a;">✅ DADOS EXTRAÍDOS COM SUCESSO (OCR MULTIMODAL)</h4>
+                <div style="font-size: 12px; margin-top: 8px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                  <div><strong>Titular:</strong> Gustavo Baptista</div>
+                  <div><strong>Convênio:</strong> Bradesco Saúde Exato</div>
+                  <div><strong>Número Carteirinha:</strong> 8472 9102 3847 1029</div>
+                  <div><strong>Validade:</strong> 12/2028</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB BI: BUSINESS INTELLIGENCE & ROI INSTAGRAM ADS -->
+          <div class="tab-content-panel" id="tab-panel-bi">
+            <div class="card-panel">
+              <div class="card-panel-header">
+                <div class="card-title-group">
+                  <div class="card-title-icon-circle" style="background-color: #10b981;">
+                    <i class="fa-solid fa-chart-line"></i>
+                  </div>
+                  <div class="card-title-text">
+                    <h3>BI de Tráfego Pago & ROI de Campanhas do Instagram Ads</h3>
+                    <p>Desempenho financeiro e conversão de pacientes originados de anúncios das redes sociais.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-top: 12px;">
+                <div style="background: #ecfdf5; padding: 14px; border-radius: 8px; border: 1px solid #a7f3d0;">
+                  <span style="font-size: 11px; font-weight: 600; color: #047857;">RECEITA TOTAL DOS ADS</span>
+                  <div style="font-size: 24px; font-weight: 800; color: #065f46;">R$ 32.200,00</div>
+                </div>
+                <div style="background: #eff6ff; padding: 14px; border-radius: 8px; border: 1px solid #bfdbfe;">
+                  <span style="font-size: 11px; font-weight: 600; color: #1d4ed8;">TOTAL AGENDAMENTOS</span>
+                  <div style="font-size: 24px; font-weight: 800; color: #1e40af;">92 Consultas</div>
+                </div>
+                <div style="background: #f5f3ff; padding: 14px; border-radius: 8px; border: 1px solid #ddd6fe;">
+                  <span style="font-size: 11px; font-weight: 600; color: #6d28d9;">TAXA DE CONVERSÃO GLOBAL</span>
+                  <div style="font-size: 24px; font-weight: 800; color: #5b21b6;">74.1%</div>
+                </div>
+              </div>
+            </div>
 
           <!-- TAB 2: CHATOPS / COPILOTO IA MÉDICO (DR. AI) -->
           <div class="tab-content-panel" id="tab-panel-copiloto">
