@@ -20,11 +20,8 @@ class RegistrationAgent:
         if not text:
             return None
         
-        patterns = [
-            r"(?:meu nome [eé]|sou [oa]|chamo-me|me chamo|nome [eé]|aqui [eé] [oa])\s+([A-ZÀ-Úa-zà-ú]+(?:\s+[A-ZÀ-Úa-zà-ú]+)?)",
-            r"(?:ol[aá]|oi|bom dia|boa tarde|boa noite)[,\s]+(?:eu sou [oa]|aqui [eé] [oa])\s+([A-ZÀ-Úa-zà-ú]+)",
-        ]
-        
+        stop_conjunctions = ["e", "que", "preciso", "quero", "gostaria", "estou", "com", "para", "pra", "de", "da", "do", "tem", "tenho", "um", "uma"]
+
         reserved_words = [
             "sim", "nao", "não", "gostaria", "quero", "doutor", "dra", "qual", "como",
             "onde", "quanto", "quando", "quem", "meu", "minha", "boa", "bom", "olá", "ola",
@@ -32,13 +29,25 @@ class RegistrationAgent:
             "queria", "preciso", "marcar", "agendar", "consulta", "saber", "horario", "horário",
             "valor", "preço", "preco", "duvida", "dúvida", "ajuda", "informacao", "informação", "paciente"
         ]
+
+        patterns = [
+            r"\b(?:meu nome [eé]|sou|eu sou|me chamo|chamo-me|nome [eé]|aqui [eé])\s+(?:[oa]\s+)?([A-ZÀ-Úa-zà-ú]+)(?:\s+([A-ZÀ-Úa-zà-ú]+))?",
+            r"\b(?:sou|chamo|nome)\s+([A-ZÀ-Úa-zà-ú]+)"
+        ]
         
         for p in patterns:
             match = re.search(p, text, re.IGNORECASE)
             if match:
-                extracted = match.group(1).strip()
-                if extracted.lower() not in reserved_words and len(extracted) > 2:
-                    return extracted.capitalize()
+                w1 = match.group(1).strip()
+                w2 = match.group(2).strip() if (match.lastindex and match.lastindex >= 2 and match.group(2)) else ""
+                
+                if w1.lower() in reserved_words or len(w1) <= 2:
+                    continue
+                
+                if w2 and w2.lower() not in stop_conjunctions and w2.lower() not in reserved_words:
+                    return f"{w1.capitalize()} {w2.capitalize()}"
+                else:
+                    return w1.capitalize()
         return None
 
     async def get_or_create_contact(self, db: AsyncSession, clinic_id: uuid.UUID, phone: str, name: str | None = None) -> Contact:
