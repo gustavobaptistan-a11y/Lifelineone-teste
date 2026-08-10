@@ -258,29 +258,50 @@ function removeTypingIndicator(thread, id) {
   if (el) el.remove();
 }
 
-// 5. QR Code Refresh & Copy Code
+// 5. Carregador e Exibidor de QR Code do WhatsApp (Evolution API Go)
 function initQRCodeLoader() {
-  const btnRefresh = document.getElementById('btn-refresh-qrcode');
-  const btnCopy = document.getElementById('btn-copy-pairing-code');
+  const btnFetch = document.getElementById('btn-fetch-qr-code');
+  const qrImg = document.getElementById('qr-code-img');
+  const qrLoading = document.getElementById('qr-code-loading');
+  const pairingDisplay = document.getElementById('pairing-code-display');
 
-  if (btnRefresh) {
-    btnRefresh.addEventListener('click', () => {
-      const display = document.getElementById('pairing-code-display');
-      if (display) {
-        const rand = Math.random().toString(36).substring(2, 6).toUpperCase() + '-' + Math.random().toString(36).substring(2, 6).toUpperCase();
-        display.textContent = rand;
+  async function fetchQRCode() {
+    if (qrLoading) qrLoading.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Gerando QR Code da Evolution API...';
+    if (qrImg) qrImg.style.display = 'none';
+
+    try {
+      const res = await fetch('/api/v1/webhooks/whatsapp/qr-code');
+      const data = await res.json();
+
+      if (data.code && qrImg) {
+        qrImg.src = data.code;
+        qrImg.style.display = 'inline-block';
+        if (qrLoading) qrLoading.style.display = 'none';
       }
-      alert('Novo QR Code gerado com sucesso!');
-    });
+      if (data.pairing_code && pairingDisplay) {
+        pairingDisplay.textContent = data.pairing_code;
+      }
+    } catch (err) {
+      if (qrLoading) qrLoading.innerHTML = '⚠️ Clique no botão para tentar gerar o QR Code novamente.';
+    }
   }
 
-  if (btnCopy) {
-    btnCopy.addEventListener('click', () => {
-      const code = document.getElementById('pairing-code-display').textContent;
-      navigator.clipboard.writeText(code);
-      alert(`Código ${code} copiado para a área de transferência!`);
-    });
+  if (btnFetch) {
+    if (btnCopy) {
+      btnCopy.addEventListener('click', () => {
+        const code = document.getElementById('pairing-code-display').textContent;
+        navigator.clipboard.writeText(code);
+        alert(`Código ${code} copiado para a área de transferência!`);
+      });
+    }
   }
+
+  if (btnFetch) {
+    btnFetch.addEventListener('click', fetchQRCode);
+  }
+
+  // Auto-carregar ao abrir
+  fetchQRCode();
 }
 
 // 6. Reset Sandbox History (Limpar Tela & Resetar DB)
