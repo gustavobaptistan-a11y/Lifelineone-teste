@@ -541,50 +541,60 @@ class SupervisorAgent:
 
         # CASO 0.B: Resposta com o Nome do Paciente para Conclusão do Agendamento
         elif conversation.current_goal and (conversation.current_goal.startswith("aguardando_nome_para_agendamento:") or conversation.current_goal.startswith("aguardando_nome_para_agendamento|")):
-            action_name = "received_patient_name_for_booking"
             delim = "|" if "|" in conversation.current_goal else ":"
             parts = conversation.current_goal.split(delim)
             pending_time_slot = parts[1]
             target_date_str = parts[2] if len(parts) > 2 else None
             days_offset = int(parts[3]) if len(parts) > 3 else 1
 
-            extracted_name = registration_agent.extract_name_from_text(content)
-            is_greeting_phrase = any(w in low_content for w in ["boa tarde", "bom dia", "boa noite", "olá", "ola", "oi", "tudo bem"])
-            if (not extracted_name or extracted_name == "Paciente" or is_greeting_phrase) and not is_greeting_phrase:
-                extracted_name = content.strip().title()
-            
-            # Salvar nome no banco
-            contact.nome = extracted_name
-            await db.commit()
-            await db.refresh(contact)
-            await db.refresh(conversation)
-            display_name = extracted_name
-
-            parts_name = [p for p in extracted_name.split() if len(p) > 1]
-            if len(parts_name) < 2:
-                # Nome simples informado -> Solicitar sobrenome / nome completo
+            # 1. Se for uma pergunta paralela de localização / endereço
+            if any(k in low_content for k in ["endereço", "endereco", "onde fica", "onde e", "onde é", "localização", "localizacao", "como chegar"]):
+                action_name = "operational_info_mid_booking"
+                formatted_slot = format_time_slot_str(pending_time_slot)
                 response_text = (
-                    f"Obrigada, {parts_name[0]}! Para o cadastro oficial no prontuário médico, por favor, me informe o seu nome completo (com sobrenome)."
+                    f"Ficamos no Connect Tower, em Taguatinga (https://maps.app.goo.gl/vittamed). 🚗\n\n"
+                    f"Inclusive, como estávamos organizando a sua consulta para amanhã às {formatted_slot}: "
+                    f"para registrarmos na sua ficha médica, me informe por favor o seu nome completo (com sobrenome)."
                 )
             else:
-                # Nome completo informado -> Apresentar resumo e pedir confirmação explícita
-                slots_data = await scheduler_agent.find_available_slots(db, clinic_id)
-                formatted_slot = format_time_slot_str(pending_time_slot)
-                if not target_date_str:
-                    target_date_str = slots_data["data"]
-                day_label = "Depois de amanhã" if days_offset == 2 else "Amanhã"
+                action_name = "received_patient_name_for_booking"
+                extracted_name = registration_agent.extract_name_from_text(content)
+                is_greeting_phrase = any(w in low_content for w in ["boa tarde", "bom dia", "boa noite", "olá", "ola", "oi", "tudo bem"])
+                if (not extracted_name or extracted_name == "Paciente") and not is_greeting_phrase:
+                    extracted_name = content.strip().title()
+                
+                if extracted_name and extracted_name != "Paciente":
+                    contact.nome = extracted_name
+                    await db.commit()
+                    await db.refresh(contact)
+                    await db.refresh(conversation)
+                    display_name = extracted_name
 
-                conversation.current_goal = f"aguardando_confirmacao_dados|{pending_time_slot}|{extracted_name}|{target_date_str}|{days_offset}"
-                response_text = (
-                    f"Perfeito, {parts_name[0]}! Por favor, confira os dados do seu agendamento:\n\n"
-                    f"👤 Nome Completo: {extracted_name}\n"
-                    f"🩺 Especialidade: {specialty}\n"
-                    f"👩‍⚕️ Médica: {slots_data['doctor_name']}\n"
-                    f"📅 Data: {day_label} ({target_date_str}) às {formatted_slot}\n"
-                    f"📍 Local: Connect Tower, em Taguatinga 🚗\n"
-                    f"💡 Recomendação: Lembre-se de trazer exames anteriores (se houver) e documento oficial com foto.\n\n"
-                    f"Podemos confirmar o seu agendamento com estes dados?"
-                )
+                parts_name = [p for p in (display_name or "").split() if len(p) > 1]
+                if len(parts_name) < 2:
+                    first_ack = parts_name[0] if parts_name else "paciente"
+                    response_text = (
+                        f"Obrigada, {first_ack}! Para o cadastro oficial no prontuário médico, por favor, me informe o seu nome completo (com sobrenome)."
+                    )
+                else:
+                    # Nome completo informado -> Apresentar resumo e pedir confirmação explícita
+                    slots_data = await scheduler_agent.find_available_slots(db, clinic_id)
+                    formatted_slot = format_time_slot_str(pending_time_slot)
+                    if not target_date_str:
+                        target_date_str = slots_data["data"]
+                    day_label = "Depois de amanhã" if days_offset == 2 else "Amanhã"
+
+                    conversation.current_goal = f"aguardando_confirmacao_dados|{pending_time_slot}|{extracted_name}|{target_date_str}|{days_offset}"
+                    response_text = (
+                        f"Perfeito, {parts_name[0]}! Por favor, confira os dados do seu agendamento:\n\n"
+                        f"👤 Nome Completo: {extracted_name}\n"
+                        f"🩺 Especialidade: {specialty}\n"
+                        f"👩‍⚕️ Médica: {slots_data['doctor_name']}\n"
+                        f"📅 Data: {day_label} ({target_date_str}) às {formatted_slot}\n"
+                        f"📍 Local: Connect Tower, em Taguatinga 🚗\n"
+                        f"💡 Recomendação: Lembre-se de trazer exames anteriores (se houver) e documento oficial com foto.\n\n"
+                        f"Podemos confirmar o seu agendamento com estes dados?"
+                    )
 
         elif is_picking_time:
             # Extrair nome da mensagem atual se presente (ex: "meu nome é gustavo")
@@ -711,10 +721,22 @@ class SupervisorAgent:
                     f"Sua consulta para {time_info} já está confirmadíssima! ☕\n"
                     f"Se precisar de mais informações ou alterar o seu agendamento, é só me falar por aqui: 'preciso falar do meu agendamento'."
                 )
-            elif conversation.current_goal == "aguardando_confirmacao_horario":
+            elif conversation.current_goal and conversation.current_goal.startswith("aguardando_confirmacao_horario"):
                 slots_data = await scheduler_agent.find_available_slots(db, clinic_id, preferred_period=entities.get("preferred_period"))
                 horarios_str = ", ".join([format_time_slot_str(h) for h in slots_data["horarios_disponiveis"][:3]])
                 response_text = f"{address_text}\n\nInclusive, como estávamos organizando seu agendamento para amanhã ({slots_data['data']}): temos vagas às {horarios_str}. Qual horário você prefere?"
+            elif conversation.current_goal and conversation.current_goal.startswith("aguardando_nome_para_agendamento"):
+                delim = "|" if "|" in conversation.current_goal else ":"
+                parts = conversation.current_goal.split(delim)
+                pending_time_slot = parts[1]
+                formatted_slot = format_time_slot_str(pending_time_slot)
+                response_text = f"{address_text}\n\nInclusive, como estávamos organizando a sua consulta para amanhã às {formatted_slot}: para registrarmos na sua ficha médica, me informe por favor o seu nome completo (com sobrenome)."
+            elif conversation.current_goal and conversation.current_goal.startswith("aguardando_confirmacao_dados"):
+                delim = "|" if "|" in conversation.current_goal else ":"
+                parts = conversation.current_goal.split(delim)
+                pending_time_slot = parts[1]
+                formatted_slot = format_time_slot_str(pending_time_slot)
+                response_text = f"{address_text}\n\nInclusive, estava só aguardando a sua confirmação para finalizar a consulta para amanhã às {formatted_slot}. Podemos confirmar o seu agendamento com estes dados?"
             else:
                 response_text = f"{address_text}\n\nDeseja consultar nossos horários disponíveis?"
 
