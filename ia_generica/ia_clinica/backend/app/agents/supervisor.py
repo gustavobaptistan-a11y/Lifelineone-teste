@@ -432,6 +432,23 @@ class SupervisorAgent:
                 f"Gostaria de agendar a sua avaliação médica para amanhã?"
             )
 
+        # CASO 4.5: Resposta do Paciente à Escuta Empática de Sintomas / Duração (ex: "tem uns 2 meses", "2 semanas")
+        elif conversation.current_goal == "escuta_sintomas_empathia":
+            action_name = "symptom_duration_received"
+            conversation.current_goal = "aguardando_confirmacao_horario"
+            await memory_agent.save_clinical_note(db, patient_id, "duracao_sintoma", f"Duração: {content}")
+            slots_data = await scheduler_agent.find_available_slots(db, clinic_id)
+            horarios_str = ", ".join(slots_data["horarios_disponiveis"][:3])
+            
+            clean_first = clean_patient_first_name(display_name)
+            name_ack = f", {clean_first}" if clean_first else ""
+            clean_dur = re.sub(r'^(tem\s+uns|tem|faz|fazem|há|ha|cerca\s+de)\s*', '', content, flags=re.IGNORECASE).strip()
+            dur_phrase = f"há cerca de {clean_dur}" if clean_dur else f"há {content}"
+            response_text = (
+                f"Compreendo perfeitamente{name_ack}! Estar apresentando esse sintoma {dur_phrase} exige uma avaliação médica cuidadosa para investigar as causas em consulta presencial.\n\n"
+                f"Temos horários disponíveis para amanhã ({slots_data['data']}) com a {slots_data['doctor_name']}: **{horarios_str}**. Qual horário fica mais confortável para a sua rotina?"
+            )
+
         # CASO 5: Caso Pediátrico / Cuidador Exausto (Caregiver Stress Shield)
         elif entities["is_pediatric"] or entities.get("caregiver_stress"):
             action_name = "caregiver_stress_shield"
@@ -468,21 +485,6 @@ class SupervisorAgent:
             response_text = (
                 f"{opener} A queda de cabelo traz bastante desconforto, mas com a avaliação médica correta é possível tratar com segurança!\n\n"
                 f"Há quanto tempo notou a queda? Se quiser, já posso olhar os horários com nossa médica especialista."
-            )
-
-        # CASO 6.5: Resposta de Tempo de Sintomas (ex: "2 meses", "3 semanas")
-        elif conversation.current_goal == "escuta_sintomas_empathia" and any(k in low_content for k in ["mes", "mês", "meses", "semana", "semanas", "dia", "dias", "tempo", "ano", "anos"]):
-            action_name = "symptom_duration_received"
-            conversation.current_goal = "aguardando_confirmacao_horario"
-            await memory_agent.save_clinical_note(db, patient_id, "duracao_sintoma", f"Duração: {content}")
-            slots_data = await scheduler_agent.find_available_slots(db, clinic_id)
-            horarios_str = ", ".join(slots_data["horarios_disponiveis"][:3])
-            
-            clean_first = clean_patient_first_name(display_name)
-            name_ack = f", {clean_first}" if clean_first else ""
-            response_text = (
-                f"Compreendo perfeitamente{name_ack}! Ter a queda de cabelo há {content} exige uma avaliação médica cuidadosa para investigar as causas em consulta.\n\n"
-                f"Temos horários disponíveis para amanhã ({slots_data['data']}) com nossa médica especialista: **{horarios_str}**. Qual horário você prefere?"
             )
 
         # CASO 6.6: Pedido de Análise ou Orientação Geral
