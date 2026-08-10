@@ -115,8 +115,8 @@ async def configure_evolution_webhook(webhook_url: str, instance_name: Optional[
 async def reset_chat_database(
     db: AsyncSession = Depends(get_db)
 ):
-    """Reseta totalmente a conversa, agendamentos e o histórico de mensagens no banco de dados Supabase."""
-    tables = ["messages", "ai_agents_logs", "appointments", "conversations"]
+    """Reseta totalmente a conversa, agendamentos, contatos e histórico no banco de dados Supabase."""
+    tables = ["messages", "ai_agents_logs", "appointments", "conversations", "patient_contacts", "patients", "contacts"]
     for tbl in tables:
         try:
             await db.execute(text(f"DELETE FROM {tbl};"))

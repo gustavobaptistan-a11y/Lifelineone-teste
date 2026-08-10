@@ -168,10 +168,8 @@ class SupervisorAgent:
         # 1. Filtro de Emergência
         is_safe, is_emergency, reason = security_filter_agent.check_message_security(content)
         if is_emergency or any(k in low_content for k in ["falta de ar", "chiado no peito", "anafilaxia", "reacao alérgica estranha"]):
-            clean_first = clean_patient_first_name(sender_name)
-            name_ack = f", {clean_first}" if clean_first else ""
             emergency_response = (
-                f"🚨 **Atenção{name_ack}!** Sintomas de falta de ar ou reações graves a medicamentos exigem atendimento imediato.\n"
+                f"🚨 **Atenção!** Sintomas de falta de ar ou reações graves a medicamentos exigem atendimento imediato.\n"
                 f"Por favor, dirija-se ao Pronto-Socorro mais próximo agora mesmo!"
             )
             return {"action": "emergency_override", "response": emergency_response, "confidence": 1.0}
@@ -193,10 +191,8 @@ class SupervisorAgent:
         # 1.95. Tratamento Multimodal: Imagem (Exames, Carteirinhas ou Lesões Dermatológicas)
         if message_type in ["imagem", "image", "foto"]:
             img_res = await documents_agent.process_medical_image(media_url or "", content)
-            clean_first = clean_patient_first_name(sender_name)
-            name_ack = f", {clean_first}" if clean_first else ""
             img_response = (
-                f"Recebi a sua imagem com sucesso{name_ack}! 📸\n\n"
+                f"Recebi a sua imagem com sucesso! 📸\n\n"
                 f"• **Análise Multimodal:** {img_res['summary']}\n"
                 f"• **Prontuário:** A foto já foi anexada ao seu cadastro e estará disponível para a médica na sua consulta.\n\n"
                 f"Como posso te ajudar a organizar seu atendimento hoje?"
@@ -210,8 +206,8 @@ class SupervisorAgent:
             if first_c: clinic_id = first_c
         except Exception: pass
 
-        # 2. Cadastro / Identificação do Contato
-        contact = await registration_agent.get_or_create_contact(db, clinic_id, phone, sender_name)
+        # 2. Cadastro / Identificação do Contato (Sem presumir nome do WhatsApp)
+        contact = await registration_agent.get_or_create_contact(db, clinic_id, phone, name=None)
         contact_id = contact.id
 
         # 3. Carregar Histórico e Estado da Conversa
@@ -224,7 +220,7 @@ class SupervisorAgent:
                 "conversation_id": conv_id_str,
                 "contact_id": str(contact_id),
                 "phone": phone,
-                "patient_name": sender_name,
+                "patient_name": contact.nome or "Paciente",
                 "action": "ai_paused_human_operator_active",
                 "response": None,
                 "confidence": 1.0
@@ -235,29 +231,29 @@ class SupervisorAgent:
             conversation.is_human_handover_requested = True
             conversation.handover_reason = "Solicitação direta de atendente humano pelo paciente"
             await db.flush()
-            clean_first = clean_patient_first_name(sender_name)
-            name_ack = f", {clean_first}" if clean_first else ""
             handover_response = (
-                f"Com certeza{name_ack}! Transferi o seu atendimento para nossa recepção humana. 🔔\n\n"
+                f"Com certeza! Transferi o seu atendimento para nossa recepção humana. 🔔\n\n"
                 f"Nossa equipe notificou o painel e responderá por aqui em instantes!"
             )
             return {
                 "conversation_id": conv_id_str,
                 "contact_id": str(contact_id),
                 "phone": phone,
-                "patient_name": sender_name,
+                "patient_name": contact.nome or "Paciente",
                 "action": "human_handover_activated",
                 "response": handover_response,
                 "confidence": 1.0
             }
-        raw_contact_name = str(contact.nome) if contact.nome else sender_name
-        
+        # O nome do paciente só é conhecido e utilizado SE tiver sido extraído do texto do paciente (ex: "Meu nome é Gustavo") 
+        # ou se já existir um nome confirmado diferente do padrão "Paciente".
         extracted_name = registration_agent.extract_name_from_text(content)
         if extracted_name:
             await registration_agent.update_contact_name(db, contact, extracted_name)
             raw_contact_name = extracted_name
+        else:
+            raw_contact_name = contact.nome if (contact.nome and contact.nome != "Paciente") else None
 
-        display_name = clean_patient_first_name(raw_contact_name)
+        display_name = clean_patient_first_name(raw_contact_name) if raw_contact_name else ""
         low_content = content.lower()
 
         # Vincular ou resgatar paciente para verificar histórico e agendamentos

@@ -21,14 +21,16 @@ class RegistrationAgent:
             return None
         
         patterns = [
-            r"(?:meu nome [eé]|sou [oa]|chamo-me|me chamo|nome [eé])\s+([A-ZÀ-Ú][a-zà-ú]+(?:\s+[A-ZÀ-Ú][a-zà-ú]+)?)",
-            r"(?:ol[aá]|oi|bom dia|boa tarde|boa noite)[,\s]+(?:eu sou [oa]\s+)?([A-ZÀ-Ú][a-zà-ú]+)",
+            r"(?:meu nome [eé]|sou [oa]|chamo-me|me chamo|nome [eé]|aqui [eé] [oa])\s+([A-ZÀ-Úa-zà-ú]+(?:\s+[A-ZÀ-Úa-zà-ú]+)?)",
+            r"(?:ol[aá]|oi|bom dia|boa tarde|boa noite)[,\s]+(?:eu sou [oa]|aqui [eé] [oa])\s+([A-ZÀ-Úa-zà-ú]+)",
         ]
         
         reserved_words = [
             "sim", "nao", "não", "gostaria", "quero", "doutor", "dra", "qual", "como",
             "onde", "quanto", "quando", "quem", "meu", "minha", "boa", "bom", "olá", "ola",
-            "estou", "sou", "mae", "mãe", "pai", "vo", "vó", "já", "ja"
+            "estou", "sou", "mae", "mãe", "pai", "vo", "vó", "já", "ja", "tudo", "bem",
+            "queria", "preciso", "marcar", "agendar", "consulta", "saber", "horario", "horário",
+            "valor", "preço", "preco", "duvida", "dúvida", "ajuda", "informacao", "informação", "paciente"
         ]
         
         for p in patterns:
@@ -48,15 +50,12 @@ class RegistrationAgent:
             if not contact:
                 contact = Contact(
                     clinic_id=clinic_id,
-                    nome=name if name else "Paciente",
+                    nome="Paciente",
                     telefone=phone,
                     tipo_contato="proprio",
                     preferencias_comunicacao={"canal": "whatsapp"}
                 )
                 db.add(contact)
-                await db.flush()
-            elif name and name != "Paciente" and contact.nome != name:
-                contact.nome = name
                 await db.flush()
 
             return contact
