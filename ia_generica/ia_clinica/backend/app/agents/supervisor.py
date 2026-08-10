@@ -77,12 +77,12 @@ def get_dynamic_greeting(display_name: str = "") -> str:
     name_ack = f", {clean_first}" if clean_first else ""
 
     templates = [
-        f"Olá{name_ack}! Sou a Roberta. É um prazer cuidar do seu atendimento! Como posso te ajudar hoje? 💙",
+        f"Olá{name_ack}! Sou a Roberta. É um prazer te atender! Como posso te ajudar hoje? 💙",
         f"{period_greeting}{name_ack}! Sou a Roberta. É um prazer enorme cuidar do seu atendimento por aqui! Como posso te ajudar hoje? 💙",
-        f"Olá{name_ack}, {period_greeting.lower()}! Meu nome é Roberta e estou à sua disposição para o que precisar. Como posso te auxiliar hoje? ✨",
-        f"{period_greeting}{name_ack}! Seja muito bem-vindo(a). Sou a Roberta, da equipe de atendimento. Em que posso te ajudar hoje? 💙",
-        f"Olá{name_ack}! Sou a Roberta e será um prazer te ajudar hoje. Como posso cuidar de você ou do seu agendamento? 🩺💙",
-        f"{period_greeting}{name_ack}! Aqui é a Roberta. Estou por aqui para tirar suas dúvidas ou organizar sua consulta. Como posso te ajudar hoje? 😊"
+        f"Olá{name_ack}, {period_greeting.lower()}! Meu nome é Roberta e estou à sua disposição. Como posso te auxiliar hoje? ✨",
+        f"{period_greeting}{name_ack}! Seja muito bem-vindo(a). Sou a Roberta. Em que posso te ajudar hoje? 💙",
+        f"Olá{name_ack}! Sou a Roberta e é um grande prazer falar com você. Como posso te ajudar hoje? 😊",
+        f"{period_greeting}{name_ack}! Aqui é a Roberta. Estou à sua disposição para o que precisar. Como posso te ajudar hoje? ✨"
     ]
     
     return random.choice(templates)
