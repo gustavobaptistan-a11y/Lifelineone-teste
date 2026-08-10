@@ -522,23 +522,38 @@ class SupervisorAgent:
                 f"Gostaria de verificar as vagas disponíveis para a sua consulta amanhã?"
             )
 
-        # CASO 8.5: Dúvida de Localização e Funcionamento
+        # CASO 8.5: Dúvida de Localização e Funcionamento (com State Memory Stack)
         elif any(k in low_content for k in ["endereço", "endereco", "onde fica", "onde e", "onde é", "localização", "localizacao", "como chegar", "estacionamento", "horario de funcionamento"]):
             action_name = "operational_info"
             cfgs = await self._get_clinic_settings(db, clinic_id)
             address_text = cfgs.get("endereco", "Ficamos na Av. Paulista, 1000 com estacionamento no local e manobrista. 🚗")
             if not address_text.startswith("Ficamos"):
                 address_text = f"Ficamos na {address_text} com estacionamento e facilidade de acesso. 🚗"
-            response_text = f"{address_text}\n\nDeseja consultar nossos horários disponíveis?"
+            
+            if conversation.current_goal == "aguardando_confirmacao_horario":
+                slots_data = await scheduler_agent.find_available_slots(db, clinic_id, preferred_period=entities.get("preferred_period"))
+                horarios_str = ", ".join(slots_data["horarios_disponiveis"][:3])
+                response_text = f"{address_text}\n\nInclusive, como estávamos organizando seu agendamento para amanhã ({slots_data['data']}): temos vagas às **{horarios_str}**. Qual horário você prefere?"
+            else:
+                response_text = f"{address_text}\n\nDeseja consultar nossos horários disponíveis?"
 
-        # CASO 9: Dúvida de Convênio Isolada
+        # CASO 9: Dúvida de Convênio Isolada (com State Memory Stack)
         elif any(k in low_content for k in ["unimed", "bradesco", "sulamérica", "sulamerica", "convenio", "plano", "reembolso"]):
             action_name = "insurance_info"
             opener = f"Atendemos sim{name_prefix}!" if (is_first_interaction and display_name) else "Atendemos sim!"
-            response_text = (
-                f"{opener} Aceitamos Unimed Nacional, Bradesco Saúde e SulAmérica Exato para consultas e testes.\n\n"
-                f"Também emitimos nota para reembolso no seu convênio. Quer dar uma olhada nas vagas disponíveis?"
-            )
+            
+            if conversation.current_goal == "aguardando_confirmacao_horario":
+                slots_data = await scheduler_agent.find_available_slots(db, clinic_id, preferred_period=entities.get("preferred_period"))
+                horarios_str = ", ".join(slots_data["horarios_disponiveis"][:3])
+                response_text = (
+                    f"{opener} Aceitamos Unimed Nacional, Bradesco Saúde e SulAmérica Exato para consultas e testes.\n\n"
+                    f"Inclusive, como estávamos escolhendo seu horário para amanhã ({slots_data['data']}): temos vagas às **{horarios_str}**. Qual horário fica melhor para a sua rotina?"
+                )
+            else:
+                response_text = (
+                    f"{opener} Aceitamos Unimed Nacional, Bradesco Saúde e SulAmérica Exato para consultas e testes.\n\n"
+                    f"Também emitimos nota para reembolso no seu convênio. Quer dar uma olhada nas vagas disponíveis?"
+                )
 
         # CASO 10: Saudação Padrão ou Continuidade
         else:

@@ -20,7 +20,8 @@ class SchedulerAgent:
         self,
         db: AsyncSession,
         clinic_id: uuid.UUID,
-        target_date: Optional[datetime.date] = None
+        target_date: Optional[datetime.date] = None,
+        preferred_period: Optional[str] = None
     ) -> Dict[str, Any]:
         if not target_date:
             target_date = datetime.date.today() + datetime.timedelta(days=1)
@@ -51,12 +52,25 @@ class SchedulerAgent:
             doc_esp = "Alergia e Imunologia Pediátrica e Adulto"
 
         slots = await calendar_service.get_available_slots(doc_id, target_date)
+        all_times = [s["time"] for s in slots if s["available"]]
+
+        if preferred_period == "tarde":
+            afternoon = [t for t in all_times if int(t.split(":")[0]) >= 12]
+            morning = [t for t in all_times if int(t.split(":")[0]) < 12]
+            ordered_times = afternoon + morning
+        elif preferred_period == "manha":
+            morning = [t for t in all_times if int(t.split(":")[0]) < 12]
+            afternoon = [t for t in all_times if int(t.split(":")[0]) >= 12]
+            ordered_times = morning + afternoon
+        else:
+            ordered_times = all_times
+
         return {
             "doctor_id": str(doc_id),
             "doctor_name": doc_name,
             "especialidade": doc_esp,
             "data": target_date.strftime("%d/%m/%Y"),
-            "horarios_disponiveis": [s["time"] for s in slots if s["available"]]
+            "horarios_disponiveis": ordered_times
         }
 
     async def create_booking(
