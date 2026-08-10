@@ -442,6 +442,54 @@ class SupervisorAgent:
                 f"Qual horário fica melhor para a sua rotina?"
             )
 
+        # CASO GREETING MID-CONVERSATION (Sintonia & Humor Empático no meio do Agendamento)
+        elif conversation.current_goal and any(conversation.current_goal.startswith(prefix) for prefix in [
+            "aguardando_nome_para_agendamento", "aguardando_confirmacao_horario", "aguardando_confirmacao_dados", "escuta_sintomas_empathia"
+        ]) and any(re.search(rf'\b{w}\b', low_content) for w in ["boa tarde", "bom dia", "boa noite", "olá", "ola", "oi", "tudo bem"]) and len(low_content.split()) <= 4:
+            action_name = "mid_conversation_greeting_resume"
+            clean_first = clean_patient_first_name(display_name)
+            name_ack = f", {clean_first}" if clean_first else ""
+            
+            if conversation.current_goal.startswith("aguardando_nome_para_agendamento"):
+                delim = "|" if "|" in conversation.current_goal else ":"
+                parts = conversation.current_goal.split(delim)
+                pending_time_slot = parts[1]
+                target_date_str = parts[2] if len(parts) > 2 else "amanhã"
+                days_offset = int(parts[3]) if len(parts) > 3 else 1
+                day_label = "depois de amanhã" if days_offset == 2 else "amanhã"
+                formatted_slot = format_time_slot_str(pending_time_slot)
+                
+                response_text = (
+                    f"Opa! Olá novamente{name_ack} rsrsrs! 😊\n\n"
+                    f"Vamos continuar o seu agendamento de onde paramos?\n\n"
+                    f"Estávamos organizando a sua consulta de {specialty} para {day_label} ({target_date_str}) às {formatted_slot}.\n\n"
+                    f"Para registrarmos na sua ficha médica, me informe por favor o seu nome completo (com sobrenome)."
+                )
+            elif conversation.current_goal.startswith("aguardando_confirmacao_horario"):
+                slots_data = await scheduler_agent.find_available_slots(db, clinic_id)
+                horarios_str = ", ".join([format_time_slot_str(h) for h in slots_data["horarios_disponiveis"][:3]])
+                response_text = (
+                    f"Opa! Olá novamente{name_ack} rsrsrs! 😊\n\n"
+                    f"Estou por aqui! Vamos continuar a organizar a sua consulta para amanhã ({slots_data['data']})?\n\n"
+                    f"Temos as vagas das {horarios_str} com a {slots_data['doctor_name']}. Qual horário fica melhor para você?"
+                )
+            elif conversation.current_goal.startswith("aguardando_confirmacao_dados"):
+                delim = "|" if "|" in conversation.current_goal else ":"
+                parts = conversation.current_goal.split(delim)
+                pending_time_slot = parts[1]
+                p_name = parts[2] if len(parts) > 2 else display_name
+                formatted_slot = format_time_slot_str(pending_time_slot)
+                response_text = (
+                    f"Opa! Olá novamente{name_ack} rsrsrs! 😊\n\n"
+                    f"Estava só aguardando a sua confirmação para finalizar a consulta de {specialty} para {p_name} às {formatted_slot}.\n\n"
+                    f"Podemos confirmar o seu agendamento com estes dados?"
+                )
+            else:
+                response_text = (
+                    f"Opa! Olá novamente{name_ack} rsrsrs! 😊\n\n"
+                    f"Como posso te ajudar a dar continuidade ao seu agendamento agora?"
+                )
+
         # CASO 0.A: Confirmação Final dos Dados do Agendamento pelo Paciente
         elif conversation.current_goal and (conversation.current_goal.startswith("aguardando_confirmacao_dados:") or conversation.current_goal.startswith("aguardando_confirmacao_dados|")):
             action_name = "confirming_booking_data"
@@ -501,7 +549,8 @@ class SupervisorAgent:
             days_offset = int(parts[3]) if len(parts) > 3 else 1
 
             extracted_name = registration_agent.extract_name_from_text(content)
-            if not extracted_name or extracted_name == "Paciente":
+            is_greeting_phrase = any(w in low_content for w in ["boa tarde", "bom dia", "boa noite", "olá", "ola", "oi", "tudo bem"])
+            if (not extracted_name or extracted_name == "Paciente" or is_greeting_phrase) and not is_greeting_phrase:
                 extracted_name = content.strip().title()
             
             # Salvar nome no banco
