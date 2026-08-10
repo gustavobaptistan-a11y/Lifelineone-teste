@@ -359,8 +359,29 @@ class SupervisorAgent:
             any(w in low_content for w in ["08", "09", "10", "14", "horas", "hora", "das", "quero", "09:00", "08:00", "10:00", "14:00"])
         )
 
+        # GATILHO GLOBAL 0.1: Transbordo Humano / Solicitação de Atendente Humano
+        is_human_request = any(k in low_content for k in [
+            "humano", "atendente", "falar com humano", "falar com atendente", 
+            "recepção", "recepcao", "falar com a recepção", "atendente humano", 
+            "atendimento humano", "pessoa", "falar com pessoa"
+        ])
+        is_option_other = (conversation.current_goal == "aguardando_opcao_pos_agendamento" and any(k in low_content for k in ["2", "outro", "outro assunto", "dúvida", "duvida"]))
+
+        if is_human_request or is_option_other:
+            action_name = "human_handover"
+            clean_first = clean_patient_first_name(display_name)
+            name_ack = f", {clean_first}" if clean_first else ""
+            conversation.status = "aguardando_humano"
+            conversation.human_takeover = True
+            await db.commit()
+
+            response_text = (
+                f"Compreendo perfeitamente{name_ack}! Vou transferir o seu atendimento agora mesmo para um de nossos atendentes humanos da recepção. 👩‍💼\n\n"
+                f"Por favor, aguarde um momento que a nossa equipe já vai te atender por aqui!"
+            )
+
         # CASO 0: Resposta com o Nome do Paciente para Conclusão do Agendamento
-        if conversation.current_goal and conversation.current_goal.startswith("aguardando_nome_para_agendamento:"):
+        elif conversation.current_goal and conversation.current_goal.startswith("aguardando_nome_para_agendamento:"):
             action_name = "received_patient_name_for_booking"
             pending_time_slot = conversation.current_goal.split(":")[1]
             extracted_name = registration_agent.extract_name_from_text(content)
@@ -395,8 +416,9 @@ class SupervisorAgent:
             
             first_name = extracted_name.split()[0]
             detail_plan = f"pelo convênio {insurance_info}" if insurance_info else ""
+            formatted_slot = f"{h_val:02d}:00" if 'h_val' in locals() else pending_time_slot
             response_text = (
-                f"✨ **Prontinho, {first_name}!** Agendei sua consulta de {specialty} para amanhã ({slots_data['data']}) às **{pending_time_slot}** com a {slots_data['doctor_name']} {detail_plan}.\n\n"
+                f"✨ **Prontinho, {first_name}!** Agendei sua consulta de {specialty} para amanhã ({slots_data['data']}) às **{formatted_slot}** com a {slots_data['doctor_name']} {detail_plan}.\n\n"
                 f"📍 **Localização:** Av. Paulista, 1000 (com estacionamento no local e manobrista). 🚗\n"
                 f"☕ Te esperamos 10 minutinhos antes para um café quentinho na recepção!\n\n"
                 f"Se precisar de mais informações ou alterar o seu agendamento, é só me falar por aqui: **'preciso falar do meu agendamento'**."
@@ -436,8 +458,9 @@ class SupervisorAgent:
                 conversation.current_goal = "consulta_agendada"
 
                 detail_plan = f"pelo convênio {insurance_info}" if insurance_info else ""
+                formatted_slot = f"{h_val:02d}:00" if 'h_val' in locals() else time_slot
                 response_text = (
-                    f"✨ **Prontinho, {clean_first}!** Agendei sua consulta de {specialty} para amanhã ({slots_data['data']}) às **{time_slot}** com a {slots_data['doctor_name']} {detail_plan}.\n\n"
+                    f"✨ **Prontinho, {clean_first}!** Agendei sua consulta de {specialty} para amanhã ({slots_data['data']}) às **{formatted_slot}** com a {slots_data['doctor_name']} {detail_plan}.\n\n"
                     f"📍 **Localização:** Av. Paulista, 1000 (com estacionamento no local e manobrista). 🚗\n"
                     f"☕ Te esperamos 10 minutinhos antes para um café quentinho na recepção!\n\n"
                     f"Se precisar de mais informações ou alterar seu agendamento, é só me dizer por aqui: **'preciso falar do meu agendamento'**."
@@ -459,23 +482,33 @@ class SupervisorAgent:
             else:
                 response_text = f"Por nada! Estou sempre à disposição por aqui se precisar de algo. Um excelente dia! 💙"
 
-        # CASO GATILHO EXPLÍCITO DE REAGENDAMENTO / SUPORTE AO AGENDAMENTO ("preciso falar do meu agendamento")
-        elif any(k in low_content for k in ["preciso falar do meu agendamento", "falar do meu agendamento", "falar do agendamento", "meu agendamento", "alterar agendamento", "remarcar", "trocar horario", "mudar horario", "alterar"]):
-            action_name = "manage_existing_booking"
-            slots_data = await scheduler_agent.find_available_slots(db, clinic_id)
-            horarios_str = ", ".join(slots_data["horarios_disponiveis"][:3])
+        # CASO PACIENTE RETORNA OU ENVIA MENSAGEM COM AGENDAMENTO JÁ CONFIRMADO
+        elif (active_booking is not None or conversation.current_goal in ["consulta_agendada", "aguardando_opcao_pos_agendamento"]) and not any(k in low_content for k in ["cancelar", "desmarcar", "desistir"]):
             clean_first = clean_patient_first_name(display_name)
             name_ack = f", {clean_first}" if clean_first else ""
-            
-            if active_booking:
+            time_info = active_booking['data_hora_str'] if active_booking else "amanhã"
+
+            # Se o paciente quer falar sobre agendamento (opção 1 ou frase explícita)
+            if (conversation.current_goal == "aguardando_opcao_pos_agendamento" and any(k in low_content for k in ["1", "agendamento", "sobre agendamento", "meu agendamento", "alterar", "remarcar", "localização", "localizacao"])) or any(k in low_content for k in ["preciso falar do meu agendamento", "falar do meu agendamento", "falar do agendamento", "meu agendamento"]):
+                action_name = "manage_existing_booking"
+                slots_data = await scheduler_agent.find_available_slots(db, clinic_id)
+                horarios_str = ", ".join(slots_data["horarios_disponiveis"][:3])
                 response_text = (
-                    f"Com certeza{name_ack}! Localizei o seu agendamento para **{active_booking['data_hora_str']}** com a {slots_data['doctor_name']}.\n\n"
+                    f"Com certeza{name_ack}! Localizei o seu agendamento de {specialty} para **{time_info}** com a {slots_data['doctor_name']}.\n\n"
+                    f"📍 **Localização:** Av. Paulista, 1000 (com estacionamento e manobrista). 🚗\n\n"
                     f"Se você deseja **alterar o horário** para amanhã ({slots_data['data']}), temos as seguintes vagas disponíveis: **{horarios_str}**. Qual horário fica melhor para você?\n\n"
                     f"(Se preferir cancelar a consulta, basta responder 'cancelar agendamento')."
                 )
             else:
+                # Saudação / Menu pós-agendamento inteligente
+                action_name = "post_booking_contextual_menu"
+                conversation.current_goal = "aguardando_opcao_pos_agendamento"
                 response_text = (
-                    f"Claro{name_ack}! Vamos organizar seu agendamento. Para amanhã ({slots_data['data']}), temos vagas às **{horarios_str}**. Qual horário você prefere?"
+                    f"Olá{name_ack}! É um prazer falar com você novamente! 😊\n\n"
+                    f"Vejo que você já possui uma consulta confirmada de {specialty} para **{time_info}** com a Dra. Ana.\n\n"
+                    f"Como posso te ajudar agora?\n"
+                    f"1️⃣ **Falar sobre o seu agendamento** (ver detalhes, alterar horário ou cancelar)\n"
+                    f"2️⃣ **Tratar de outro assunto** (falar com a nossa recepção humana)"
                 )
 
         # CASO 8.5: Dúvida de Localização e Funcionamento (com State Memory Stack & Checagem de Agendamento Ativo)
