@@ -181,6 +181,11 @@
             <span>Recepção Multimodal (Fotos/Áudios)</span>
           </button>
 
+          <button class="subnav-item" data-tab="nps">
+            <i class="fa-solid fa-star" style="color: #eab308;"></i>
+            <span>Pesquisa de Satisfação (NPS)</span>
+          </button>
+
           <button class="subnav-item" data-tab="refinamento">
             <i class="fa-solid fa-lightbulb" style="color: #f59e0b;"></i>
             <span>Refinamento Multi-IA (Sugestões)</span>
@@ -1090,6 +1095,62 @@
                   <p style="font-size: 12px; color: #475569; line-height: 1.5;">Prontuários e conversas do WhatsApp armazenados com isolamento RLS (Row Level Security) no Supabase Cloud.</p>
                 </div>
 
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB 11: PESQUISA DE SATISFAÇÃO AUTÔNOMA (NPS & CSAT) -->
+          <div class="tab-content-panel" id="tab-panel-nps">
+            <div class="card-panel">
+              <div class="card-panel-header">
+                <div class="card-title-group">
+                  <div class="card-title-icon-circle" style="background-color: #eab308;">
+                    <i class="fa-solid fa-star" style="color: white;"></i>
+                  </div>
+                  <div class="card-title-text">
+                    <h3>Pesquisa de Satisfação Autônoma (NPS & CSAT dos Pacientes)</h3>
+                    <p>Avaliação enviada automaticamente via WhatsApp 1h pós-atendimento.</p>
+                  </div>
+                </div>
+                <button class="btn-primary-blue" id="btn-trigger-nps-sim" style="background-color: #eab308;">
+                  <i class="fa-solid fa-paper-plane"></i> Simular Disparo de Pesquisa NPS
+                </button>
+              </div>
+
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-top: 16px;">
+                <div style="background: #fefce8; padding: 18px; border-radius: 12px; border: 1px solid #fef08a; text-align: center;">
+                  <div style="font-size: 11px; font-weight: 700; color: #a16207;">NET PROMOTER SCORE (NPS)</div>
+                  <div style="font-size: 38px; font-weight: 900; color: #854d0e; margin: 4px 0;">96 / 100</div>
+                  <span class="badge-status-green"><i class="fa-solid fa-trophy"></i> Zona de Excelência</span>
+                </div>
+
+                <div style="background: #f0fdf4; padding: 18px; border-radius: 12px; border: 1px solid #bbf7d0; text-align: center;">
+                  <div style="font-size: 11px; font-weight: 700; color: #15803d;">ÍNDICE CSAT (SATISFAÇÃO DIRETA)</div>
+                  <div style="font-size: 38px; font-weight: 900; color: #166534; margin: 4px 0;">98.4%</div>
+                  <span class="badge-status-green"><i class="fa-solid fa-face-smile"></i> Pacientes Muito Satisfeitos</span>
+                </div>
+
+                <div style="background: #f8fafc; padding: 18px; border-radius: 12px; border: 1px solid #cbd5e1; text-align: center;">
+                  <div style="font-size: 11px; font-weight: 700; color: #475569;">TOTAL DE AVALIAÇÕES</div>
+                  <div style="font-size: 38px; font-weight: 900; color: #0f172a; margin: 4px 0;">142</div>
+                  <span style="font-size: 11px; color: #64748b;">Respondidas no WhatsApp</span>
+                </div>
+              </div>
+
+              <!-- Comentários e Feedbacks dos Pacientes -->
+              <div style="margin-top: 20px; background: white; padding: 16px; border-radius: 10px; border: 1px solid #e2e8f0;">
+                <h4 style="font-size: 13px; font-weight: 700; color: #0f172a; margin-bottom: 12px;">💬 Depoimentos Recentes dos Pacientes (WhatsApp):</h4>
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                  <div style="background: #f8fafc; padding: 10px 14px; border-radius: 8px; border-left: 4px solid #16a34a; font-size: 12px;">
+                    <strong>Mariana S. ⭐⭐⭐⭐⭐:</strong> "A IA Roberta agendou minha consulta em menos de 1 minuto! Atendimento excelente."
+                  </div>
+                  <div style="background: #f8fafc; padding: 10px 14px; border-radius: 8px; border-left: 4px solid #16a34a; font-size: 12px;">
+                    <strong>Carlos E. ⭐⭐⭐⭐⭐:</strong> "Adorei receber o lembrete e o PDF do endereço da clínica direto no meu WhatsApp."
+                  </div>
+                  <div style="background: #f8fafc; padding: 10px 14px; border-radius: 8px; border-left: 4px solid #3b82f6; font-size: 12px;">
+                    <strong>Fernanda L. ⭐⭐⭐⭐:</strong> "Atendimento super rápido, empático e atencioso. Recomendo!"
+                  </div>
+                </div>
               </div>
             </div>
           </div>

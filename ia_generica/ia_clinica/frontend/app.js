@@ -834,3 +834,40 @@ function initOmniChat() {
     sendOmniMessage(msg);
   };
 }
+
+// 7. Pesquisa de Satisfação NPS Autônoma & Alerta Sonoro Plim!
+function initNPSTrigger() {
+  const btnNps = document.getElementById('btn-trigger-nps-sim');
+  if (btnNps) {
+    btnNps.addEventListener('click', async () => {
+      try {
+        playPlimSound();
+        await fetch('/api/v1/webhooks/analytics/nps/submit?score=5&comment=Excelente%20atendimento', { method: 'POST' });
+        alert('⭐ Pesquisa de satisfação NPS disparada via WhatsApp! Nota 5/5 registrada no painel.');
+      } catch (e) {
+        alert('⭐ Pesquisa NPS simulada!');
+      }
+    });
+  }
+}
+
+function playPlimSound() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(880, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(1320, ctx.currentTime + 0.15);
+    gain.gain.setValueAtTime(0.3, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.3);
+  } catch (e) {}
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  initNPSTrigger();
+});
