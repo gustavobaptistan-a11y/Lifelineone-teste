@@ -673,4 +673,129 @@ function initCRMFeatures() {
       alert('📸 Foto de exame/lesão analisada por visão computacional e anexada ao prontuário médico!');
     });
   }
+
+  initOmniChat();
+}
+
+// Handler do Chat Omnichannel WhatsApp ao Vivo
+function initOmniChat() {
+  const omniInput = document.getElementById('omni-chat-input');
+  const omniSendBtn = document.getElementById('omni-chat-send-btn');
+  const omniThread = document.getElementById('omni-chat-thread');
+  const omniResetBtn = document.getElementById('omni-reset-chat-btn');
+
+  async function sendOmniMessage(textToSend) {
+    const text = textToSend || (omniInput ? omniInput.value.trim() : '');
+    if (!text) return;
+
+    if (omniInput) omniInput.value = '';
+
+    // Adicionar bolha de mensagem do paciente
+    if (omniThread) {
+      const userBubble = document.createElement('div');
+      userBubble.style.alignSelf = 'flex-end';
+      userBubble.style.background = '#dcf8c6';
+      userBubble.style.padding = '10px 14px';
+      userBubble.style.borderRadius = '12px 0 12px 12px';
+      userBubble.style.fontSize = '13px';
+      userBubble.style.maxWidth = '80%';
+      userBubble.style.boxShadow = '0 1px 2px rgba(0,0,0,0.1)';
+      userBubble.innerHTML = escapeHtml(text);
+      omniThread.appendChild(userBubble);
+
+      // Digitando... da IA
+      const typingBubble = document.createElement('div');
+      typingBubble.id = 'omni-typing-indicator';
+      typingBubble.style.alignSelf = 'flex-start';
+      typingBubble.style.background = 'white';
+      typingBubble.style.padding = '8px 12px';
+      typingBubble.style.borderRadius = '0 12px 12px 12px';
+      typingBubble.style.fontSize = '12px';
+      typingBubble.style.color = '#64748b';
+      typingBubble.innerHTML = '<em>IA Roberta está digitando...</em>';
+      omniThread.appendChild(typingBubble);
+      omniThread.scrollTop = omniThread.scrollHeight;
+
+      try {
+        const res = await fetch('/api/v1/webhooks/whatsapp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            phone: '5511999887766',
+            sender_name: 'Gustavo',
+            message: text,
+            message_type: 'texto'
+          })
+        });
+
+        const data = await res.json();
+        const indicator = document.getElementById('omni-typing-indicator');
+        if (indicator) indicator.remove();
+
+        const aiReply = data.response || data.reply_preview || "Olá! Como posso te ajudar hoje na clínica?";
+
+        const aiBubble = document.createElement('div');
+        aiBubble.style.alignSelf = 'flex-start';
+        aiBubble.style.background = 'white';
+        aiBubble.style.padding = '10px 14px';
+        aiBubble.style.borderRadius = '0 12px 12px 12px';
+        aiBubble.style.fontSize = '13px';
+        aiBubble.style.maxWidth = '80%';
+        aiBubble.style.boxShadow = '0 1px 2px rgba(0,0,0,0.1)';
+        aiBubble.innerHTML = escapeHtml(aiReply).replace(/\n/g, '<br>');
+        omniThread.appendChild(aiBubble);
+        omniThread.scrollTop = omniThread.scrollHeight;
+
+      } catch (err) {
+        const indicator = document.getElementById('omni-typing-indicator');
+        if (indicator) indicator.remove();
+
+        const errorBubble = document.createElement('div');
+        errorBubble.style.alignSelf = 'flex-start';
+        errorBubble.style.background = '#fee2e2';
+        errorBubble.style.color = '#991b1b';
+        errorBubble.style.padding = '10px 14px';
+        errorBubble.style.borderRadius = '0 12px 12px 12px';
+        errorBubble.style.fontSize = '13px';
+        errorBubble.style.maxWidth = '80%';
+        errorBubble.innerHTML = 'Erro de comunicação com o servidor da IA.';
+        omniThread.appendChild(errorBubble);
+      }
+    }
+  }
+
+  if (omniSendBtn) {
+    omniSendBtn.addEventListener('click', () => sendOmniMessage());
+  }
+
+  if (omniInput) {
+    omniInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') sendOmniMessage();
+    });
+  }
+
+  if (omniResetBtn) {
+    omniResetBtn.addEventListener('click', async () => {
+      try {
+        await fetch('/api/v1/webhooks/reset-chat', { method: 'POST' });
+        if (omniThread) {
+          omniThread.innerHTML = `
+            <div style="align-self: center; background: #fff3cd; color: #856404; padding: 6px 12px; border-radius: 6px; font-size: 11px; max-width: 90%; text-align: center;">
+              🔒 Histórico resetado com sucesso! Nova sessão aberta.
+            </div>
+            <div style="align-self: flex-start; background: white; padding: 10px 14px; border-radius: 0 12px 12px 12px; font-size: 13px; max-width: 80%; box-shadow: 0 1px 2px rgba(0,0,0,0.1);">
+              Olá! Sou a <strong>Roberta</strong>, assistente da clínica. Como posso te ajudar hoje? 💙
+            </div>
+          `;
+        }
+        alert('Histórico da conversa resetado com sucesso!');
+      } catch (e) {
+        alert('Conversa resetada!');
+      }
+    });
+  }
+
+  window.sendOmniQuickMsg = function(msg) {
+    sendOmniMessage(msg);
+  };
 }
