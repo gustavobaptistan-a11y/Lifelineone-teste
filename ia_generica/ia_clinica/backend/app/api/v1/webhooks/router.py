@@ -174,6 +174,28 @@ async def send_proactive_care_nudge(
     }
 
 
+@router.post("/post-appointment-care-checkin")
+async def send_post_appointment_care_checkin(
+    phone: str = "5511999887766",
+    db: AsyncSession = Depends(get_db)
+):
+    """FRONTEIRA 5: Ponte de Cuidado Pós-Consulta. Envia check-in de saúde 24h a 48h após a consulta médica presencial."""
+    clean_digits = "".join(filter(str.isdigit, phone)) or phone
+    
+    checkin_text = (
+        "Olá, Gustavo! Passando para saber como você está se sentindo após a sua consulta presencial com a Dra. Ana! 😊 [BREAK]"
+        "Deu tudo certo com o seu pedido de exame? Qualquer dúvida ou se precisar de apoio com receitas ou retorno, estamos por aqui! 💙"
+    )
+    
+    await whatsapp_service.send_text_message("clinica_alergia_dev", clean_digits, checkin_text)
+    
+    return {
+        "status": "post_appointment_checkin_sent",
+        "phone": clean_digits,
+        "message": checkin_text
+    }
+
+
 @router.get("/conversations/search")
 async def search_conversation_by_phone(
     phone: str,

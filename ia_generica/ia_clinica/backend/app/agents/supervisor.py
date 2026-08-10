@@ -116,6 +116,22 @@ class SupervisorAgent:
         else:
             entities["sentiment"] = "tranquilo"
 
+        # 7. FRONTEIRA 1: Detecção de Parentesco & Vínculo Familiar (Kinship Binding)
+        if any(k in combined for k in ["meu filho", "minha filha", "meu bebê", "meu bebe", "para o lucas", "para a sofia", "pro meu filho", "pra minha filha"]):
+            entities["kinship"] = "mae_ou_pai_para_filho"
+        elif any(k in combined for k in ["minha mãe", "minha mae", "meu pai", "para minha mãe", "para meu pai"]):
+            entities["kinship"] = "filho_para_pais_idosos"
+        else:
+            entities["kinship"] = "proprio_paciente"
+
+        # 8. FRONTEIRA 6: Letramento Digital Adaptativo
+        if any(k in text_input.lower() for k in ["ligação", "ligacao", "ligar", "telefone fixo", "falar no telefone"]):
+            entities["digital_literacy"] = "assistido_humanizado"
+        elif any(k in text_input.lower() for k in ["pix", "pdf", "link", "maps", "qr", "qrcode"]):
+            entities["digital_literacy"] = "nativo_digital"
+        else:
+            entities["digital_literacy"] = "padrao"
+
         word_count = len(text_input.split())
         if word_count <= 5 or len(text_input) <= 25:
             entities["velocity"] = "curto"
