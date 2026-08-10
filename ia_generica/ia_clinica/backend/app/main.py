@@ -47,20 +47,21 @@ if os.path.exists(frontend_dir):
     async def serve_index():
         index_path = os.path.join(frontend_dir, "index.html")
         if os.path.exists(index_path):
-            return FileResponse(index_path)
+            return FileResponse(index_path, headers={"Cache-Control": "no-cache, no-store, must-revalidate", "Pragma": "no-cache", "Expires": "0"})
         return {"status": "online", "message": "Lifeline One API Operacional"}
 
     @app.get("/style.css")
     @app.get("/clinical/style.css")
     @app.get("/clinical/configuracoes/style.css")
     async def serve_css():
-        return FileResponse(os.path.join(frontend_dir, "style.css"))
+        return FileResponse(os.path.join(frontend_dir, "style.css"), headers={"Cache-Control": "no-cache, no-store, must-revalidate"})
 
     @app.get("/app.js")
+    @app.get("/static/app.js")
     @app.get("/clinical/app.js")
     @app.get("/clinical/configuracoes/app.js")
     async def serve_js():
-        return FileResponse(os.path.join(frontend_dir, "app.js"))
+        return FileResponse(os.path.join(frontend_dir, "app.js"), headers={"Cache-Control": "no-cache, no-store, must-revalidate"})
 else:
     @app.get("/")
     async def root():
