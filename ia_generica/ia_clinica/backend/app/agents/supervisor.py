@@ -88,6 +88,22 @@ def get_dynamic_greeting(display_name: str = "") -> str:
     return random.choice(templates)
 
 
+def get_dynamic_warmth_opener(display_name: str = "") -> str:
+    """Gera aberturas acolhedoras e variadas mantendo o carinho e o respeito ao paciente."""
+    clean_first = clean_patient_first_name(display_name) if display_name else ""
+    name_ack = f", {clean_first}" if clean_first else ""
+
+    templates = [
+        f"Com todo carinho{name_ack}!",
+        f"Com o maior prazer{name_ack}!",
+        f"Com todo o cuidado{name_ack}!",
+        f"Com muita alegria{name_ack}!",
+        f"Com certeza{name_ack}! Seria um prazer te ajudar.",
+        f"Com todo o carinho e atenção{name_ack}!"
+    ]
+    return random.choice(templates)
+
+
 class SupervisorAgent:
     """
     Agente Supervisor Avançado (Inteligência Pós-Agendamento & Gestão de Memória de Consultas).
@@ -645,9 +661,7 @@ class SupervisorAgent:
                 # Sondar motivo/sintoma do paciente antes de oferecer horários
                 action_name = "probe_patient_concern_before_booking"
                 conversation.current_goal = "escuta_sintomas_empathia"
-                clean_first = clean_patient_first_name(display_name)
-                name_ack = f", {clean_first}" if clean_first else ""
-                opener = f"Com todo o carinho{name_ack}!" if clean_first else "Com todo o carinho!"
+                opener = get_dynamic_warmth_opener(display_name)
 
                 response_text = (
                     f"{opener} Vou te ajudar a organizar o seu agendamento! 😊\n\n"
@@ -664,8 +678,7 @@ class SupervisorAgent:
 
                 context_ack = f" para a consulta de {specialty}" if specialty else ""
                 insurance_ack = f" pelo plano {insurance_info}" if insurance_info else ""
-                clean_first = clean_patient_first_name(display_name)
-                opener = f"Com todo carinho, {clean_first}!" if clean_first else "Com todo carinho!"
+                opener = get_dynamic_warmth_opener(display_name)
                 response_text = f"{opener} Temos vagas amanhã ({slots_data['data']}){context_ack}{insurance_ack} com a {slots_data['doctor_name']}: {horarios_str}. Qual horário fica melhor para você?"
 
         # 3.3. GUARDRAIL CLÍNICO ESTRITO: PROIBIÇÃO DE DIAGNÓSTICO E PRESCRIÇÃO PELA IA
