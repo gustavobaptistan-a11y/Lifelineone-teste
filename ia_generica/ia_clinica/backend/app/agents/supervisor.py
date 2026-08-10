@@ -372,6 +372,26 @@ class SupervisorAgent:
                 f"A Dra. Ana é nossa especialista em Alergia Pediátrica. Gostaria de ver as vagas disponíveis para amanhã?"
             )
 
+        # 3.3. GUARDRAIL CLÍNICO ESTRITO: PROIBIÇÃO DE DIAGNÓSTICO E PRESCRIÇÃO PELA IA
+        if any(k in low_content for k in ["qual meu diagnostico", "qual meu diagnóstico", "o que eu tenho", "qual doença", "qual doenca", "isso é perigoso", "isso e perigoso", "é eflúvio", "e efluvio", "diagnostique"]):
+            action_name = "no_diagnosis_guardrail"
+            clean_first = clean_patient_first_name(display_name)
+            name_ack = f", {clean_first}" if clean_first else ""
+            response_text = (
+                f"Entendo a sua preocupação{name_ack}! Como assistente virtual da recepção, **não realizo diagnósticos médicos nem prescrevo tratamentos**.\n\n"
+                f"Apenas a nossa médica especialista, a Dra. Ana, poderá examinar você detalhadamente na consulta presencial e indicar a conduta adequada.\n\n"
+                f"Gostaria de agendar a sua avaliação médica para amanhã?"
+            )
+            return {
+                "conversation_id": conv_id_str,
+                "contact_id": str(contact_id),
+                "phone": phone,
+                "patient_name": sender_name,
+                "action": action_name,
+                "response": response_text,
+                "confidence": 1.0
+            }
+
         # CASO 6: Caso Capilar / Tricologia
         elif entities["is_tricology"]:
             action_name = "empathetic_listening"
@@ -379,11 +399,11 @@ class SupervisorAgent:
             await memory_agent.save_clinical_note(db, patient_id, "relato_capilar", f"Relato: {content}")
             opener = f"Sinto muito por isso{name_prefix}." if (is_first_interaction and display_name) else "Entendo perfeitamente."
             response_text = (
-                f"{opener} A queda de cabelo (como a alopécia pós-dengue) preocupa, mas tem ótimo tratamento e recuperação!\n\n"
+                f"{opener} A queda de cabelo traz bastante desconforto, mas com a avaliação médica correta é possível tratar com segurança!\n\n"
                 f"Há quanto tempo notou a queda? Se quiser, já posso olhar os horários com nossa médica especialista."
             )
 
-        # CASO 6.5: Resposta de Tempo de Sintomas (ex: "2 meses", "3 semanas") ou Pedido de Análise
+        # CASO 6.5: Resposta de Tempo de Sintomas (ex: "2 meses", "3 semanas")
         elif conversation.current_goal == "escuta_sintomas_empathia" or any(k in low_content for k in ["mes", "mês", "meses", "semana", "semanas", "dia", "dias", "tempo", "ano", "anos"]):
             action_name = "symptom_duration_received"
             conversation.current_goal = "aguardando_confirmacao_horario"
@@ -394,22 +414,22 @@ class SupervisorAgent:
             clean_first = clean_patient_first_name(display_name)
             name_ack = f", {clean_first}" if clean_first else ""
             response_text = (
-                f"Compreendo perfeitamente{name_ack}! Ter a queda de cabelo há {content} é um sinal de alerta importante que precisa de uma avaliação médica detalhada com tricoscopia para estagnar a queda e estimular o nascimento de novos fios.\n\n"
-                f"Temos horários disponíveis para amanhã ({slots_data['data']}) com nossa especialista: **{horarios_str}**. Qual horário você prefere?"
+                f"Compreendo perfeitamente{name_ack}! Ter a queda de cabelo há {content} exige uma avaliação médica cuidadosa para investigar as causas em consulta.\n\n"
+                f"Temos horários disponíveis para amanhã ({slots_data['data']}) com nossa médica especialista: **{horarios_str}**. Qual horário você prefere?"
             )
 
-        # CASO 6.6: Pedido de Análise ou Sugestão Geral ("analise e me de sugestoes para melhorar")
+        # CASO 6.6: Pedido de Análise ou Orientação Geral
         elif any(k in low_content for k in ["analise", "análise", "sugestoes", "sugestões", "melhorar", "o que fazer", "como funciona"]):
             action_name = "analysis_recommendations"
             slots_data = await scheduler_agent.find_available_slots(db, clinic_id)
             horarios_str = ", ".join(slots_data["horarios_disponiveis"][:3])
             
             response_text = (
-                f"Com base na nossa conversa, recomendo fortemente agendarmos uma **Consulta Especializada com Tricoscopia Digital** 🩺.\n\n"
-                f"Nela a Dra. Ana irá:\n"
-                f"1. Analisar a raiz do couro cabeludo com lente de aumento HD.\n"
-                f"2. Identificar a causa exata (eflúvio telógeno, nutricional ou hormonal).\n"
-                f"3. Prescrever o protocolo de tratamento personalizado.\n\n"
+                f"Como assistente virtual, não posso fornecer diagnósticos. Recomendo agendarmos a sua **Consulta Especializada com a Dra. Ana** 🩺.\n\n"
+                f"Na consulta presencial, a médica irá:\n"
+                f"1. Avaliar detalhadamente o couro cabeludo e seu histórico.\n"
+                f"2. Solicitar os exames necessários se houver indicação.\n"
+                f"3. Definir a conduta médica adequada para você.\n\n"
                 f"Temos vagas para amanhã: **{horarios_str}**. Posso reservar qual horário para você?"
             )
 
