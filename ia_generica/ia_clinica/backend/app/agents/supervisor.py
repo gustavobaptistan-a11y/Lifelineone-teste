@@ -442,19 +442,25 @@ class SupervisorAgent:
                 f"O Prick Test (picadinha) fazemos aqui na própria clínica. Quer agendar uma avaliação?"
             )
 
-        # CASO 8: Dúvida de Preço e Localização
-        elif any(k in low_content for k in ["valor", "preço", "quanto custa", "endereço", "endereco", "onde fica", "onde e", "onde é", "localização", "localizacao", "como chegar", "estacionamento", "horario de funcionamento"]):
+        # CASO 8: Pergunta de Preço / Valores de Consulta e Exames (GUARDRAIL DE NÃO DIVULGAÇÃO DE VALORES)
+        elif any(k in low_content for k in ["valor", "preço", "preco", "quanto custa", "tabela", "orçamento", "orcamento", "quanto é", "quanto e", "quanto fica"]):
+            action_name = "no_price_disclosure_guardrail"
+            clean_first = clean_patient_first_name(display_name)
+            name_ack = f", {clean_first}" if clean_first else ""
+            response_text = (
+                f"Entendo a sua dúvida{name_ack}! Os valores de consultas, testes e exames dependem da modalidade de atendimento (convênio ou nota fiscal para reembolso).\n\n"
+                f"Por política da clínica, os detalhes financeiros, formas de pagamento e recibos são informados diretamente pela nossa equipe de recepção no momento da confirmação do agendamento.\n\n"
+                f"Gostaria de verificar as vagas disponíveis para a sua consulta amanhã?"
+            )
+
+        # CASO 8.5: Dúvida de Localização e Funcionamento
+        elif any(k in low_content for k in ["endereço", "endereco", "onde fica", "onde e", "onde é", "localização", "localizacao", "como chegar", "estacionamento", "horario de funcionamento"]):
             action_name = "operational_info"
             cfgs = await self._get_clinic_settings(db, clinic_id)
             address_text = cfgs.get("endereco", "Ficamos na Av. Paulista, 1000 com estacionamento no local e manobrista. 🚗")
-            price_text = cfgs.get("preco_consulta", "A consulta particular é R$ 350,00 (com retorno em 15 dias e nota fiscal para reembolso).")
-            
             if not address_text.startswith("Ficamos"):
                 address_text = f"Ficamos na {address_text} com estacionamento e facilidade de acesso. 🚗"
-            if not price_text.startswith("A consulta"):
-                price_text = f"A consulta particular é {price_text}."
-                
-            response_text = f"{address_text}\n\n{price_text} Deseja consultar nossos horários?"
+            response_text = f"{address_text}\n\nDeseja consultar nossos horários disponíveis?"
 
         # CASO 9: Dúvida de Convênio Isolada
         elif any(k in low_content for k in ["unimed", "bradesco", "sulamérica", "sulamerica", "convenio", "plano", "reembolso"]):
