@@ -35,9 +35,11 @@ app.include_router(clinics_router, prefix=f"{settings.API_V1_STR}/clinics", tags
 frontend_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "frontend"))
 
 if os.path.exists(frontend_dir):
-    app.mount("/static", StaticFiles(directory=frontend_dir), name="static")
+    app.mount("/static", StaticFiles(directory=frontend_dir, html=True), name="static")
 
     @app.get("/")
+    @app.get("/index.html")
+    @app.get("/static/index.html")
     @app.get("/painel")
     @app.get("/clinical")
     @app.get("/clinical/configuracoes")
