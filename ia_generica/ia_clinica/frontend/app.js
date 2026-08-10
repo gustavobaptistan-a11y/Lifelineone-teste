@@ -24,11 +24,39 @@ function escapeHtml(text) {
     .replace(/'/g, "&#039;");
 }
 
+// Função Global de Troca de Abas
+window.activateTab = function(tabId) {
+  const configSubnavPanel = document.getElementById('panel-config-subnav');
+  const subnavItems = document.querySelectorAll('.subnav-item');
+  const tabPanels = document.querySelectorAll('.tab-content-panel');
+  const pageTitle = document.getElementById('main-page-title');
+
+  if (configSubnavPanel) {
+    configSubnavPanel.style.display = 'block';
+  }
+
+  subnavItems.forEach(item => {
+    if (item.getAttribute('data-tab') === tabId) {
+      item.classList.add('active');
+      if (pageTitle && item.querySelector('span')) {
+        pageTitle.textContent = item.querySelector('span').textContent;
+      }
+    } else {
+      item.classList.remove('active');
+    }
+  });
+
+  tabPanels.forEach(panel => panel.classList.remove('active'));
+  const targetPanel = document.getElementById(`tab-panel-${tabId}`);
+  if (targetPanel) {
+    targetPanel.classList.add('active');
+  }
+};
+
 // 1. Navegação por Sidebar & Sub-nav
 function initNavigation() {
   const navItems = document.querySelectorAll('.nav-item');
   const subnavItems = document.querySelectorAll('.subnav-item');
-  const tabPanels = document.querySelectorAll('.tab-content-panel');
   const pageTitle = document.getElementById('main-page-title');
   const breadcrumbSection = document.getElementById('breadcrumb-section');
   const configSubnavPanel = document.getElementById('panel-config-subnav');
@@ -47,14 +75,12 @@ function initNavigation() {
 
       if (navTarget === 'configuracoes') {
         if (configSubnavPanel) configSubnavPanel.style.display = 'block';
-        
-        // Reativar subnav item ativa
         const activeSub = document.querySelector('.subnav-item.active');
         const targetTab = activeSub ? activeSub.getAttribute('data-tab') : 'roberta';
-        activateTab(targetTab);
+        window.activateTab(targetTab);
       } else {
         if (configSubnavPanel) configSubnavPanel.style.display = 'none';
-        activateTab(navTarget);
+        window.activateTab(navTarget);
       }
     });
   });
@@ -63,23 +89,9 @@ function initNavigation() {
   subnavItems.forEach(item => {
     item.addEventListener('click', () => {
       const tabTarget = item.getAttribute('data-tab');
-      const title = item.querySelector('span').textContent;
-      
-      subnavItems.forEach(i => i.classList.remove('active'));
-      item.classList.add('active');
-
-      if (pageTitle) pageTitle.textContent = title;
-      activateTab(tabTarget);
+      window.activateTab(tabTarget);
     });
   });
-
-  function activateTab(tabId) {
-    tabPanels.forEach(panel => panel.classList.remove('active'));
-    const targetPanel = document.getElementById(`tab-panel-${tabId}`);
-    if (targetPanel) {
-      targetPanel.classList.add('active');
-    }
-  }
 }
 
 // 2. Slider de Temperatura Sync
@@ -99,21 +111,22 @@ function initChatOpsHub() {
   const input = document.getElementById('hub-chatops-input');
   const btn = document.getElementById('hub-chatops-btn');
   const thread = document.getElementById('hub-chatops-messages');
-  const chipBtns = document.querySelectorAll('.quick-chip-btn');
+  const chipBtns = document.querySelectorAll('.chatops-chip');
 
   if (!input || !btn || !thread) return;
 
-  async function sendCommand(cmdText) {
-    const textVal = cmdText || input.value.trim();
+  async function sendCommand(overrideCmd) {
+    const textVal = overrideCmd || input.value.trim();
     if (!textVal) return;
 
-    appendMessage(thread, 'user', textVal, 'Dr. Gustav Baptista (Diretor)');
-    if (!cmdText) input.value = '';
+    if (!overrideCmd) input.value = '';
+
+    appendMessage(thread, 'user', textVal, 'Direção Médica');
 
     const typingId = appendTypingIndicator(thread, 'Copiloto Admin');
 
     try {
-      const res = await fetch('/api/v1/clinics/config-chat', {
+      const res = await fetch('/api/v1/webhooks/chatops', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -178,25 +191,22 @@ function initSandboxHub() {
     if (!textVal) return;
 
     const placeholder = document.getElementById('sandbox-empty-placeholder');
-    if (placeholder) placeholder.remove();
+    if (placeholder) placeholder.style.display = 'none';
 
-    appendMessage(thread, 'user', textVal, 'Paciente (Simulação)');
     input.value = '';
+
+    appendMessage(thread, 'user', textVal, 'Paciente');
 
     const typingId = appendTypingIndicator(thread, 'IA Roberta');
 
     try {
-      await new Promise(r => setTimeout(r, 1500));
-
       const res = await fetch('/api/v1/webhooks/whatsapp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           phone: '5511999887766',
-          phone_number: '5511999887766',
-          sender_name: 'Gustavo (Paciente Teste)',
+          sender_name: 'Gustavo',
           message: textVal,
-          message_text: textVal,
           message_type: 'texto'
         })
       });
@@ -204,12 +214,12 @@ function initSandboxHub() {
       const data = await res.json();
       removeTypingIndicator(thread, typingId);
 
-      if (data.response) {
-        appendMessage(thread, 'ai', data.response, 'IA Roberta');
-      }
+      const replyMsg = data.response || data.reply_preview || 'Olá! Como posso ajudar você hoje na clínica?';
+      appendMessage(thread, 'ai', replyMsg, 'IA Roberta');
+
     } catch (err) {
       removeTypingIndicator(thread, typingId);
-      appendMessage(thread, 'ai', 'Desculpe, tive um problema de conexão. Tente novamente!', 'IA Roberta');
+      appendMessage(thread, 'ai', 'Erro ao conectar com a IA Roberta.', 'IA Roberta');
     }
   }
 
@@ -219,24 +229,27 @@ function initSandboxHub() {
   });
 }
 
-// Helper para Mensagens
-function appendMessage(thread, role, text, author) {
+// Helper para mensagens do Sandbox
+function appendMessage(thread, type, text, author) {
+  if (!thread) return null;
   const msgBox = document.createElement('div');
-  msgBox.className = `msg-box ${role}`;
+  msgBox.className = `msg-box ${type}`;
 
-  const icon = role === 'ai' ? '<i class="fa-solid fa-robot"></i>' : '<i class="fa-solid fa-user"></i>';
+  const formattedText = escapeHtml(text).replace(/\n/g, '<br>');
 
   msgBox.innerHTML = `
-    <div class="msg-author">${icon} ${escapeHtml(author)}</div>
-    <div class="msg-body">${escapeHtml(text)}</div>
+    <div class="msg-author">${escapeHtml(author)}</div>
+    <div class="msg-body">${formattedText}</div>
   `;
 
   thread.appendChild(msgBox);
   thread.scrollTop = thread.scrollHeight;
+  return msgBox;
 }
 
 function appendTypingIndicator(thread, author) {
-  const id = `typing-${Date.now()}`;
+  if (!thread) return null;
+  const id = 'typing-' + Date.now();
   const msgBox = document.createElement('div');
   msgBox.className = 'msg-box ai typing-box';
   msgBox.id = id;
@@ -261,6 +274,7 @@ function removeTypingIndicator(thread, id) {
 // 5. Carregador e Exibidor de QR Code do WhatsApp (Evolution API Go)
 function initQRCodeLoader() {
   const btnFetch = document.getElementById('btn-fetch-qr-code');
+  const btnCopy = document.getElementById('btn-copy-pairing-code');
   const qrImg = document.getElementById('qr-code-img');
   const qrLoading = document.getElementById('qr-code-loading');
   const pairingDisplay = document.getElementById('pairing-code-display');
