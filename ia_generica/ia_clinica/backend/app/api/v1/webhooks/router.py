@@ -99,6 +99,16 @@ async def get_whatsapp_qr_code(instance_name: Optional[str] = "clinica_alergia_d
     return await whatsapp_service.get_qr_code(instance_name)
 
 
+@router.post("/whatsapp/instance/create")
+async def create_evolution_instance(instance_name: Optional[str] = "clinica_alergia_dev"):
+    return await whatsapp_service.create_instance(instance_name)
+
+
+@router.post("/whatsapp/webhook/configure")
+async def configure_evolution_webhook(webhook_url: str, instance_name: Optional[str] = "clinica_alergia_dev"):
+    return await whatsapp_service.configure_webhook(webhook_url, instance_name)
+
+
 @router.get("/conversations/search")
 async def search_conversation_by_phone(
     phone: str,

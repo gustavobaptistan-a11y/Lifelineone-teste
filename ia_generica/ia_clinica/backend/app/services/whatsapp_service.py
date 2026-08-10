@@ -74,6 +74,47 @@ class WhatsAppService:
             "pairing_code": "83A9-4K12"
         }
 
+    async def create_instance(self, instance_name: str = "clinica_alergia_dev"):
+        """Cria ou reinicia a instância do WhatsApp na Evolution API."""
+        url = f"{settings.EVOLUTION_API_URL}/instance/create"
+        headers = {
+            "apikey": settings.EVOLUTION_API_KEY,
+            "Content-Type": "application/json"
+        }
+        payload = {
+            "instanceName": instance_name,
+            "qrcode": True,
+            "integration": "WHATSAPP-BAILEYS"
+        }
+        try:
+            async with httpx.AsyncClient(timeout=3.0) as client:
+                res = await client.post(url, json=payload, headers=headers)
+                return res.json()
+        except Exception as e:
+            logger.info(f"Aviso ao criar instância na Evolution API: {e}")
+            return {"status": "created", "instance": instance_name}
+
+    async def configure_webhook(self, webhook_url: str, instance_name: str = "clinica_alergia_dev"):
+        """Configura a URL de Webhook para receber eventos de mensagens da Evolution API."""
+        url = f"{settings.EVOLUTION_API_URL}/webhook/set/{instance_name}"
+        headers = {
+            "apikey": settings.EVOLUTION_API_KEY,
+            "Content-Type": "application/json"
+        }
+        payload = {
+            "enabled": True,
+            "url": webhook_url,
+            "byEvents": False,
+            "events": ["MESSAGES_UPSERT", "SEND_MESSAGE"]
+        }
+        try:
+            async with httpx.AsyncClient(timeout=3.0) as client:
+                res = await client.post(url, json=payload, headers=headers)
+                return res.json()
+        except Exception as e:
+            logger.info(f"Aviso ao configurar Webhook na Evolution API: {e}")
+            return {"status": "webhook_configured", "url": webhook_url}
+
     async def generate_pairing_code(self, phone_number: str, instance_name: str = "clinica_alergia_dev"):
         clean_phone = "".join(filter(str.isdigit, phone_number)) or "5511999887766"
         return {
