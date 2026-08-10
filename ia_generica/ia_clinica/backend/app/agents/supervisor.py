@@ -331,13 +331,27 @@ class SupervisorAgent:
             any(w in low_content for w in ["08", "09", "10", "14", "horas", "hora", "das", "quero", "09:00", "08:00", "10:00", "14:00"])
         )
 
-        if is_picking_time:
-            action_name = "confirm_simulated_booking"
+        # CASO 0: Resposta com o Nome do Paciente para Conclusão do Agendamento
+        if conversation.current_goal and conversation.current_goal.startswith("aguardando_nome_para_agendamento:"):
+            action_name = "received_patient_name_for_booking"
+            pending_time_slot = conversation.current_goal.split(":")[1]
+            extracted_name = registration_agent.extract_name_from_text(content)
+            if not extracted_name or extracted_name == "Paciente":
+                extracted_name = content.strip().title()
+            
+            # Salvar nome do paciente no banco
+            contact.nome = extracted_name
+            await db.commit()
+            await db.refresh(contact)
+            display_name = extracted_name
+            
             slots_data = await scheduler_agent.find_available_slots(db, clinic_id)
-
             try:
                 target_dt = datetime.datetime.now() + datetime.timedelta(days=1)
-                h_val, m_val = map(int, time_slot.split(":"))
+                if ":" in pending_time_slot:
+                    h_val, m_val = map(int, pending_time_slot.split(":"))
+                else:
+                    h_val, m_val = int(pending_time_slot.replace("h", "")), 0
                 target_dt = target_dt.replace(hour=h_val, minute=m_val, second=0, microsecond=0)
                 doctor_id = uuid.UUID(slots_data["doctor_id"])
                 await scheduler_agent.create_booking(db, clinic_id, patient_id, doctor_id, target_dt)
@@ -350,13 +364,56 @@ class SupervisorAgent:
                 logger.warning(f"Erro booking: {e}")
 
             conversation.current_goal = "consulta_agendada"
-            conversation.status = "finalizada"
-
+            
+            first_name = extracted_name.split()[0]
             detail_plan = f"pelo convênio {insurance_info}" if insurance_info else ""
             response_text = (
-                f"✨ **Prontinho!** Agendei sua consulta de {specialty} para amanhã ({slots_data['data']}) às **{time_slot}** com a {slots_data['doctor_name']} {detail_plan}.\n\n"
-                f"☕ Te esperamos 10 minutinhos antes para um café quentinho na recepção!"
+                f"✨ **Prontinho, {first_name}!** Agendei sua consulta de {specialty} para amanhã ({slots_data['data']}) às **{pending_time_slot}** com a {slots_data['doctor_name']} {detail_plan}.\n\n"
+                f"📍 **Localização:** Av. Paulista, 1000 (com estacionamento no local e manobrista). 🚗\n"
+                f"☕ Te esperamos 10 minutinhos antes para um café quentinho na recepção!\n\n"
+                f"Se precisar de mais informações ou alterar o seu agendamento, é só me falar por aqui: **'preciso falar do meu agendamento'**."
             )
+
+        elif is_picking_time:
+            clean_first = clean_patient_first_name(display_name)
+            
+            # Se o nome do paciente ainda não foi informado (display_name é "Paciente" ou vazio)
+            if not clean_first or display_name.strip().lower() in ["paciente", ""]:
+                action_name = "ask_name_before_booking"
+                conversation.current_goal = f"aguardando_nome_para_agendamento:{time_slot}"
+                response_text = (
+                    f"Ótima escolha! Para concluir o registro do seu agendamento para amanhã às **{time_slot}**, por favor, me informe o seu **nome completo**."
+                )
+            else:
+                action_name = "confirm_simulated_booking"
+                slots_data = await scheduler_agent.find_available_slots(db, clinic_id)
+
+                try:
+                    target_dt = datetime.datetime.now() + datetime.timedelta(days=1)
+                    if ":" in time_slot:
+                        h_val, m_val = map(int, time_slot.split(":"))
+                    else:
+                        h_val, m_val = int(time_slot.replace("h", "")), 0
+                    target_dt = target_dt.replace(hour=h_val, minute=m_val, second=0, microsecond=0)
+                    doctor_id = uuid.UUID(slots_data["doctor_id"])
+                    await scheduler_agent.create_booking(db, clinic_id, patient_id, doctor_id, target_dt)
+                    active_booking = {
+                        "data_hora_str": target_dt.strftime("%d/%m/%Y às %H:%M"),
+                        "data": target_dt.strftime("%d/%m/%Y"),
+                        "horario": f"{h_val:02d}:00"
+                    }
+                except Exception as e:
+                    logger.warning(f"Erro booking: {e}")
+
+                conversation.current_goal = "consulta_agendada"
+
+                detail_plan = f"pelo convênio {insurance_info}" if insurance_info else ""
+                response_text = (
+                    f"✨ **Prontinho, {clean_first}!** Agendei sua consulta de {specialty} para amanhã ({slots_data['data']}) às **{time_slot}** com a {slots_data['doctor_name']} {detail_plan}.\n\n"
+                    f"📍 **Localização:** Av. Paulista, 1000 (com estacionamento no local e manobrista). 🚗\n"
+                    f"☕ Te esperamos 10 minutinhos antes para um café quentinho na recepção!\n\n"
+                    f"Se precisar de mais informações ou alterar seu agendamento, é só me dizer por aqui: **'preciso falar do meu agendamento'**."
+                )
 
         # CASO CANCELAMENTO DE CONSULTA
         elif any(k in low_content for k in ["cancelar", "desmarcar", "desistir da consulta", "cancelamento"]):
@@ -374,12 +431,65 @@ class SupervisorAgent:
             else:
                 response_text = f"Por nada! Estou sempre à disposição por aqui se precisar de algo. Um excelente dia! 💙"
 
-        # CASO ALTERAÇÃO DE CONSULTA JÁ AGENDADA
-        elif active_booking and any(k in low_content for k in ["alterar", "remarcar", "mudar", "outro horário", "trocar"]):
+        # CASO GATILHO EXPLÍCITO DE REAGENDAMENTO / SUPORTE AO AGENDAMENTO ("preciso falar do meu agendamento")
+        elif any(k in low_content for k in ["preciso falar do meu agendamento", "falar do meu agendamento", "falar do agendamento", "meu agendamento", "alterar agendamento", "remarcar", "trocar horario", "mudar horario", "alterar"]):
             action_name = "manage_existing_booking"
             slots_data = await scheduler_agent.find_available_slots(db, clinic_id)
             horarios_str = ", ".join(slots_data["horarios_disponiveis"][:3])
-            response_text = f"Sem problemas! Posso alterar seu agendamento de **{active_booking['data_hora_str']}**. Temos estes outros horários para amanhã: **{horarios_str}**. Qual fica melhor para você?"
+            clean_first = clean_patient_first_name(display_name)
+            name_ack = f", {clean_first}" if clean_first else ""
+            
+            if active_booking:
+                response_text = (
+                    f"Com certeza{name_ack}! Localizei o seu agendamento para **{active_booking['data_hora_str']}** com a {slots_data['doctor_name']}.\n\n"
+                    f"Se você deseja **alterar o horário** para amanhã ({slots_data['data']}), temos as seguintes vagas disponíveis: **{horarios_str}**. Qual horário fica melhor para você?\n\n"
+                    f"(Se preferir cancelar a consulta, basta responder 'cancelar agendamento')."
+                )
+            else:
+                response_text = (
+                    f"Claro{name_ack}! Vamos organizar seu agendamento. Para amanhã ({slots_data['data']}), temos vagas às **{horarios_str}**. Qual horário você prefere?"
+                )
+
+        # CASO 8.5: Dúvida de Localização e Funcionamento (com State Memory Stack & Checagem de Agendamento Ativo)
+        elif any(k in low_content for k in ["endereço", "endereco", "onde fica", "onde e", "onde é", "localização", "localizacao", "como chegar", "estacionamento", "horario de funcionamento"]):
+            action_name = "operational_info"
+            cfgs = await self._get_clinic_settings(db, clinic_id)
+            address_text = cfgs.get("endereco", "Ficamos na Av. Paulista, 1000 com estacionamento no local e manobrista. 🚗")
+            if not address_text.startswith("Ficamos"):
+                address_text = f"Ficamos na {address_text} com estacionamento e facilidade de acesso. 🚗"
+            
+            if active_booking or conversation.current_goal == "consulta_agendada":
+                time_info = active_booking['data_hora_str'] if active_booking else "amanhã"
+                response_text = (
+                    f"{address_text}\n\n"
+                    f"Sua consulta para **{time_info}** já está confirmadíssima! ☕\n"
+                    f"Se precisar de mais informações ou alterar o seu agendamento, é só me falar por aqui: **'preciso falar do meu agendamento'**."
+                )
+            elif conversation.current_goal == "aguardando_confirmacao_horario":
+                slots_data = await scheduler_agent.find_available_slots(db, clinic_id, preferred_period=entities.get("preferred_period"))
+                horarios_str = ", ".join(slots_data["horarios_disponiveis"][:3])
+                response_text = f"{address_text}\n\nInclusive, como estávamos organizando seu agendamento para amanhã ({slots_data['data']}): temos vagas às **{horarios_str}**. Qual horário você prefere?"
+            else:
+                response_text = f"{address_text}\n\nDeseja consultar nossos horários disponíveis?"
+
+        # CASO PACIENTE INFORMA QUE JÁ ESTÁ AGENDADO ("ja estou agendada", "já agendei")
+        elif any(k in low_content for k in ["ja estou agendada", "já estou agendada", "ja agendei", "já agendei", "ja tenho consulta", "já tenho consulta"]):
+            action_name = "active_booking_status"
+            clean_first = clean_patient_first_name(display_name)
+            name_prefix = f" {clean_first}" if clean_first else ""
+            if active_booking or conversation.current_goal == "consulta_agendada":
+                time_info = active_booking['data_hora_str'] if active_booking else "amanhã"
+                response_text = (
+                    f"Com certeza{name_prefix}! Sua consulta de {specialty} está confirmadíssima para **{time_info}** com a Dra. Ana. 🏥\n\n"
+                    f"📍 **Localização:** Av. Paulista, 1000 (com estacionamento no local e manobrista). 🚗\n\n"
+                    f"Se precisar de mais informações ou alterar o seu agendamento, é só me falar por aqui: **'preciso falar do meu agendamento'**."
+                )
+            else:
+                slots_data = await scheduler_agent.find_available_slots(db, clinic_id)
+                horarios_str = ", ".join(slots_data["horarios_disponiveis"][:3])
+                response_text = (
+                    f"Que ótimo{name_prefix}! Caso queira agendar ou alterar o horário da sua consulta para amanhã, temos vagas às **{horarios_str}**. Qual prefere?"
+                )
 
         # CASO PACIENTE RETORNA O CONTATO E JÁ POSSUI AGENDAMENTO ATIVO
         elif active_booking and conversation.current_goal == "consulta_agendada" and any(k in low_content for k in ["minha consulta", "meu agendamento", "que dia", "que horas"]):
@@ -442,7 +552,8 @@ class SupervisorAgent:
             
             clean_first = clean_patient_first_name(display_name)
             name_ack = f", {clean_first}" if clean_first else ""
-            clean_dur = re.sub(r'^(tem\s+uns|tem|faz|fazem|há|ha|cerca\s+de)\s*', '', content, flags=re.IGNORECASE).strip()
+            clean_dur = re.sub(r'^(tem\s+uns|tem|faz|fazem|há|ha|cerca\s+de|a\s+cerca\s+de|a)\s+', '', content, flags=re.IGNORECASE).strip()
+            clean_dur = re.sub(r'^(há|ha|a)\s+', '', clean_dur, flags=re.IGNORECASE).strip()
             dur_phrase = f"há cerca de {clean_dur}" if clean_dur else f"há {content}"
             response_text = (
                 f"Compreendo perfeitamente{name_ack}! Estar apresentando esse sintoma {dur_phrase} exige uma avaliação médica cuidadosa para investigar as causas em consulta presencial.\n\n"
@@ -522,20 +633,7 @@ class SupervisorAgent:
                 f"Gostaria de verificar as vagas disponíveis para a sua consulta amanhã?"
             )
 
-        # CASO 8.5: Dúvida de Localização e Funcionamento (com State Memory Stack)
-        elif any(k in low_content for k in ["endereço", "endereco", "onde fica", "onde e", "onde é", "localização", "localizacao", "como chegar", "estacionamento", "horario de funcionamento"]):
-            action_name = "operational_info"
-            cfgs = await self._get_clinic_settings(db, clinic_id)
-            address_text = cfgs.get("endereco", "Ficamos na Av. Paulista, 1000 com estacionamento no local e manobrista. 🚗")
-            if not address_text.startswith("Ficamos"):
-                address_text = f"Ficamos na {address_text} com estacionamento e facilidade de acesso. 🚗"
-            
-            if conversation.current_goal == "aguardando_confirmacao_horario":
-                slots_data = await scheduler_agent.find_available_slots(db, clinic_id, preferred_period=entities.get("preferred_period"))
-                horarios_str = ", ".join(slots_data["horarios_disponiveis"][:3])
-                response_text = f"{address_text}\n\nInclusive, como estávamos organizando seu agendamento para amanhã ({slots_data['data']}): temos vagas às **{horarios_str}**. Qual horário você prefere?"
-            else:
-                response_text = f"{address_text}\n\nDeseja consultar nossos horários disponíveis?"
+
 
         # CASO 9: Dúvida de Convênio Isolada (com State Memory Stack)
         elif any(k in low_content for k in ["unimed", "bradesco", "sulamérica", "sulamerica", "convenio", "plano", "reembolso"]):
@@ -558,12 +656,20 @@ class SupervisorAgent:
         # CASO 10: Saudação Padrão ou Continuidade
         else:
             action_name = "receptionist_greeting"
-            if past_msgs_count > 1 or conversation.current_goal in ["aguardando_confirmacao_horario"]:
+            clean_first = clean_patient_first_name(display_name)
+            name_ack = f", {clean_first}" if clean_first else ""
+            if active_booking or conversation.current_goal == "consulta_agendada":
+                time_info = active_booking['data_hora_str'] if active_booking else "amanhã"
+                response_text = (
+                    f"Olá{name_ack}! Lembrando que sua consulta já está confirmadíssima para **{time_info}**! 🏥\n\n"
+                    f"📍 **Endereço:** Av. Paulista, 1000 (com estacionamento no local e manobrista). 🚗\n\n"
+                    f"Se precisar de mais informações ou alterar seu agendamento, é só me dizer: **'preciso falar do meu agendamento'**."
+                )
+            elif past_msgs_count > 1 or conversation.current_goal in ["aguardando_confirmacao_horario"]:
                 slots_data = await scheduler_agent.find_available_slots(db, clinic_id)
                 horarios_str = ", ".join(slots_data["horarios_disponiveis"][:3])
                 response_text = f"Estou acompanhando seu caso com carinho! Podemos agendar sua avaliação para amanhã em um destes horários: **{horarios_str}**. Qual prefere?"
             else:
-                name_ack = f", {display_name}" if display_name else ""
                 response_text = f"Olá{name_ack}! Sou a Roberta. É um prazer cuidar do seu atendimento! Como posso te ajudar hoje? 💙"
 
         # 5. Salvar resposta enviada

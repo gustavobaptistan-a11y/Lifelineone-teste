@@ -100,7 +100,8 @@ class SchedulerAgent:
                 status="reservado"
             )
             db.add(appointment)
-            await db.flush()
+            await db.commit()
+            await db.refresh(appointment)
             return appointment
         except Exception as e:
             await db.rollback()
