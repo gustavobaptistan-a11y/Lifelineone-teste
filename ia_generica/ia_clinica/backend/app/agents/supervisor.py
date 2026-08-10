@@ -106,6 +106,24 @@ class SupervisorAgent:
         if any(k in combined for k in ["falta de ar", "chiado no peito", "anafilaxia", "reacao grave"]):
             entities["has_emergency"] = True
 
+        # 6. FASE 1 & FASE 2: Análise de Sentimento e Espelhamento de Ritmo (Velocity Matching)
+        if any(k in text_input.lower() for k in ["medo", "assustad", "preocupad", "grave", "horrivel", "desespero", "estresse", "ruim", "ansios"]):
+            entities["sentiment"] = "ansioso"
+        elif any(k in text_input.lower() for k in ["urgente", "rápido", "rapido", "logo", "agora", "já", "ja", "correndo", "pressa"]):
+            entities["sentiment"] = "apressado"
+        elif any(k in text_input.lower() for k in ["chato", "demora", "péssimo", "pessimo", "ruim", "dificil", "difícil"]):
+            entities["sentiment"] = "frustrado"
+        else:
+            entities["sentiment"] = "tranquilo"
+
+        word_count = len(text_input.split())
+        if word_count <= 5 or len(text_input) <= 25:
+            entities["velocity"] = "curto"
+        elif word_count >= 18 or len(text_input) >= 120:
+            entities["velocity"] = "detalhado"
+        else:
+            entities["velocity"] = "medio"
+
         return entities
 
     async def process_incoming_message(

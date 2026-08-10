@@ -152,6 +152,28 @@ async def reset_chat_database(
         }
 
 
+@router.post("/proactive-care-nudge")
+async def send_proactive_care_nudge(
+    phone: str = "5511999887766",
+    db: AsyncSession = Depends(get_db)
+):
+    """FASE 6: Envia lembrete empático de acompanhamento caso o paciente tenha ficado em dúvida sobre horários."""
+    clean_digits = "".join(filter(str.isdigit, phone)) or phone
+    
+    nudge_text = (
+        "Conseguiu dar uma olhadinha na sua agenda, Gustavo? 😊 [BREAK]"
+        "Sem nenhuma pressa! Estou por aqui para te ajudar a encaixar o melhor horário com nossa médica especialista quando for mais confortável pra você! 💙"
+    )
+    
+    await whatsapp_service.send_text_message("clinica_alergia_dev", clean_digits, nudge_text)
+    
+    return {
+        "status": "proactive_nudge_sent",
+        "phone": clean_digits,
+        "nudge_message": nudge_text
+    }
+
+
 @router.get("/conversations/search")
 async def search_conversation_by_phone(
     phone: str,

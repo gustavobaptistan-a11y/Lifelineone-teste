@@ -15,24 +15,44 @@ class WhatsAppService:
     """
 
     async def send_text_message(self, instance_name: str, number: str, text: str):
+        """
+        Envia mensagens para o WhatsApp com FASE 4 (Multi-Message Chunking) e FASE 5 (Micro-Delay de Digitação Humanizado).
+        """
+        import asyncio
         url = f"{settings.EVOLUTION_API_URL}/message/sendText/{instance_name}"
         headers = {
             "apikey": settings.EVOLUTION_API_KEY,
             "Content-Type": "application/json"
         }
-        payload = {
-            "number": number,
-            "text": text
-        }
         
-        try:
-            async with httpx.AsyncClient(timeout=1.0) as client:
-                response = await client.post(url, json=payload, headers=headers)
-                response.raise_for_status()
-                return response.json()
-        except Exception as e:
-            logger.error(f"Erro ao enviar mensagem WhatsApp para {number}: {e}")
-            return {"status": "simulated_sent", "number": number, "text": text}
+        # 1. FASE 4: Múltiplos Balões (Quebra por [BREAK] ou parágrafos duplos)
+        chunks = [c.strip() for c in text.split("[BREAK]") if c.strip()]
+        if not chunks:
+            chunks = [text]
+
+        results = []
+        for i, chunk in enumerate(chunks):
+            # 2. FASE 5: Micro-Delay de Digitação Proporcional (0.3s a 1.2s para simular presença humana)
+            char_count = len(chunk)
+            typing_delay = min(1.2, max(0.3, char_count * 0.015))
+            if i > 0:
+                await asyncio.sleep(typing_delay)
+
+            payload = {
+                "number": number,
+                "text": chunk
+            }
+            
+            try:
+                async with httpx.AsyncClient(timeout=1.0) as client:
+                    response = await client.post(url, json=payload, headers=headers)
+                    response.raise_for_status()
+                    results.append(response.json())
+            except Exception as e:
+                logger.error(f"Erro ao enviar mensagem WhatsApp para {number}: {e}")
+                results.append({"status": "simulated_sent", "number": number, "text": chunk})
+
+        return results[0] if len(results) == 1 else {"status": "multi_bubbles_sent", "chunks_count": len(chunks)}
 
     async def get_qr_code(self, instance_name: str = "clinica_alergia_dev"):
         url = f"{settings.EVOLUTION_API_URL}/instance/connect/{instance_name}"
