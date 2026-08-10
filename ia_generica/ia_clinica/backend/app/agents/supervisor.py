@@ -205,7 +205,7 @@ class SupervisorAgent:
         child_match = re.search(r"(?:filh[oa]|bebê|bebe)\s+([A-ZÀ-Úa-zà-ú]+)", combined, re.IGNORECASE)
         if child_match:
             c_candidate = child_match.group(1).capitalize()
-            if c_candidate.lower() not in ["com", "de", "que", "está", "esta", "tem", "sem", "do", "da", "para", "pra"]:
+            if c_candidate.lower() not in ["com", "de", "que", "está", "esta", "tá", "ta", "tem", "sem", "do", "da", "para", "pra", "é", "e", "ficou", "foi"]:
                 entities["child_name"] = c_candidate
             else:
                 entities["child_name"] = None
@@ -253,9 +253,9 @@ class SupervisorAgent:
 
         # 1. Filtro de Emergência
         is_safe, is_emergency, reason = security_filter_agent.check_message_security(content)
-        if is_emergency or any(k in low_content for k in ["falta de ar", "chiado no peito", "anafilaxia", "garganta fechando", "reacao alérgica estranha"]):
+        if is_emergency or any(k in low_content for k in ["falta de ar", "chiado no peito", "anafilaxia", "garganta fechando", "garganta inchando", "peito fechar", "peito fechando", "reacao alérgica estranha"]):
             emergency_response = (
-                f"🚨 **Atenção!** Sintomas como falta de ar ou sensação de garganta fechando são sinais de emergência médica!\n\n"
+                f"🚨 **Atenção!** Sintomas como falta de ar, peito fechando ou sensação de garganta inchando são sinais de emergência médica!\n\n"
                 f"Por favor, dirija-se ao Pronto-Socorro mais próximo agora mesmo ou ligue para o SAMU (192). Não aguarde o atendimento por mensagem! 💙"
             )
             return {"action": "emergency_override", "response": emergency_response, "confidence": 1.0}
@@ -707,13 +707,24 @@ class SupervisorAgent:
                     f"2️⃣ Tratar de outro assunto (falar com a nossa recepção humana)"
                 )
 
-        # CASO 8.5: Dúvida de Localização e Funcionamento (com State Memory Stack & Checagem de Agendamento Ativo)
-        elif any(k in low_content for k in ["endereço", "endereco", "onde fica", "onde e", "onde é", "localização", "localizacao", "como chegar", "estacionamento", "horario de funcionamento"]):
+        # CASO 8.5: Dúvida de Localização, Transporte, Exames e Funcionamento (com State Memory Stack & Checagem de Agendamento Ativo)
+        elif any(k in low_content for k in [
+            "endereço", "endereco", "onde fica", "onde e", "onde é", "localização", "localizacao", 
+            "como chegar", "estacionamento", "horario de funcionamento", "metrô", "metro", "ônibus", 
+            "onibus", "transporte", "estação", "estacao", "almoço", "almoco", "funciona", "aberto",
+            "exames anteriores", "levar exame", "precisa levar"
+        ]):
             action_name = "operational_info"
             cfgs = await self._get_clinic_settings(db, clinic_id)
-            address_text = cfgs.get("endereco", "Ficamos no Connect Tower, em Taguatinga (https://maps.app.goo.gl/vittamed). 🚗")
+            address_text = cfgs.get("endereco", "Ficamos no Connect Tower, em Taguatinga (https://maps.app.goo.gl/vittamed), muito próximo da Estação do Metrô e com ponto de ônibus na porta. 🚗")
             if not address_text.startswith("Ficamos"):
                 address_text = f"Ficamos no {address_text} com facilidade de acesso. 🚗"
+            
+            if "almoço" in low_content or "almoco" in low_content or "funcionamento" in low_content:
+                address_text = f"{address_text}\n\n⏰ Horário: Atendemos de Segunda a Sexta das 08h às 18h e Sábados das 08h às 12h (não fechamos para almoço!)."
+            
+            if "exame" in low_content or "levar" in low_content:
+                address_text = f"{address_text}\n\n📄 Exames: Sim! Se você tiver exames de sangue ou de alergia anteriores, traga no dia da consulta para a médica avaliar."
             
             if active_booking or conversation.current_goal == "consulta_agendada":
                 time_info = active_booking['data_hora_str'] if active_booking else "amanhã"
@@ -739,7 +750,17 @@ class SupervisorAgent:
                 formatted_slot = format_time_slot_str(pending_time_slot)
                 response_text = f"{address_text}\n\nInclusive, estava só aguardando a sua confirmação para finalizar a consulta para amanhã às {formatted_slot}. Podemos confirmar o seu agendamento com estes dados?"
             else:
-                response_text = f"{address_text}\n\nDeseja consultar nossos horários disponíveis?"
+                if entities["is_pediatric"] or entities.get("caregiver_stress") or any(k in low_content for k in ["mancha", "coceira", "pele", "rinite", "cabelo", "alergia"]):
+                    slots_data = await scheduler_agent.find_available_slots(db, clinic_id)
+                    horarios_str = ", ".join([format_time_slot_str(h) for h in slots_data["horarios_disponiveis"][:3]])
+                    conversation.current_goal = "aguardando_confirmacao_horario"
+                    response_text = (
+                        f"{address_text}\n\n"
+                        f"E sobre a queixa médica relatada: a Dra. Ana é nossa médica especialista! 🩺\n"
+                        f"Temos vagas para amanhã ({slots_data['data']}): **{horarios_str}**. Qual horário fica mais confortável para você?"
+                    )
+                else:
+                    response_text = f"{address_text}\n\nDeseja consultar nossos horários disponíveis?"
 
         # CASO PACIENTE INFORMA QUE JÁ ESTÁ AGENDADO ("ja estou agendada", "já agendei")
         elif any(k in low_content for k in ["ja estou agendada", "já estou agendada", "ja agendei", "já agendei", "ja tenho consulta", "já tenho consulta"]):

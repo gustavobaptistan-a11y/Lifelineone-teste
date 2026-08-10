@@ -28,8 +28,10 @@ class SecurityFilterAgent:
 
         # 2. Palavras de Emergência Médica Grave
         emergency_terms = [
-            "falta de ar severa", "anaphylaxis", "choque anafilatico", "parada respiratoria",
-            "desmaiou", "inconsciente", "sem respirar", "edema de glote"
+            "falta de ar", "falta de ar severa", "anaphylaxis", "anafilaxia", "choque anafilatico", 
+            "parada respiratoria", "desmaiou", "inconsciente", "sem respirar", "edema de glote",
+            "garganta fechando", "garganta inchando", "garganta trancando", "peito fechar", "peito fechando",
+            "chiado no peito", "lábio inchando", "labio inchando", "lingua inchando"
         ]
         if any(term in low for term in emergency_terms):
             return False, True, "Emergência Médica Detectada"
