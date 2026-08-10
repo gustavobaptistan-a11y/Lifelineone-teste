@@ -383,6 +383,36 @@ class SupervisorAgent:
                 f"Há quanto tempo notou a queda? Se quiser, já posso olhar os horários com nossa médica especialista."
             )
 
+        # CASO 6.5: Resposta de Tempo de Sintomas (ex: "2 meses", "3 semanas") ou Pedido de Análise
+        elif conversation.current_goal == "escuta_sintomas_empathia" or any(k in low_content for k in ["mes", "mês", "meses", "semana", "semanas", "dia", "dias", "tempo", "ano", "anos"]):
+            action_name = "symptom_duration_received"
+            conversation.current_goal = "aguardando_confirmacao_horario"
+            await memory_agent.save_clinical_note(db, patient_id, "duracao_sintoma", f"Duração: {content}")
+            slots_data = await scheduler_agent.find_available_slots(db, clinic_id)
+            horarios_str = ", ".join(slots_data["horarios_disponiveis"][:3])
+            
+            clean_first = clean_patient_first_name(display_name)
+            name_ack = f", {clean_first}" if clean_first else ""
+            response_text = (
+                f"Compreendo perfeitamente{name_ack}! Ter a queda de cabelo há {content} é um sinal de alerta importante que precisa de uma avaliação médica detalhada com tricoscopia para estagnar a queda e estimular o nascimento de novos fios.\n\n"
+                f"Temos horários disponíveis para amanhã ({slots_data['data']}) com nossa especialista: **{horarios_str}**. Qual horário você prefere?"
+            )
+
+        # CASO 6.6: Pedido de Análise ou Sugestão Geral ("analise e me de sugestoes para melhorar")
+        elif any(k in low_content for k in ["analise", "análise", "sugestoes", "sugestões", "melhorar", "o que fazer", "como funciona"]):
+            action_name = "analysis_recommendations"
+            slots_data = await scheduler_agent.find_available_slots(db, clinic_id)
+            horarios_str = ", ".join(slots_data["horarios_disponiveis"][:3])
+            
+            response_text = (
+                f"Com base na nossa conversa, recomendo fortemente agendarmos uma **Consulta Especializada com Tricoscopia Digital** 🩺.\n\n"
+                f"Nela a Dra. Ana irá:\n"
+                f"1. Analisar a raiz do couro cabeludo com lente de aumento HD.\n"
+                f"2. Identificar a causa exata (eflúvio telógeno, nutricional ou hormonal).\n"
+                f"3. Prescrever o protocolo de tratamento personalizado.\n\n"
+                f"Temos vagas para amanhã: **{horarios_str}**. Posso reservar qual horário para você?"
+            )
+
         # CASO 7: Dúvidas de Exames / Preparo
         elif any(k in low_content for k in ["teste de contato", "prick test", "antialérgico", "antialergico", "parar de tomar"]):
             action_name = "prep_instructions"
@@ -399,7 +429,6 @@ class SupervisorAgent:
             address_text = cfgs.get("endereco", "Ficamos na Av. Paulista, 1000 com estacionamento no local e manobrista. 🚗")
             price_text = cfgs.get("preco_consulta", "A consulta particular é R$ 350,00 (com retorno em 15 dias e nota fiscal para reembolso).")
             
-            # Formatação limpa se o texto recuperado já incluir descrição
             if not address_text.startswith("Ficamos"):
                 address_text = f"Ficamos na {address_text} com estacionamento e facilidade de acesso. 🚗"
             if not price_text.startswith("A consulta"):
@@ -419,10 +448,10 @@ class SupervisorAgent:
         # CASO 10: Saudação Padrão ou Continuidade
         else:
             action_name = "receptionist_greeting"
-            if past_msgs_count > 1 or conversation.current_goal == "aguardando_confirmacao_horario":
+            if past_msgs_count > 0 or conversation.current_goal in ["aguardando_confirmacao_horario", "escuta_sintomas_empathia"]:
                 slots_data = await scheduler_agent.find_available_slots(db, clinic_id)
                 horarios_str = ", ".join(slots_data["horarios_disponiveis"][:3])
-                response_text = f"Estou aqui com você! Qual daqueles horários ({horarios_str}) fica mais confortável para a sua rotina?"
+                response_text = f"Estou acompanhando seu caso com carinho! Podemos agendar sua avaliação para amanhã em um destes horários: **{horarios_str}**. Qual prefere?"
             else:
                 name_ack = f", {display_name}" if display_name else ""
                 response_text = f"Olá{name_ack}! Sou a Roberta. É um prazer cuidar do seu atendimento! Como posso te ajudar hoje? 💙"
