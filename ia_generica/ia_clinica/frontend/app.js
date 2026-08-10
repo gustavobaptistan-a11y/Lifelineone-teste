@@ -725,6 +725,10 @@ function initOmniChat() {
 
     if (omniInput) omniInput.value = '';
 
+    // Remover marca d'água inicial se existir
+    const watermark = document.getElementById('omni-chat-watermark');
+    if (watermark) watermark.remove();
+
     // Adicionar bolha de mensagem do paciente
     if (omniThread) {
       const userBubble = document.createElement('div');
@@ -818,8 +822,8 @@ function initOmniChat() {
             <div style="align-self: center; background: #fff3cd; color: #856404; padding: 6px 12px; border-radius: 6px; font-size: 11px; max-width: 90%; text-align: center;">
               🔒 Histórico resetado com sucesso! Nova sessão aberta.
             </div>
-            <div style="align-self: flex-start; background: white; padding: 10px 14px; border-radius: 0 12px 12px 12px; font-size: 13px; max-width: 80%; box-shadow: 0 1px 2px rgba(0,0,0,0.1);">
-              Olá! Sou a <strong>Roberta</strong>, assistente da clínica. Como posso te ajudar hoje? 💙
+            <div id="omni-chat-watermark" style="align-self: center; margin: auto; text-align: center; color: #94a3b8; font-size: 13px; font-style: italic; opacity: 0.85; padding: 20px 0;">
+              Digite uma menssagem para iniciar interação...
             </div>
           `;
         }
