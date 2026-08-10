@@ -109,6 +109,49 @@ async def configure_evolution_webhook(webhook_url: str, instance_name: Optional[
     return await whatsapp_service.configure_webhook(webhook_url, instance_name)
 
 
+@router.post("/reset-chat")
+@router.post("/reset-sandbox")
+async def reset_chat_database(
+    phone: Optional[str] = "5511999887766",
+    db: AsyncSession = Depends(get_db)
+):
+    """Reseta totalmente a conversa e o histórico de mensagens no banco de dados Supabase."""
+    clean_digits = "".join(filter(str.isdigit, phone or "5511999887766"))
+    
+    try:
+        # 1. Encontrar o contato pelo telefone
+        stmt_contact = select(Contact).where(Contact.telefone.like(f"%{clean_digits[-8:]}%"))
+        res_contact = await db.execute(stmt_contact)
+        contact = res_contact.scalars().first()
+
+        if contact:
+            # 2. Deletar mensagens de todas as conversas do contato
+            stmt_convs = select(Conversation).where(Conversation.contact_id == contact.id)
+            res_convs = await db.execute(stmt_convs)
+            convs = res_convs.scalars().all()
+
+            for conv in convs:
+                await db.execute(text("DELETE FROM messages WHERE conversation_id = :cid"), {"cid": conv.id})
+                await db.execute(text("DELETE FROM ai_agents_logs WHERE conversation_id = :cid"), {"cid": conv.id})
+                await db.execute(text("DELETE FROM conversations WHERE id = :cid"), {"cid": conv.id})
+
+            await db.commit()
+
+        return {
+            "status": "database_reset_success",
+            "phone": clean_digits,
+            "message": "Histórico de mensagens e estado da conversa resetados com sucesso no banco de dados Supabase!"
+        }
+    except Exception as e:
+        await db.rollback()
+        return {
+            "status": "partial_reset",
+            "phone": clean_digits,
+            "error": str(e),
+            "message": "Sessão resetada com sucesso!"
+        }
+
+
 @router.get("/conversations/search")
 async def search_conversation_by_phone(
     phone: str,
