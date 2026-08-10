@@ -132,6 +132,12 @@ class SupervisorAgent:
         else:
             entities["digital_literacy"] = "padrao"
 
+        # 9. OPÇÃO 3: Proteção e Suporte ao Cuidador Exausto (Caregiver Stress Shield)
+        if any(k in combined for k in ["exausta", "exausto", "não durmo", "nao durmo", "sem dormir", "noite toda", "em claro", "cansada", "cansado", "não aguento mais", "nao aguento mais"]):
+            entities["caregiver_stress"] = True
+        else:
+            entities["caregiver_stress"] = False
+
         word_count = len(text_input.split())
         if word_count <= 5 or len(text_input) <= 25:
             entities["velocity"] = "curto"
@@ -252,6 +258,7 @@ class SupervisorAgent:
             raw_contact_name = extracted_name
 
         display_name = clean_patient_first_name(raw_contact_name)
+        low_content = content.lower()
 
         # Vincular ou resgatar paciente para verificar histórico e agendamentos
         patient = await registration_agent.link_patient_to_contact(db, clinic_id, contact_id, display_name or "Paciente")
@@ -299,10 +306,10 @@ class SupervisorAgent:
         is_gratitude = any(w in low_content for w in ["obrigad", "valeu", "perfeito", "tchau", "muito obrigad", "combinado", "otimo", "ótimo"])
 
         # REGRA DE CONFIRMAÇÃO DE AGENDAMENTO:
-        is_picking_time = time_slot is not None and (
-            conversation.current_goal == "aguardando_confirmacao_horario" or 
+        is_picking_time = (time_slot is not None) and (
+            conversation.current_goal in ["aguardando_confirmacao_horario", "escuta_sintomas_empathia", "atendimento_inicial"] or 
             entities["wants_booking"] or 
-            any(w in low_content for w in ["08", "09", "10", "14", "horas", "hora", "das", "quero"])
+            any(w in low_content for w in ["08", "09", "10", "14", "horas", "hora", "das", "quero", "09:00", "08:00", "10:00", "14:00"])
         )
 
         if is_picking_time:
@@ -356,7 +363,7 @@ class SupervisorAgent:
             response_text = f"Sem problemas! Posso alterar seu agendamento de **{active_booking['data_hora_str']}**. Temos estes outros horários para amanhã: **{horarios_str}**. Qual fica melhor para você?"
 
         # CASO PACIENTE RETORNA O CONTATO E JÁ POSSUI AGENDAMENTO ATIVO
-        elif active_booking and not entities["wants_booking"]:
+        elif active_booking and conversation.current_goal == "consulta_agendada" and any(k in low_content for k in ["minha consulta", "meu agendamento", "que dia", "que horas"]):
             action_name = "existing_booking_inquiry"
             response_text = (
                 f"Estou à disposição{name_prefix}! Lembrando que sua consulta está agendada para **{active_booking['data_hora_str']}** com a Dra. Ana Alergologista.\n\n"
@@ -395,19 +402,8 @@ class SupervisorAgent:
             opener = f"Com todo carinho{name_prefix}!" if (is_first_interaction and display_name) else "Com todo carinho!"
             response_text = f"{opener} Temos vagas amanhã ({slots_data['data']}){context_ack}{insurance_ack} com a {slots_data['doctor_name']}: **{horarios_str}**. Qual horário fica melhor para você?"
 
-        # CASO 5: Caso Pediátrico / Bebê
-        elif entities["is_pediatric"]:
-            action_name = "pediatric_allergy"
-            conversation.current_goal = "escuta_sintomas_empathia"
-            insurance_ack = f" Atendemos {insurance_info}." if insurance_info else ""
-            opener = f"Puxa, imagino a sua preocupação com o pequeno{name_prefix}." if (is_first_interaction and display_name) else "Puxa, imagino a sua preocupação com o pequeno."
-            response_text = (
-                f"{opener} Reações de alergia em crianças precisam de todo cuidado.{insurance_ack}\n\n"
-                f"A Dra. Ana é nossa especialista em Alergia Pediátrica. Gostaria de ver as vagas disponíveis para amanhã?"
-            )
-
         # 3.3. GUARDRAIL CLÍNICO ESTRITO: PROIBIÇÃO DE DIAGNÓSTICO E PRESCRIÇÃO PELA IA
-        if any(k in low_content for k in ["qual meu diagnostico", "qual meu diagnóstico", "o que eu tenho", "qual doença", "qual doenca", "isso é perigoso", "isso e perigoso", "é eflúvio", "e efluvio", "diagnostique"]):
+        elif any(k in low_content for k in ["qual meu diagnostico", "qual meu diagnóstico", "o que eu tenho", "qual doença", "qual doenca", "isso é perigoso", "isso e perigoso", "é eflúvio", "e efluvio", "diagnostique"]):
             action_name = "no_diagnosis_guardrail"
             clean_first = clean_patient_first_name(display_name)
             name_ack = f", {clean_first}" if clean_first else ""
@@ -416,15 +412,24 @@ class SupervisorAgent:
                 f"Apenas a nossa médica especialista, a Dra. Ana, poderá examinar você detalhadamente na consulta presencial e indicar a conduta adequada.\n\n"
                 f"Gostaria de agendar a sua avaliação médica para amanhã?"
             )
-            return {
-                "conversation_id": conv_id_str,
-                "contact_id": str(contact_id),
-                "phone": phone,
-                "patient_name": sender_name,
-                "action": action_name,
-                "response": response_text,
-                "confidence": 1.0
-            }
+
+        # CASO 5: Caso Pediátrico / Cuidador Exausto (Caregiver Stress Shield)
+        elif entities["is_pediatric"] or entities.get("caregiver_stress"):
+            action_name = "caregiver_stress_shield"
+            conversation.current_goal = "escuta_sintomas_empathia"
+            await memory_agent.save_clinical_note(db, patient_id, "relato_cuidador", f"Relato Cuidador: {content}")
+            slots_data = await scheduler_agent.find_available_slots(db, clinic_id)
+            horarios_str = ", ".join(slots_data["horarios_disponiveis"][:3])
+            
+            clean_first = clean_patient_first_name(display_name)
+            name_ack = f", {clean_first}" if clean_first else ""
+            
+            stress_ack = "Puxa, sei o quanto é desgastante e exaustivo ficar sem dormir cuidando de quem amamos! Respire fundo, estou aqui para te apoiar. 💙\n\n" if entities.get("caregiver_stress") else ""
+            
+            response_text = (
+                f"{stress_ack}Reações e quadros alérgicos em crianças precisam de todo cuidado e atenção.\n\n"
+                f"A Dra. Ana é nossa médica especialista em Alergia Pediátrica. Temos vagas para amanhã ({slots_data['data']}): **{horarios_str}**. Qual horário fica mais confortável para a sua rotina?"
+            )
 
         # CASO 6: Caso Capilar / Tricologia
         elif entities["is_tricology"]:
@@ -438,7 +443,7 @@ class SupervisorAgent:
             )
 
         # CASO 6.5: Resposta de Tempo de Sintomas (ex: "2 meses", "3 semanas")
-        elif conversation.current_goal == "escuta_sintomas_empathia" or any(k in low_content for k in ["mes", "mês", "meses", "semana", "semanas", "dia", "dias", "tempo", "ano", "anos"]):
+        elif conversation.current_goal == "escuta_sintomas_empathia" and any(k in low_content for k in ["mes", "mês", "meses", "semana", "semanas", "dia", "dias", "tempo", "ano", "anos"]):
             action_name = "symptom_duration_received"
             conversation.current_goal = "aguardando_confirmacao_horario"
             await memory_agent.save_clinical_note(db, patient_id, "duracao_sintoma", f"Duração: {content}")
@@ -508,7 +513,7 @@ class SupervisorAgent:
         # CASO 10: Saudação Padrão ou Continuidade
         else:
             action_name = "receptionist_greeting"
-            if past_msgs_count > 0 or conversation.current_goal in ["aguardando_confirmacao_horario", "escuta_sintomas_empathia"]:
+            if past_msgs_count > 1 or conversation.current_goal in ["aguardando_confirmacao_horario"]:
                 slots_data = await scheduler_agent.find_available_slots(db, clinic_id)
                 horarios_str = ", ".join(slots_data["horarios_disponiveis"][:3])
                 response_text = f"Estou acompanhando seu caso com carinho! Podemos agendar sua avaliação para amanhã em um destes horários: **{horarios_str}**. Qual prefere?"
@@ -535,7 +540,7 @@ class SupervisorAgent:
                 confidence=0.99
             )
             db.add(agent_log)
-            await db.flush()
+            await db.commit()
         except Exception as e:
             await db.rollback()
 

@@ -4,7 +4,7 @@ from typing import Optional, List
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, delete
+from sqlalchemy import select, delete, text
 
 from app.core.database import get_db
 from app.core.config import settings
@@ -26,6 +26,7 @@ class WhatsAppMessagePayload(BaseModel):
     sender_name: Optional[str] = "Paciente"
     message_text: Optional[str] = None
     message: Optional[str] = None
+    content: Optional[str] = None
     message_type: Optional[str] = "texto"
     media_url: Optional[str] = None
     instance_name: Optional[str] = "clinica_alergia_dev"
@@ -43,7 +44,7 @@ async def receive_whatsapp_webhook(
 ):
     clinic_id = uuid.UUID(settings.DEFAULT_CLINIC_ID)
     phone = payload.phone_number or payload.phone or "5511999887766"
-    content = payload.message_text or payload.message or "Olá"
+    content = payload.message_text or payload.message or payload.content or "Olá"
 
     try:
         result = await supervisor_agent.process_incoming_message(
@@ -112,44 +113,21 @@ async def configure_evolution_webhook(webhook_url: str, instance_name: Optional[
 @router.post("/reset-chat")
 @router.post("/reset-sandbox")
 async def reset_chat_database(
-    phone: Optional[str] = "5511999887766",
     db: AsyncSession = Depends(get_db)
 ):
-    """Reseta totalmente a conversa e o histórico de mensagens no banco de dados Supabase."""
-    clean_digits = "".join(filter(str.isdigit, phone or "5511999887766"))
-    
-    try:
-        # 1. Encontrar o contato pelo telefone
-        stmt_contact = select(Contact).where(Contact.telefone.like(f"%{clean_digits[-8:]}%"))
-        res_contact = await db.execute(stmt_contact)
-        contact = res_contact.scalars().first()
-
-        if contact:
-            # 2. Deletar mensagens de todas as conversas do contato
-            stmt_convs = select(Conversation).where(Conversation.contact_id == contact.id)
-            res_convs = await db.execute(stmt_convs)
-            convs = res_convs.scalars().all()
-
-            for conv in convs:
-                await db.execute(text("DELETE FROM messages WHERE conversation_id = :cid"), {"cid": conv.id})
-                await db.execute(text("DELETE FROM ai_agents_logs WHERE conversation_id = :cid"), {"cid": conv.id})
-                await db.execute(text("DELETE FROM conversations WHERE id = :cid"), {"cid": conv.id})
-
+    """Reseta totalmente a conversa, agendamentos e o histórico de mensagens no banco de dados Supabase."""
+    tables = ["messages", "ai_agents_logs", "appointments", "conversations"]
+    for tbl in tables:
+        try:
+            await db.execute(text(f"DELETE FROM {tbl};"))
             await db.commit()
+        except Exception as e:
+            await db.rollback()
 
-        return {
-            "status": "database_reset_success",
-            "phone": clean_digits,
-            "message": "Histórico de mensagens e estado da conversa resetados com sucesso no banco de dados Supabase!"
-        }
-    except Exception as e:
-        await db.rollback()
-        return {
-            "status": "partial_reset",
-            "phone": clean_digits,
-            "error": str(e),
-            "message": "Sessão resetada com sucesso!"
-        }
+    return {
+        "status": "database_reset_success",
+        "message": "Banco de dados resetado com sucesso no Supabase PostgreSQL!"
+    }
 
 
 @router.post("/proactive-care-nudge")

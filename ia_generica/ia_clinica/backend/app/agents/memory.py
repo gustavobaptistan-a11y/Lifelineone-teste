@@ -20,17 +20,17 @@ class MemoryAgent:
         descricao: str
     ) -> ClinicalNote | None:
         try:
-            note = ClinicalNote(
-                patient_id=patient_id,
-                tipo_nota=tipo_nota,
-                descricao=descricao
-            )
-            db.add(note)
-            await db.flush()
-            return note
+            async with db.begin_nested():
+                note = ClinicalNote(
+                    patient_id=patient_id,
+                    tipo_nota=tipo_nota,
+                    descricao=descricao
+                )
+                db.add(note)
+                await db.flush()
+                return note
         except Exception as e:
-            await db.rollback()
-            logger.info(f"Nota clínica não persistida: {e}")
+            logger.info(f"Nota clínica não persistida (ignorado graciosamente): {e}")
             return None
 
 
