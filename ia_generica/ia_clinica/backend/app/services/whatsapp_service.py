@@ -59,7 +59,7 @@ class WhatsAppService:
         headers = {"apikey": settings.EVOLUTION_API_KEY}
         
         try:
-            async with httpx.AsyncClient(timeout=3.0) as client:
+            async with httpx.AsyncClient(timeout=5.0) as client:
                 # 1. Tentar conectar / obter QR code da instância existente
                 resp = await client.get(url, headers=headers)
                 
@@ -78,17 +78,40 @@ class WhatsAppService:
 
                 if resp.status_code in [200, 201]:
                     data = resp.json()
-                    base64_str = data.get("base64") or data.get("qrcode", {}).get("base64") or (data.get("code") if isinstance(data.get("code"), str) and data.get("code", "").startswith("data:image") else None)
-                    pairing_code = data.get("pairingCode") or "83A9-4K12"
+                    base64_str = (
+                        data.get("base64") or 
+                        data.get("qrcode", {}).get("base64") or 
+                        data.get("qrcode", {}).get("code") or 
+                        data.get("code")
+                    )
+                    pairing_code = data.get("pairingCode") or data.get("qrcode", {}).get("pairingCode") or "83A9-4K12"
+
                     if base64_str:
+                        # Se for a string bruta do QR Code do Baileys (ex: "2@..."), gerar PNG Base64 com qrcode
                         if not base64_str.startswith("data:image"):
-                            base64_str = f"data:image/png;base64,{base64_str}"
+                            if base64_str.startswith("2@") or len(base64_str) < 300:
+                                qr = qrcode.QRCode(
+                                    version=None,
+                                    error_correction=qrcode.constants.ERROR_CORRECT_L,
+                                    box_size=10,
+                                    border=2,
+                                )
+                                qr.add_data(base64_str)
+                                qr.make(fit=True)
+                                img = qr.make_image(fill_color="#0B3A78", back_color="#FFFFFF")
+                                buffered = io.BytesIO()
+                                img.save(buffered, format="PNG")
+                                img_str = base64.b64encode(buffered.getvalue()).decode()
+                                base64_str = f"data:image/png;base64,{img_str}"
+                            else:
+                                base64_str = f"data:image/png;base64,{base64_str}"
+
                         return {
                             "status": "connected_to_evolution",
                             "code": base64_str,
                             "pairing_code": pairing_code,
                             "is_real": True,
-                            "message": "QR Code Oficial da Evolution API carregado!"
+                            "message": "QR Code Oficial da Evolution API carregado com sucesso!"
                         }
         except Exception as e:
             logger.info(f"Evolution API remota em {settings.EVOLUTION_API_URL} offline/erro: {e}")

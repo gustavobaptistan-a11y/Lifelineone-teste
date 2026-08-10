@@ -12,13 +12,13 @@ class Settings(BaseSettings):
     
     # Chaves de API
     OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
-    EVOLUTION_API_URL: str = os.getenv("EVOLUTION_API_URL", "http://localhost:8080")
-    EVOLUTION_API_KEY: str = os.getenv("EVOLUTION_API_KEY", "")
+    EVOLUTION_API_URL: str = os.getenv("EVOLUTION_API_URL") or "http://127.0.0.1:8080"
+    EVOLUTION_API_KEY: str = os.getenv("EVOLUTION_API_KEY") or "429683bb-b70d-4afe-a492-411a00a12e3e"
     
     DEFAULT_CLINIC_ID: str = os.getenv("DEFAULT_CLINIC_ID", "11111111-1111-1111-1111-111111111111")
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=[".env", "../.env"],
         env_file_encoding="utf-8",
         extra="ignore"
     )
