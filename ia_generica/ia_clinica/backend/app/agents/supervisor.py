@@ -452,9 +452,10 @@ class SupervisorAgent:
                     f"Perfeito, {parts_name[0]}! Por favor, confira os dados do seu agendamento:\n\n"
                     f"👤 **Nome Completo:** {extracted_name}\n"
                     f"🩺 **Especialidade:** {specialty}\n"
-                    f"📅 **Data:** Amanhã ({slots_data['data']})\n"
-                    f"⏰ **Horário:** {pending_time_slot}\n"
-                    f"👩‍⚕️ **Médica:** {slots_data['doctor_name']}\n\n"
+                    f"👩‍⚕️ **Médica:** {slots_data['doctor_name']}\n"
+                    f"📅 **Data:** Amanhã ({slots_data['data']}) às **{pending_time_slot}**\n"
+                    f"📍 **Local:** Av. Paulista, 1000 (com estacionamento no local e manobrista) 🚗\n"
+                    f"💡 **Recomendação:** Chegar 10 minutos antes com documento oficial com foto.\n\n"
                     f"Podemos **confirmar** o seu agendamento com estes dados?"
                 )
 
@@ -468,14 +469,22 @@ class SupervisorAgent:
                 display_name = extracted_in_msg
 
             parts_name = [p for p in (display_name or "").split() if len(p) > 1 and p.lower() != "paciente"]
-            
-            # Se não possui nome completo (menos de 2 nomes) -> Pedir Nome Completo
+
+            # Se não possui nome completo (menos de 2 nomes) -> Pedir Nome Completo com Triagem Empática
             if len(parts_name) < 2:
                 action_name = "ask_full_name_before_booking"
                 conversation.current_goal = f"aguardando_nome_para_agendamento:{time_slot}"
                 first_ack = f", {parts_name[0]}" if parts_name else ""
+                
+                # Triagem de alerta empática se houver manchas ou lesões
+                screening_msg = ""
+                if "mancha" in low_content or "pele" in low_content or "lesao" in low_content or "lesão" in low_content:
+                    screening_msg = "\n\n⚠️ *Antes de confirmar, você está sentindo febre, dor forte ou coceira intensa nessas manchas? Se houver febre ou mal-estar geral, recomendo buscar um Pronto Atendimento imediatamente.*"
+                
                 response_text = (
-                    f"Com certeza{first_ack}! Para registrarmos a sua consulta no prontuário e organizar o horário das **{time_slot}** para amanhã, por favor, me informe o seu **nome completo**."
+                    f"Olá{first_ack}. Sinto muito pelo desconforto!{screening_msg}\n\n"
+                    f"Como os sintomas envolvem a pele, temos a vaga das **{time_slot}** para amanhã com a nossa médica especialista, a Dra. Ana ({specialty}).\n\n"
+                    f"Para registrarmos a sua consulta no prontuário médico, por favor, me informe o seu **nome completo** (com sobrenome)."
                 )
             else:
                 action_name = "ask_confirmation_before_booking"
@@ -485,9 +494,10 @@ class SupervisorAgent:
                     f"Perfeito, {parts_name[0]}! Por favor, confira os dados do seu agendamento:\n\n"
                     f"👤 **Nome Completo:** {display_name}\n"
                     f"🩺 **Especialidade:** {specialty}\n"
-                    f"📅 **Data:** Amanhã ({slots_data['data']})\n"
-                    f"⏰ **Horário:** {time_slot}\n"
-                    f"👩‍⚕️ **Médica:** {slots_data['doctor_name']}\n\n"
+                    f"👩‍⚕️ **Médica:** {slots_data['doctor_name']}\n"
+                    f"📅 **Data:** Amanhã ({slots_data['data']}) às **{time_slot}**\n"
+                    f"📍 **Local:** Av. Paulista, 1000 (com estacionamento no local e manobrista) 🚗\n"
+                    f"💡 **Recomendação:** Chegar 10 minutos antes com documento oficial com foto.\n\n"
                     f"Podemos **confirmar** o seu agendamento com estes dados?"
                 )
 
