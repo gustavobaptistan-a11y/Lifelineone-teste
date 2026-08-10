@@ -414,19 +414,53 @@ class SupervisorAgent:
                 f"Por favor, aguarde um momento que a nossa equipe já vai te atender por aqui!"
             )
 
+        # CASO 0.C: Solicitação de Outro Dia / Outra Data durante Agendamento
+        elif (
+            (conversation.current_goal and any(conversation.current_goal.startswith(prefix) for prefix in [
+                "aguardando_confirmacao_horario", "aguardando_confirmacao_dados", "aguardando_nome_para_agendamento", "escuta_sintomas_empathia"
+            ])) or entities["wants_booking"]
+        ) and any(k in low_content for k in [
+            "outro dia", "outra data", "não posso amanhã", "nao posso amanha", "não posso amanha", 
+            "outra semana", "outro horario", "outro horário", "nao posso nesse", "não posso nesse",
+            "proximo dia", "próximo dia", "depois de amanhã", "depois de amanha", "segunda", "terça", 
+            "quarta", "quinta", "sexta", "sábado", "sabado", "mudar data", "trocar data"
+        ]):
+            action_name = "reschedule_other_date"
+            opener = get_dynamic_warmth_opener(display_name)
+            target_date = datetime.datetime.now() + datetime.timedelta(days=2)
+            new_date_str = target_date.strftime("%d/%m/%Y")
+            slots_data = await scheduler_agent.find_available_slots(db, clinic_id, preferred_period=entities.get("preferred_period"))
+            horarios_str = ", ".join([format_time_slot_str(h) for h in slots_data["horarios_disponiveis"][:3]])
+
+            conversation.current_goal = f"aguardando_confirmacao_horario|{new_date_str}|2"
+            await memory_agent.save_clinical_note(db, patient_id, "preferencia_data", f"Solicitou agendamento para {new_date_str}")
+
+            context_spec = f" de {specialty}" if specialty else ""
+            response_text = (
+                f"{opener} Sem problemas! Podemos organizar a sua consulta{context_spec} para depois de amanhã ({new_date_str}).\n\n"
+                f"Para essa data, temos os seguintes horários disponíveis com a {slots_data['doctor_name']}: {horarios_str}.\n\n"
+                f"Qual horário fica melhor para a sua rotina?"
+            )
+
         # CASO 0.A: Confirmação Final dos Dados do Agendamento pelo Paciente
-        elif conversation.current_goal and conversation.current_goal.startswith("aguardando_confirmacao_dados:"):
+        elif conversation.current_goal and (conversation.current_goal.startswith("aguardando_confirmacao_dados:") or conversation.current_goal.startswith("aguardando_confirmacao_dados|")):
             action_name = "confirming_booking_data"
-            parts = conversation.current_goal.split(":")
+            delim = "|" if "|" in conversation.current_goal else ":"
+            parts = conversation.current_goal.split(delim)
             pending_time_slot = parts[1]
             confirmed_full_name = parts[2] if len(parts) > 2 else display_name
+            target_date_str = parts[3] if len(parts) > 3 else None
+            days_offset = int(parts[4]) if len(parts) > 4 else 1
 
             # Se o paciente confirma ("sim", "confirmo", "pode", "ok", "correto", "pode ser", "com certeza", "pode agendar")
             if any(w in low_content for w in ["sim", "confirmo", "pode", "ok", "correto", "pode ser", "com certeza", "pode agendar", "tudo certo", "perfeito", "1"]):
                 slots_data = await scheduler_agent.find_available_slots(db, clinic_id)
                 formatted_slot = format_time_slot_str(pending_time_slot)
+                if not target_date_str:
+                    target_date_str = slots_data["data"]
+
                 try:
-                    target_dt = datetime.datetime.now() + datetime.timedelta(days=1)
+                    target_dt = datetime.datetime.now() + datetime.timedelta(days=days_offset)
                     clean_digits = "".join(filter(str.isdigit, pending_time_slot.split(":")[0]))
                     h_val = int(clean_digits) if clean_digits else 8
                     target_dt = target_dt.replace(hour=h_val, minute=0, second=0, microsecond=0)
@@ -434,7 +468,7 @@ class SupervisorAgent:
                     await scheduler_agent.create_booking(db, clinic_id, patient_id, doctor_id, target_dt)
                     active_booking = {
                         "data_hora_str": target_dt.strftime(f"%d/%m/%Y às {h_val:02d}:00 horas"),
-                        "data": target_dt.strftime("%d/%m/%Y"),
+                        "data": target_date_str,
                         "horario": f"{h_val:02d}:00 horas"
                     }
                 except Exception as e:
@@ -443,8 +477,9 @@ class SupervisorAgent:
                 conversation.current_goal = "consulta_agendada"
                 first_name = confirmed_full_name.split()[0]
                 detail_plan = f"pelo convênio {insurance_info}" if insurance_info else ""
+                day_label = "depois de amanhã" if days_offset == 2 else "amanhã"
                 response_text = (
-                    f"✨ Prontinho, {first_name}! Agendei sua consulta de {specialty} para amanhã ({slots_data['data']}) às {formatted_slot} com a {slots_data['doctor_name']} {detail_plan}.\n\n"
+                    f"✨ Prontinho, {first_name}! Agendei sua consulta de {specialty} para {day_label} ({target_date_str}) às {formatted_slot} com a {slots_data['doctor_name']} {detail_plan}.\n\n"
                     f"📍 Localização: Av. Paulista, 1000 (estacionamento no local e manobrista). 🚗\n"
                     f"☕ Te esperamos 10 minutinhos antes para um café quentinho na recepção!\n\n"
                     f"Se precisar de mais informações ou alterar o seu agendamento, é só me falar por aqui: 'preciso falar do meu agendamento'."
@@ -457,9 +492,14 @@ class SupervisorAgent:
                 )
 
         # CASO 0.B: Resposta com o Nome do Paciente para Conclusão do Agendamento
-        elif conversation.current_goal and conversation.current_goal.startswith("aguardando_nome_para_agendamento:"):
+        elif conversation.current_goal and (conversation.current_goal.startswith("aguardando_nome_para_agendamento:") or conversation.current_goal.startswith("aguardando_nome_para_agendamento|")):
             action_name = "received_patient_name_for_booking"
-            pending_time_slot = conversation.current_goal.split(":")[1]
+            delim = "|" if "|" in conversation.current_goal else ":"
+            parts = conversation.current_goal.split(delim)
+            pending_time_slot = parts[1]
+            target_date_str = parts[2] if len(parts) > 2 else None
+            days_offset = int(parts[3]) if len(parts) > 3 else 1
+
             extracted_name = registration_agent.extract_name_from_text(content)
             if not extracted_name or extracted_name == "Paciente":
                 extracted_name = content.strip().title()
@@ -468,8 +508,9 @@ class SupervisorAgent:
             contact.nome = extracted_name
             await db.commit()
             await db.refresh(contact)
+            await db.refresh(conversation)
             display_name = extracted_name
-            
+
             parts_name = [p for p in extracted_name.split() if len(p) > 1]
             if len(parts_name) < 2:
                 # Nome simples informado -> Solicitar sobrenome / nome completo
@@ -478,15 +519,19 @@ class SupervisorAgent:
                 )
             else:
                 # Nome completo informado -> Apresentar resumo e pedir confirmação explícita
-                conversation.current_goal = f"aguardando_confirmacao_dados:{pending_time_slot}:{extracted_name}"
                 slots_data = await scheduler_agent.find_available_slots(db, clinic_id)
                 formatted_slot = format_time_slot_str(pending_time_slot)
+                if not target_date_str:
+                    target_date_str = slots_data["data"]
+                day_label = "Depois de amanhã" if days_offset == 2 else "Amanhã"
+
+                conversation.current_goal = f"aguardando_confirmacao_dados|{pending_time_slot}|{extracted_name}|{target_date_str}|{days_offset}"
                 response_text = (
                     f"Perfeito, {parts_name[0]}! Por favor, confira os dados do seu agendamento:\n\n"
                     f"👤 Nome Completo: {extracted_name}\n"
                     f"🩺 Especialidade: {specialty}\n"
                     f"👩‍⚕️ Médica: {slots_data['doctor_name']}\n"
-                    f"📅 Data: Amanhã ({slots_data['data']}) às {formatted_slot}\n"
+                    f"📅 Data: {day_label} ({target_date_str}) às {formatted_slot}\n"
                     f"📍 Local: Av. Paulista, 1000 (estacionamento no local e manobrista) 🚗\n"
                     f"💡 Recomendação: Chegar 10 minutos antes com documento oficial com foto.\n\n"
                     f"Podemos confirmar o seu agendamento com estes dados?"
@@ -499,15 +544,33 @@ class SupervisorAgent:
                 contact.nome = extracted_in_msg
                 await db.commit()
                 await db.refresh(contact)
+                await db.refresh(conversation)
                 display_name = extracted_in_msg
 
             parts_name = [p for p in (display_name or "").split() if len(p) > 1 and p.lower() != "paciente"]
             formatted_slot = format_time_slot_str(time_slot)
 
+            target_date_str = None
+            days_offset = 1
+            if conversation.current_goal and ("|" in conversation.current_goal or ":" in conversation.current_goal):
+                delim = "|" if "|" in conversation.current_goal else ":"
+                parts_g = conversation.current_goal.split(delim)
+                if len(parts_g) >= 3 and "/" in parts_g[1]:
+                    target_date_str = parts_g[1]
+                    try:
+                        days_offset = int(parts_g[2])
+                    except Exception:
+                        days_offset = 2
+
             # Se não possui nome completo (menos de 2 nomes) -> Pedir Nome Completo com Triagem Empática
             if len(parts_name) < 2:
                 action_name = "ask_full_name_before_booking"
-                conversation.current_goal = f"aguardando_nome_para_agendamento:{time_slot}"
+                slots_data = await scheduler_agent.find_available_slots(db, clinic_id)
+                if not target_date_str:
+                    target_date_str = slots_data["data"]
+                day_label = "depois de amanhã" if days_offset == 2 else "amanhã"
+                
+                conversation.current_goal = f"aguardando_nome_para_agendamento|{time_slot}|{target_date_str}|{days_offset}"
                 first_ack = f", {parts_name[0]}" if parts_name else ""
                 
                 # Triagem de alerta empática se houver manchas ou lesões
@@ -517,19 +580,23 @@ class SupervisorAgent:
                 
                 response_text = (
                     f"Olá{first_ack}. Sinto muito pelo desconforto!{screening_msg}\n\n"
-                    f"Como os sintomas envolvem a pele, temos a vaga das {formatted_slot} para amanhã com a nossa médica especialista, a Dra. Ana ({specialty}).\n\n"
+                    f"Como os sintomas envolvem a pele, temos a vaga das {formatted_slot} para {day_label} ({target_date_str}) com a nossa médica especialista, a Dra. Ana ({specialty}).\n\n"
                     f"Para registrarmos a sua consulta no prontuário médico, por favor, me informe o seu nome completo (com sobrenome)."
                 )
             else:
                 action_name = "ask_confirmation_before_booking"
-                conversation.current_goal = f"aguardando_confirmacao_dados:{time_slot}:{display_name}"
                 slots_data = await scheduler_agent.find_available_slots(db, clinic_id)
+                if not target_date_str:
+                    target_date_str = slots_data["data"]
+                day_label = "Depois de amanhã" if days_offset == 2 else "Amanhã"
+                
+                conversation.current_goal = f"aguardando_confirmacao_dados|{time_slot}|{display_name}|{target_date_str}|{days_offset}"
                 response_text = (
                     f"Perfeito, {parts_name[0]}! Por favor, confira os dados do seu agendamento:\n\n"
                     f"👤 Nome Completo: {display_name}\n"
                     f"🩺 Especialidade: {specialty}\n"
                     f"👩‍⚕️ Médica: {slots_data['doctor_name']}\n"
-                    f"📅 Data: Amanhã ({slots_data['data']}) às {formatted_slot}\n"
+                    f"📅 Data: {day_label} ({target_date_str}) às {formatted_slot}\n"
                     f"📍 Local: Av. Paulista, 1000 (estacionamento no local e manobrista) 🚗\n"
                     f"💡 Recomendação: Chegar 10 minutos antes com documento oficial com foto.\n\n"
                     f"Podemos confirmar o seu agendamento com estes dados?"
