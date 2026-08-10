@@ -830,11 +830,17 @@ class SupervisorAgent:
                         f"Para que eu possa entender o seu caso e te encaminhar para a médica especialista ideal, me conte: qual sintoma, desconforto ou necessidade você está apresentando no momento?"
                     )
                 else:
-                    response_text = (
-                        f"Olá! Sou a Roberta. É um prazer te atender! 😊\n\n"
-                        f"Vou te ajudar a organizar o seu atendimento com todo o carinho.\n\n"
-                        f"Para começarmos, como posso te chamar? E me conte: qual sintoma ou desconforto você está sentindo no momento?"
-                    )
+                    if is_first_interaction:
+                        response_text = (
+                            f"Olá! Sou a Roberta. É um prazer te atender! 😊\n\n"
+                            f"Vou te ajudar a organizar o seu atendimento com todo o carinho.\n\n"
+                            f"Para começarmos, como posso te chamar? E me conte: qual sintoma ou desconforto você está sentindo no momento?"
+                        )
+                    else:
+                        response_text = (
+                            f"Com certeza! Vou te ajudar a organizar o seu agendamento com todo o carinho. 😊\n\n"
+                            f"Para registrarmos tudo certinho na sua ficha, como posso te chamar? E qual sintoma ou desconforto você está apresentando no momento?"
+                        )
             else:
                 action_name = "schedule_appointment"
                 slots_data = await scheduler_agent.find_available_slots(db, clinic_id)
