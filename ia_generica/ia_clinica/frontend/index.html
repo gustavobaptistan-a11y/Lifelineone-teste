@@ -104,59 +104,21 @@
         <aside class="config-subnav" id="panel-config-subnav">
           <div class="subnav-header">
             <h2>Configurações</h2>
-            <p>Global · Lifeline One</p>
+            <p>Global · VittaMed</p>
           </div>
 
-          <div class="subnav-group-title">INTELIGÊNCIA ARTIFICIAL</div>
+          <div class="subnav-group-title">CONEXÃO & CANAIS</div>
           
-          <button class="subnav-item active" data-tab="roberta">
-            <i class="fa-solid fa-wand-magic-sparkles"></i>
-            <span>Central & Teste Integrado (Dual)</span>
-          </button>
-
-          <button class="subnav-item" data-tab="conexoes" style="background: #f0fdf4; border: 1px solid #86efac; color: #166534; font-weight: 700;">
+          <button class="subnav-item active" data-tab="conexoes" style="background: #f0fdf4; border: 1px solid #86efac; color: #166534; font-weight: 700;">
             <i class="fa-brands fa-whatsapp" style="color: #25d366;"></i>
             <span>Conectar WhatsApp Real (QR Code)</span>
           </button>
 
-          <button class="subnav-item" data-tab="inbox">
-            <i class="fa-solid fa-comments" style="color: #25d366;"></i>
-            <span>Inbox CRM ao Vivo & Transbordo</span>
-          </button>
-
-          <button class="subnav-item" data-tab="noshow">
-            <i class="fa-solid fa-calendar-check" style="color: #6366f1;"></i>
-            <span>Prevenção No-Show & Lembretes</span>
-          </button>
-
-          <button class="subnav-item" data-tab="anamnese">
-            <i class="fa-solid fa-file-medical" style="color: #ec4899;"></i>
-            <span>Anamnese Pré-Consulta (Médico)</span>
-          </button>
-
-          <button class="subnav-item" data-tab="ocr">
-            <i class="fa-solid fa-id-card" style="color: #3b82f6;"></i>
-            <span>OCR Carteirinha por Foto</span>
-          </button>
-
-          <button class="subnav-item" data-tab="bi">
-            <i class="fa-solid fa-chart-line" style="color: #10b981;"></i>
-            <span>BI Tráfego Instagram Ads</span>
-          </button>
-
-          <button class="subnav-item" data-tab="voz">
-            <i class="fa-solid fa-phone-volume" style="color: #8b5cf6;"></i>
-            <span>Central de Voz & Ligações</span>
-          </button>
-
-          <button class="subnav-item" data-tab="multimodal">
-            <i class="fa-solid fa-photo-film" style="color: #06b6d4;"></i>
-            <span>Recepção Multimodal (Fotos/Áudios)</span>
-          </button>
-
-          <button class="subnav-item" data-tab="nps">
-            <i class="fa-solid fa-star" style="color: #eab308;"></i>
-            <span>Pesquisa de Satisfação (NPS)</span>
+          <div class="subnav-group-title">INTELIGÊNCIA ARTIFICIAL</div>
+          
+          <button class="subnav-item" data-tab="roberta">
+            <i class="fa-solid fa-wand-magic-sparkles"></i>
+            <span>Central & Parâmetros IA Roberta</span>
           </button>
 
           <button class="subnav-item" data-tab="refinamento">
@@ -173,10 +135,40 @@
             <i class="fa-solid fa-hospital"></i>
             <span>Convênios & Base RAG</span>
           </button>
-          
+
+          <button class="subnav-item" data-tab="noshow">
+            <i class="fa-solid fa-calendar-check" style="color: #6366f1;"></i>
+            <span>Prevenção No-Show & Lembretes</span>
+          </button>
+
+          <button class="subnav-item" data-tab="anamnese">
+            <i class="fa-solid fa-file-medical" style="color: #ec4899;"></i>
+            <span>Anamnese Pré-Consulta</span>
+          </button>
+
+          <button class="subnav-item" data-tab="ocr">
+            <i class="fa-solid fa-id-card" style="color: #3b82f6;"></i>
+            <span>OCR Carteirinha por Foto</span>
+          </button>
+
+          <button class="subnav-item" data-tab="voz">
+            <i class="fa-solid fa-phone-volume" style="color: #8b5cf6;"></i>
+            <span>Central de Voz & Ligações</span>
+          </button>
+
+          <button class="subnav-item" data-tab="multimodal">
+            <i class="fa-solid fa-photo-film" style="color: #06b6d4;"></i>
+            <span>Recepção Multimodal</span>
+          </button>
+
+          <button class="subnav-item" data-tab="nps">
+            <i class="fa-solid fa-star" style="color: #eab308;"></i>
+            <span>Pesquisa de Satisfação (NPS)</span>
+          </button>
+
           <button class="subnav-item" data-tab="triagem">
             <i class="fa-solid fa-phone"></i>
-            <span>IA Triagem (Ligação Enfermagem)</span>
+            <span>IA Triagem de Enfermagem</span>
           </button>
           
           <button class="subnav-item" data-tab="medica">
@@ -195,18 +187,13 @@
             <i class="fa-solid fa-shield-halved"></i>
             <span>Gestão de Pacientes (LGPD)</span>
           </button>
-          
-          <button class="subnav-item" data-tab="conexoes">
-            <i class="fa-brands fa-whatsapp" style="color: #25d366;"></i>
-            <span>Conexões WhatsApp (QR Code)</span>
-          </button>
         </aside>
 
         <!-- WORKSPACE DE CONTEÚDO PRINCIPAL (DIREITA) -->
         <main class="workspace-content">
           
           <!-- TAB 1: CENTRAL INTEGRADA (DUAL CHAT: TESTE DA IA + COPILOTO ADMIN LADO A LADO) -->
-          <div class="tab-content-panel active" id="tab-panel-roberta">
+          <div class="tab-content-panel" id="tab-panel-roberta">
             
             <!-- Header Card IA Roberta -->
             <div class="card-panel">
@@ -221,22 +208,6 @@
                   </div>
                 </div>
               </div>
-            </div>
-
-            <!-- BANNER DE CONEXÃO DO WHATSAPP REAL -->
-            <div style="background: linear-gradient(135deg, #ecfdf5, #f0fdf4); border: 2px solid #25d366; padding: 14px 18px; border-radius: 12px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; gap: 16px; box-shadow: 0 2px 8px rgba(37, 211, 102, 0.1);">
-              <div style="display: flex; align-items: center; gap: 14px;">
-                <div style="width: 42px; height: 42px; border-radius: 50%; background: #25d366; display: flex; align-items: center; justify-content: center; font-size: 20px; color: white;">
-                  <i class="fa-brands fa-whatsapp"></i>
-                </div>
-                <div>
-                  <h4 style="font-size: 14px; font-weight: 800; color: #065f46; margin: 0 0 2px 0;">📲 Deseja colocar a IA Roberta ONLINE no seu WhatsApp Real?</h4>
-                  <p style="font-size: 12px; color: #047857; margin: 0;">Escaneie o QR Code oficial da Evolution API Go para conectar o celular da sua clínica à IA em tempo real.</p>
-                </div>
-              </div>
-              <button class="btn-primary-blue" onclick="activateTab('conexoes')" style="background-color: #128c7e; white-space: nowrap; padding: 10px 16px; font-weight: 700;">
-                <i class="fa-solid fa-qrcode"></i> Escanear QR Code Agora
-              </button>
             </div>
 
             <!-- PAINEL LADO A LADO (DUAL CHAT CONTAINER) -->
@@ -807,7 +778,7 @@
           </div>
 
           <!-- TAB 3: OMNICHANNEL / PLAYGROUND WHATSAPP -->
-          <div class="tab-content-panel" id="tab-panel-omnichannel">
+          <div class="tab-content-panel active" id="tab-panel-omnichannel">
             <div class="card-panel">
               <div class="card-panel-header">
                 <div class="card-title-group">

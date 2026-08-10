@@ -76,7 +76,7 @@ function initNavigation() {
       if (navTarget === 'configuracoes') {
         if (configSubnavPanel) configSubnavPanel.style.display = 'block';
         const activeSub = document.querySelector('.subnav-item.active');
-        const targetTab = activeSub ? activeSub.getAttribute('data-tab') : 'roberta';
+        const targetTab = activeSub ? activeSub.getAttribute('data-tab') : 'conexoes';
         window.activateTab(targetTab);
       } else {
         if (configSubnavPanel) configSubnavPanel.style.display = 'none';
