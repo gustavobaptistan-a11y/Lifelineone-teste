@@ -2,6 +2,7 @@ import uuid
 import datetime
 import logging
 import re
+import random
 from typing import Dict, Any, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, text
@@ -40,6 +41,33 @@ def clean_patient_first_name(raw_name: str) -> str:
     if first.lower() in COURTESY_AND_NON_NAMES or len(first) < 2:
         return ""
     return first
+
+
+def get_dynamic_greeting(display_name: str = "") -> str:
+    """Gera saudações dinâmicas e variadas mantendo a essência acolhedora e humana da Roberta."""
+    now = datetime.datetime.now()
+    hour = now.hour
+    
+    if 5 <= hour < 12:
+        period_greeting = "Bom dia"
+    elif 12 <= hour < 18:
+        period_greeting = "Boa tarde"
+    else:
+        period_greeting = "Boa noite"
+        
+    clean_first = clean_patient_first_name(display_name) if display_name else ""
+    name_ack = f", {clean_first}" if clean_first else ""
+
+    templates = [
+        f"Olá{name_ack}! Sou a Roberta. É um prazer cuidar do seu atendimento! Como posso te ajudar hoje? 💙",
+        f"{period_greeting}{name_ack}! Sou a Roberta. É um prazer enorme cuidar do seu atendimento por aqui! Como posso te ajudar hoje? 💙",
+        f"Olá{name_ack}, {period_greeting.lower()}! Meu nome é Roberta e estou à sua disposição para o que precisar. Como posso te auxiliar hoje? ✨",
+        f"{period_greeting}{name_ack}! Seja muito bem-vindo(a). Sou a Roberta, da equipe de atendimento. Em que posso te ajudar hoje? 💙",
+        f"Olá{name_ack}! Sou a Roberta e será um prazer te ajudar hoje. Como posso cuidar de você ou do seu agendamento? 🩺💙",
+        f"{period_greeting}{name_ack}! Aqui é a Roberta. Estou por aqui para tirar suas dúvidas ou organizar sua consulta. Como posso te ajudar hoje? 😊"
+    ]
+    
+    return random.choice(templates)
 
 
 class SupervisorAgent:
@@ -670,7 +698,7 @@ class SupervisorAgent:
                 horarios_str = ", ".join(slots_data["horarios_disponiveis"][:3])
                 response_text = f"Estou acompanhando seu caso com carinho! Podemos agendar sua avaliação para amanhã em um destes horários: **{horarios_str}**. Qual prefere?"
             else:
-                response_text = f"Olá{name_ack}! Sou a Roberta. É um prazer cuidar do seu atendimento! Como posso te ajudar hoje? 💙"
+                response_text = get_dynamic_greeting(display_name)
 
         # 5. Salvar resposta enviada
         try:
