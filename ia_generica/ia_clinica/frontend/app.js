@@ -295,8 +295,19 @@ function initQRCodeLoader() {
       if (data.pairing_code && pairingDisplay) {
         pairingDisplay.textContent = data.pairing_code;
       }
+
+      const statusBadge = document.getElementById('evolution-status-badge');
+      if (statusBadge) {
+        if (data.is_real) {
+          statusBadge.className = 'badge-status-green';
+          statusBadge.innerHTML = '<i class="fa-solid fa-circle-check"></i> Instância Conectada à Evolution API Oficial';
+        } else {
+          statusBadge.className = 'badge-status-yellow';
+          statusBadge.innerHTML = '<i class="fa-solid fa-circle-info"></i> Modo Simulação Ativo (Para usar seu celular real, configure EVOLUTION_API_URL no .env)';
+        }
+      }
     } catch (err) {
-      if (qrLoading) qrLoading.innerHTML = '⚠️ Clique no botão para tentar gerar o QR Code novamente.';
+      if (qrLoading) qrLoading.innerHTML = '⚠️ Clique no botão acima para carregar o QR Code.';
     }
   }
 

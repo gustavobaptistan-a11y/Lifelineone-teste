@@ -59,18 +59,24 @@ class WhatsAppService:
         headers = {"apikey": settings.EVOLUTION_API_KEY}
         
         try:
-            async with httpx.AsyncClient(timeout=1.5) as client:
+            async with httpx.AsyncClient(timeout=2.0) as client:
                 resp = await client.get(url, headers=headers)
-                if resp.status_code == 200:
+                if resp.status_code in [200, 201]:
                     data = resp.json()
-                    if "base64" in data:
+                    base64_str = data.get("base64") or data.get("qrcode", {}).get("base64")
+                    pairing_code = data.get("pairingCode") or data.get("code") or "83A9-4K12"
+                    if base64_str:
+                        if not base64_str.startswith("data:image"):
+                            base64_str = f"data:image/png;base64,{base64_str}"
                         return {
-                            "status": "qr_code_ready",
-                            "code": data["base64"],
-                            "pairing_code": data.get("pairingCode", "83A9-4K12")
+                            "status": "connected_to_evolution",
+                            "code": base64_str,
+                            "pairing_code": pairing_code,
+                            "is_real": True,
+                            "message": "QR Code Oficial da Evolution API carregado!"
                         }
         except Exception as e:
-            logger.info(f"Evolution API offline, gerando QR Code HD via biblioteca qrcode: {e}")
+            logger.info(f"Evolution API remota em {settings.EVOLUTION_API_URL} offline: {e}")
 
         # Gerar QR Code HD PNG Base64 localmente
         qr = qrcode.QRCode(
@@ -79,7 +85,8 @@ class WhatsAppService:
             box_size=10,
             border=2,
         )
-        qr.add_data("https://lifelineone.com.br/whatsapp-pair-dev")
+        baileys_qr_payload = f"2@LifelineOne,instance={instance_name},key={settings.EVOLUTION_API_KEY}"
+        qr.add_data(baileys_qr_payload)
         qr.make(fit=True)
 
         img = qr.make_image(fill_color="#0B3A78", back_color="#FFFFFF")
@@ -91,7 +98,9 @@ class WhatsAppService:
         return {
             "status": "qr_code_ready",
             "code": data_uri,
-            "pairing_code": "83A9-4K12"
+            "pairing_code": "83A9-4K12",
+            "is_real": False,
+            "message": "Para conectar o WhatsApp do seu celular, configure o EVOLUTION_API_URL no arquivo .env para apontar para sua instância da Evolution API."
         }
 
     async def create_instance(self, instance_name: str = "clinica_alergia_dev"):
