@@ -932,68 +932,6 @@
             </div>
           </div>
 
-          <!-- TAB 5: DEDICADA WHATSAPP CONEXÕES (QR CODE) -->
-          <div class="tab-content-panel" id="tab-panel-conexoes">
-            <div class="card-panel">
-              <div class="card-panel-header">
-                <div class="card-title-group">
-                  <div class="card-title-icon-circle" style="background-color: #25d366;">
-                    <i class="fa-brands fa-whatsapp"></i>
-                  </div>
-                  <div class="card-title-text">
-                    <h3>Conexão do WhatsApp Comercial — Instância Evolution API</h3>
-                    <p>Conecte o número do WhatsApp da clínica apontando a câmera do celular para o QR Code abaixo.</p>
-                  </div>
-                </div>
-                <button class="btn-secondary-outline" id="btn-refresh-qrcode">
-                  <i class="fa-solid fa-rotate"></i> Gerar Novo QR Code
-                </button>
-              </div>
-
-              <div style="display: flex; gap: 24px; align-items: center; flex-wrap: wrap; margin-top: 16px;">
-                <!-- Container do QR Code -->
-                <div style="background: #ffffff; padding: 16px; border-radius: 12px; border: 1px solid var(--border-color); text-align: center; width: 220px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
-                  <div id="qrcode-canvas-container" style="width: 180px; height: 180px; margin: 0 auto; display: flex; align-items: center; justify-content: center; background: #f8fafc; border-radius: 8px;">
-                    <i class="fa-solid fa-qrcode" style="font-size: 100px; color: #334155;"></i>
-                  </div>
-                  <div style="margin-top: 10px; font-size: 11.5px; color: var(--text-muted); font-weight: 500;">
-                    Escaneie com seu WhatsApp <br> (Aparelhos Conectados)
-                  </div>
-                </div>
-
-                <!-- Detalhes da Conexão e Código de Pareamento -->
-                <div style="flex: 1; min-width: 280px;">
-                  <div style="background: #f8fafc; padding: 16px; border-radius: 10px; border: 1px solid var(--border-color); margin-bottom: 16px;">
-                    <div style="font-size: 12px; font-weight: 600; color: var(--navy-dark); margin-bottom: 6px;">
-                      🔑 Código de Pareamento Rápido (8 Dígitos)
-                    </div>
-                    <div style="display: flex; align-items: center; gap: 12px;">
-                      <span id="pairing-code-display" style="font-family: monospace; font-size: 20px; font-weight: 700; color: var(--primary-blue); letter-spacing: 2px;">83A9-4K12</span>
-                      <button class="btn-secondary-outline" id="btn-copy-pairing-code" style="height: 32px; padding: 0 10px; font-size: 11px;">
-                        <i class="fa-regular fa-copy"></i> Copiar Código
-                      </button>
-                    </div>
-                  </div>
-
-                  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px;">
-                    <div style="background: var(--bg-card); padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border-color);">
-                      <span style="font-size: 10.5px; color: var(--text-muted); display: block;">STATUS DA INSTÂNCIA</span>
-                      <span style="font-size: 12.5px; font-weight: 600; color: #16a34a;"><i class="fa-solid fa-circle-check"></i> Aguardando Leitura</span>
-                    </div>
-                    <div style="background: var(--bg-card); padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border-color);">
-                      <span style="font-size: 10.5px; color: var(--text-muted); display: block;">NOME DA INSTÂNCIA</span>
-                      <span style="font-size: 12.5px; font-weight: 600; color: var(--text-dark);">clinica_alergia_br</span>
-                    </div>
-                    <div style="background: var(--bg-card); padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border-color);">
-                      <span style="font-size: 10.5px; color: var(--text-muted); display: block;">WEBHOOK STATUS</span>
-                      <span style="font-size: 12.5px; font-weight: 600; color: #2563eb;"><i class="fa-solid fa-link"></i> Ativo / Conectado</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
           <!-- TAB 6: IA TRIAGEM DE ENFERMAGEM (VOZ/TELEFONE) -->
           <div class="tab-content-panel" id="tab-panel-triagem">
             <div class="card-panel">
@@ -1152,11 +1090,10 @@
                   <p style="font-size: 12px; color: #475569; line-height: 1.5;">Prontuários e conversas do WhatsApp armazenados com isolamento RLS (Row Level Security) no Supabase Cloud.</p>
                 </div>
 
-                <div style="background: #f8fafc; padding: 16px; border-radius: 10px; border: 1px solid #cbd5e1;">
-                  <h4 style="font-size: 13px; font-weight: 700; color: #0f172a; margin-bottom: 6px;">📄 Consentimento do Paciente</h4>
-                  <p style="font-size: 12px; color: #475569; line-height: 1.5;">O aceite dos termos de atendimento via WhatsApp é registrado automaticamente na primeira mensagem.</p>
-                </div>
               </div>
+            </div>
+          </div>
+
           <!-- TAB 10: CONEXÕES WHATSAPP (QR CODE EVOLUTION API GO) -->
           <div class="tab-content-panel" id="tab-panel-conexoes">
             <div class="card-panel" style="border: 2px solid #25d366; background: linear-gradient(135deg, #f0fdf4, #ffffff);">
@@ -1179,9 +1116,8 @@
                 <!-- Quadro com QR Code HD -->
                 <div style="background: white; padding: 20px; border-radius: 12px; border: 2px solid #a7f3d0; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.06);">
                   <div style="font-size: 12px; font-weight: 700; color: #065f46; margin-bottom: 10px;">QR CODE DE CONEXÃO OFICIAL</div>
-                  <div id="qr-code-container" style="min-height: 220px; display: flex; align-items: center; justify-content: center; background: #f8fafc; border-radius: 8px; border: 1px dashed #cbd5e1;">
-                    <img id="qr-code-img" src="" alt="QR Code WhatsApp" style="max-width: 200px; display: none; border-radius: 6px;">
-                    <span id="qr-code-loading" style="font-size: 12px; color: #64748b;"><i class="fa-solid fa-spinner fa-spin"></i> Clique acima para gerar o QR Code...</span>
+                  <div id="qr-code-container" style="min-height: 220px; display: flex; align-items: center; justify-content: center; background: white; padding: 10px; border-radius: 8px; border: 1px dashed #cbd5e1;">
+                    <img id="qr-code-img" src="data:image/png;base64,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" alt="QR Code WhatsApp" style="max-width: 200px; display: inline-block; border-radius: 6px;">
                   </div>
                   <div style="margin-top: 12px; font-size: 11px; color: #047857; font-weight: 600;">
                     Código de Pareamento: <span id="pairing-code-display" style="background: #ecfdf5; padding: 2px 8px; border-radius: 4px; border: 1px solid #a7f3d0;">83A9-4K12</span>
