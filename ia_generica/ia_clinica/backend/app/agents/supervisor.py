@@ -613,19 +613,42 @@ class SupervisorAgent:
                 f"Sou a Roberta e vi que tem interesse no nosso tratamento de **{specialty}**. Temos vagas para amanhã ({slots_data['data']}) com a médica especialista: **{horarios_str}**. Qual horário fica mais aconchegante para você?"
             )
 
-        # CASO 4: Intenção de Agendamento sem Horário Escolhido
+        # CASO 4: Intenção de Agendamento sem Horário Escolhido (com Sondagem de Sintomas se Genérica)
         elif entities["wants_booking"] or "agendar" in low_content or "consulta" in low_content:
-            action_name = "schedule_appointment"
-            slots_data = await scheduler_agent.find_available_slots(db, clinic_id)
-            horarios_str = ", ".join(slots_data["horarios_disponiveis"][:3])
+            # Verificar se algum sintoma/queixa já foi mencionado no histórico ou mensagem atual
+            has_symptom = bool(entities.get("symptoms")) or entities.get("is_tricology") or entities.get("is_pediatric") or any(
+                w in (content + " " + history_text).lower() for w in [
+                    "mancha", "queda", "cabelo", "alergia", "rinite", "espirr", "coceira", 
+                    "dermatit", "asma", "toss", "ferida", "pele", "sintoma", "dor"
+                ]
+            )
 
-            conversation.current_goal = "aguardando_confirmacao_horario"
-            await memory_agent.save_clinical_note(db, patient_id, "solicitacao_agendamento", f"Solicitou horários para {slots_data['data']}")
+            if not has_symptom and not specialty:
+                # Sondar motivo/sintoma do paciente antes de oferecer horários
+                action_name = "probe_patient_concern_before_booking"
+                conversation.current_goal = "escuta_sintomas_empathia"
+                clean_first = clean_patient_first_name(display_name)
+                name_ack = f", {clean_first}" if clean_first else ""
+                opener = f"Com todo o carinho{name_ack}!" if clean_first else "Com todo o carinho!"
 
-            context_ack = f" para a consulta de {specialty}" if specialty else ""
-            insurance_ack = f" pelo plano {insurance_info}" if insurance_info else ""
-            opener = f"Com todo carinho{name_prefix}!" if (is_first_interaction and display_name) else "Com todo carinho!"
-            response_text = f"{opener} Temos vagas amanhã ({slots_data['data']}){context_ack}{insurance_ack} com a {slots_data['doctor_name']}: **{horarios_str}**. Qual horário fica melhor para você?"
+                response_text = (
+                    f"{opener} Vou te ajudar a organizar o seu agendamento! 😊\n\n"
+                    f"Para que eu possa indicar a médica e a especialidade mais adequada para o seu caso, me conte: **qual sintoma ou desconforto você está sentindo?**\n"
+                    f"(Ou se preferir, me diga se é para uma consulta de rotina, teste de alergia ou tratamento capilar)."
+                )
+            else:
+                action_name = "schedule_appointment"
+                slots_data = await scheduler_agent.find_available_slots(db, clinic_id)
+                horarios_str = ", ".join(slots_data["horarios_disponiveis"][:3])
+
+                conversation.current_goal = "aguardando_confirmacao_horario"
+                await memory_agent.save_clinical_note(db, patient_id, "solicitacao_agendamento", f"Solicitou horários para {slots_data['data']}")
+
+                context_ack = f" para a consulta de {specialty}" if specialty else ""
+                insurance_ack = f" pelo plano {insurance_info}" if insurance_info else ""
+                clean_first = clean_patient_first_name(display_name)
+                opener = f"Com todo carinho, {clean_first}!" if clean_first else "Com todo carinho!"
+                response_text = f"{opener} Temos vagas amanhã ({slots_data['data']}){context_ack}{insurance_ack} com a {slots_data['doctor_name']}: **{horarios_str}**. Qual horário fica melhor para você?"
 
         # 3.3. GUARDRAIL CLÍNICO ESTRITO: PROIBIÇÃO DE DIAGNÓSTICO E PRESCRIÇÃO PELA IA
         elif any(k in low_content for k in ["qual meu diagnostico", "qual meu diagnóstico", "o que eu tenho", "qual doença", "qual doenca", "isso é perigoso", "isso e perigoso", "é eflúvio", "e efluvio", "diagnostique"]):
