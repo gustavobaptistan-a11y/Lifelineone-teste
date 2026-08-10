@@ -90,13 +90,14 @@ def get_dynamic_greeting(display_name: str = "") -> str:
 
 def get_dynamic_warmth_opener(display_name: str = "") -> str:
     """Gera aberturas acolhedoras e variadas mantendo o carinho e o respeito ao paciente."""
-    clean_first = clean_patient_first_name(display_name) if display_name else ""
-    name_ack = f", {clean_first}" if clean_first else ""
+    clean_name = clean_patient_first_name(display_name)
+    name_ack = f", {clean_name}" if clean_name else ""
 
     templates = [
-        f"Com todo carinho{name_ack}!",
-        f"Com o maior prazer{name_ack}!",
-        f"Com todo o cuidado{name_ack}!",
+        f"Com todo o carinho{name_ack}!",
+        f"Com certeza{name_ack}! Vamos cuidar disso juntas.",
+        f"Com muito prazer{name_ack}!",
+        f"Perfeito{name_ack}! Que bom poder te ajudar.",
         f"Com muita alegria{name_ack}!",
         f"Com certeza{name_ack}! Seria um prazer te ajudar.",
         f"Com todo o carinho e atenção{name_ack}!"
@@ -252,10 +253,10 @@ class SupervisorAgent:
 
         # 1. Filtro de Emergência
         is_safe, is_emergency, reason = security_filter_agent.check_message_security(content)
-        if is_emergency or any(k in low_content for k in ["falta de ar", "chiado no peito", "anafilaxia", "reacao alérgica estranha"]):
+        if is_emergency or any(k in low_content for k in ["falta de ar", "chiado no peito", "anafilaxia", "garganta fechando", "reacao alérgica estranha"]):
             emergency_response = (
-                f"🚨 **Atenção!** Sintomas de falta de ar ou reações graves a medicamentos exigem atendimento imediato.\n"
-                f"Por favor, dirija-se ao Pronto-Socorro mais próximo agora mesmo!"
+                f"🚨 **Atenção!** Sintomas como falta de ar ou sensação de garganta fechando são sinais de emergência médica!\n\n"
+                f"Por favor, dirija-se ao Pronto-Socorro mais próximo agora mesmo ou ligue para o SAMU (192). Não aguarde o atendimento por mensagem! 💙"
             )
             return {"action": "emergency_override", "response": emergency_response, "confidence": 1.0}
 
@@ -925,9 +926,8 @@ class SupervisorAgent:
             clean_first = clean_patient_first_name(display_name)
             name_ack = f", {clean_first}" if clean_first else ""
             response_text = (
-                f"Entendo a sua dúvida{name_ack}! Os valores de consultas, testes e exames dependem da modalidade de atendimento (convênio ou nota fiscal para reembolso).\n\n"
-                f"Por política da clínica, os detalhes financeiros, formas de pagamento e recibos são informados diretamente pela nossa equipe de recepção no momento da confirmação do agendamento.\n\n"
-                f"Gostaria de verificar as vagas disponíveis para a sua consulta amanhã?"
+                f"Olá{name_ack}! Os valores de consultas e facilidades de pagamento (inclusive nota fiscal para reembolso do seu convênio) são informados diretamente pela nossa recepção central! 💳\n\n"
+                f"Para que eu possa te ajudar a organizar a sua avaliação com a nossa médica especialista, qual sintoma ou desconforto você está apresentando no momento?"
             )
 
 
