@@ -714,27 +714,34 @@ class SupervisorAgent:
                 f"Sou a Roberta e vi que tem interesse no nosso tratamento de **{specialty}**. Temos vagas para amanhã ({slots_data['data']}) com a médica especialista: **{horarios_str}**. Qual horário fica mais aconchegante para você?"
             )
 
-        # CASO 4: Intenção de Agendamento sem Horário Escolhido (com Sondagem de Sintomas se Genérica)
+        # CASO 4: Intenção de Agendamento sem Horário Escolhido (com Sondagem Humanizada de Nome e Sintomas se Genérica)
         elif entities["wants_booking"] or "agendar" in low_content or "consulta" in low_content:
-            # Verificar se algum sintoma/queixa já foi mencionado no histórico ou mensagem atual
-            has_symptom = bool(entities.get("symptoms")) or entities.get("is_tricology") or entities.get("is_pediatric") or any(
-                w in (content + " " + history_text).lower() for w in [
-                    "mancha", "queda", "cabelo", "alergia", "rinite", "espirr", "coceira", 
-                    "dermatit", "asma", "toss", "ferida", "pele", "sintoma", "dor"
+            # Verificar se a mensagem atual do paciente traz relato explícito de sintoma ou necessidade
+            explicit_user_symptom = any(
+                w in content.lower() for w in [
+                    "mancha", "queda", "cabelo", "rinite", "espirr", "coceira", 
+                    "dermatit", "asma", "toss", "ferida", "pele", "sintoma", "dor", 
+                    "exame", "teste", "rotina", "pediatri", "tricologi", "alergia"
                 ]
             )
 
-            if not has_symptom and not specialty:
-                # Sondar motivo/sintoma do paciente antes de oferecer horários
+            if not explicit_user_symptom:
                 action_name = "probe_patient_concern_before_booking"
                 conversation.current_goal = "escuta_sintomas_empathia"
+                clean_first = clean_patient_first_name(display_name)
                 opener = get_dynamic_warmth_opener(display_name)
 
-                response_text = (
-                    f"{opener} Vou te ajudar a organizar o seu agendamento! 😊\n\n"
-                    f"Para que eu possa indicar a médica e a especialidade mais adequada para o seu caso, me conte: qual sintoma ou desconforto você está sentindo?\n"
-                    f"(Ou se preferir, me diga se é para uma consulta de rotina, teste de alergia ou tratamento capilar)."
-                )
+                if clean_first:
+                    response_text = (
+                        f"{opener} Vou te ajudar a organizar o seu atendimento com todo o carinho! 😊\n\n"
+                        f"Para que eu possa entender o seu caso e te encaminhar para a médica especialista ideal, me conte: qual sintoma, desconforto ou necessidade você está apresentando no momento?"
+                    )
+                else:
+                    response_text = (
+                        f"Olá! Sou a Roberta. É um prazer te atender! 😊\n\n"
+                        f"Vou te ajudar a organizar o seu atendimento com todo o carinho.\n\n"
+                        f"Para começarmos, como posso te chamar? E me conte: qual sintoma ou desconforto você está sentindo no momento?"
+                    )
             else:
                 action_name = "schedule_appointment"
                 slots_data = await scheduler_agent.find_available_slots(db, clinic_id)
@@ -769,9 +776,11 @@ class SupervisorAgent:
             
             clean_first = clean_patient_first_name(display_name)
             name_ack = f", {clean_first}" if clean_first else ""
-            clean_dur = re.sub(r'^(tem\s+uns|tem|faz|fazem|há|ha|cerca\s+de|a\s+cerca\s+de|a)\s+', '', content, flags=re.IGNORECASE).strip()
-            clean_dur = re.sub(r'^(há|ha|a)\s+', '', clean_dur, flags=re.IGNORECASE).strip()
-            dur_phrase = f"há cerca de {clean_dur}" if clean_dur else f"há {content}"
+            dur_match = re.search(r"(\d+\s*(?:dias?|semanas?|meses?|anos?)|ontem|uma semana|2 dias|3 dias|1 semana|2 meses|alguns dias|algumas semanas)", content, re.IGNORECASE)
+            if dur_match:
+                dur_phrase = f"há cerca de {dur_match.group(1)}"
+            else:
+                dur_phrase = "no momento"
             response_text = (
                 f"Compreendo perfeitamente{name_ack}! Estar apresentando esse sintoma {dur_phrase} exige uma avaliação médica cuidadosa para investigar as causas em consulta presencial.\n\n"
                 f"Temos horários disponíveis para amanhã ({slots_data['data']}) com a {slots_data['doctor_name']}: {horarios_str}. Qual horário fica mais confortável para a sua rotina?"
