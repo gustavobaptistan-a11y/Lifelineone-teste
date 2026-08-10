@@ -138,6 +138,29 @@ class SupervisorAgent:
         else:
             entities["caregiver_stress"] = False
 
+        # 10. Extração de Entidades Estendidas (Nome da criança, Sintomas e Duração)
+        child_match = re.search(r"(?:filh[oa]|bebê|bebe)\s+([A-ZÀ-Úa-zà-ú]+)", combined, re.IGNORECASE)
+        if child_match:
+            c_candidate = child_match.group(1).capitalize()
+            if c_candidate.lower() not in ["com", "de", "que", "está", "esta", "tem", "sem", "do", "da", "para", "pra"]:
+                entities["child_name"] = c_candidate
+            else:
+                entities["child_name"] = None
+        else:
+            entities["child_name"] = None
+
+        symptoms_list = []
+        if any(k in combined for k in ["alergia", "alérgic"]): symptoms_list.append("quadro alérgico")
+        if any(k in combined for k in ["mancha", "manchinhas", "vermelh"]): symptoms_list.append("manchas na pele")
+        if any(k in combined for k in ["tosse", "tossindo"]): symptoms_list.append("tosse")
+        if any(k in combined for k in ["coceira", "coçando"]): symptoms_list.append("coceira intensa")
+        if any(k in combined for k in ["febre", "quentinho"]): symptoms_list.append("febre")
+        if any(k in combined for k in ["queda", "cabelo"]): symptoms_list.append("queda de cabelo")
+        entities["symptoms"] = symptoms_list
+
+        dur_match = re.search(r"(?:h[áa]|faz|fazem)\s+(\d+\s*(?:dias?|semanas?|meses?)|ontem|uma semana|2 dias|3 dias)", combined, re.IGNORECASE)
+        entities["duration"] = dur_match.group(0).lower() if dur_match else None
+
         word_count = len(text_input.split())
         if word_count <= 5 or len(text_input) <= 25:
             entities["velocity"] = "curto"
@@ -420,10 +443,19 @@ class SupervisorAgent:
             clean_first = clean_patient_first_name(display_name)
             name_ack = f", {clean_first}" if clean_first else ""
             
-            stress_ack = "Puxa, sei o quanto é desgastante e exaustivo ficar sem dormir cuidando de quem amamos! Respire fundo, estou aqui para te apoiar. 💙\n\n" if entities.get("caregiver_stress") else ""
+            child_name = entities.get("child_name")
+            child_ref = f"do pequeno {child_name}" if child_name else "de quem amamos"
+            dur_ref = f" {entities['duration']}" if entities.get("duration") else ""
+            symptoms = entities.get("symptoms", [])
+            symptom_str = " e ".join(symptoms) if symptoms else "quadros alérgicos em crianças"
+
+            if entities.get("caregiver_stress"):
+                stress_ack = f"Puxa, sei o quanto é desgastante e exaustivo ficar sem dormir cuidando {child_ref}{dur_ref}! Respire fundo, estou aqui para te apoiar. 💙\n\n"
+            else:
+                stress_ack = f"Com certeza! Cuidar {child_ref} exige toda a nossa atenção e carinho. 💙\n\n"
             
             response_text = (
-                f"{stress_ack}Reações e quadros alérgicos em crianças precisam de todo cuidado e atenção.\n\n"
+                f"{stress_ack}Reações de {symptom_str} precisam de todo cuidado e atenção especialista.\n\n"
                 f"A Dra. Ana é nossa médica especialista em Alergia Pediátrica. Temos vagas para amanhã ({slots_data['data']}): **{horarios_str}**. Qual horário fica mais confortável para a sua rotina?"
             )
 
