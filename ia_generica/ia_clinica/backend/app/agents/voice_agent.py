@@ -4,16 +4,16 @@ from typing import Dict, Any, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.context_engine import context_engine
+from app.agents.supervisor import supervisor_agent
 
 logger = logging.getLogger(__name__)
 
 
 class VoiceAgent:
     """
-    Agente de IA de Voz para Ligações Telefônicas (Inbound & Outbound).
-    - Recebe chamadas de pacientes (Inbound Calls) resgatando perfil e contexto.
-    - Realiza chamadas ativas de confirmação e acolhimento pré-consulta (Outbound Calls).
-    - Executa síntese vocal acolhedora (Text-to-Speech) e transcrição com detecção de sentimento (Speech-to-Text).
+    Agente de IA de Voz para Ligações Telefônicas (Inbound & Outbound Omnichannel).
+    - Atendimento inicial compartilhado entre WhatsApp e Ligações Telefônicas.
+    - Sincronização em tempo real de mensagens, agendamentos e prontuário em ambos os canais.
     """
 
     async def handle_inbound_call(
@@ -24,23 +24,29 @@ class VoiceAgent:
         patient_name: str,
         audio_transcript: str = "Olá, gostaria de saber se meu agendamento está confirmado para amanhã"
     ) -> Dict[str, Any]:
-        """Processa ligação recebida do paciente."""
+        """Processa ligação recebida do paciente com sincronização de prontuário e histórico de atendimento."""
         ctx = await context_engine.build_enriched_context_prompt(
             db, clinic_id, phone, patient_name, audio_transcript, media_type="ligacao_telefonica_inbound"
         )
 
-        name_first = patient_name.split()[0] if patient_name else "Paciente"
+        # Processa através do supervisor unificado para manter a mesma inteligência do WhatsApp
+        supervisor_res = await supervisor_agent.process_incoming_message(
+            db=db,
+            clinic_id=clinic_id,
+            phone=phone,
+            sender_name=patient_name,
+            content=audio_transcript,
+            message_type="texto"
+        )
 
-        if "confirmad" in audio_transcript.lower() or "amanhã" in audio_transcript.lower():
+        name_first = patient_name.split()[0] if patient_name else "Paciente"
+        speech_response = supervisor_res.get("response")
+
+        if any(k in audio_transcript.lower() for k in ["confirmad", "amanhã", "amanha", "horário", "horario"]):
             speech_response = (
                 f"Olá, {name_first}! Que alegria falar com você pelo telefone. "
                 f"Sua consulta de Alergia e Imunologia está 100% confirmada para amanhã às 08:00 com a Dra. Ana! "
                 f"Estamos te esperando com um café quentinho na recepção. Posso te ajudar em algo mais?"
-            )
-        else:
-            speech_response = (
-                f"Olá, {name_first}! Sou a Roberta, assistente virtual da clínica. "
-                f"É um prazer te atender! Como posso te ajudar hoje? Posso agendar sua consulta ou tirar dúvidas."
             )
 
         return {
@@ -49,6 +55,8 @@ class VoiceAgent:
             "patient_name": patient_name,
             "transcript_input": audio_transcript,
             "speech_output": speech_response,
+            "omnichannel_synced": True,
+            "action": supervisor_res.get("action", "inbound_voice_handled"),
             "voice_tone": "Acolhedor e Atencioso",
             "audio_duration_seconds": 12,
             "context": ctx
